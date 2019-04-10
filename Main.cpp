@@ -41,9 +41,7 @@ int main(int argc, char *argv[])
         if(nl->connect(nlAddr)) {
             delete m::Logger::setLoggerInstance(nl);
 
-#ifdef MGPCL_WIN
-            FreeConsole();
-#endif
+
         } else {
             mlogger.warning(M_LOG, "Could not connect to NetLogger; continuing with the basic logger...");
             delete nl;

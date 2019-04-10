@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <!-- Fill these values and rename to "VSUserSettings.props" -->
+    <MGPCL_INCLUDE_DIR>fill_me</MGPCL_INCLUDE_DIR>
+    <MGPCL_LIB_DIR>fill_me</MGPCL_LIB_DIR>
+    <OPENSSL_LIB_DIR>fill_me</OPENSSL_LIB_DIR>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <BuildMacro Include="MGPCL_INCLUDE_DIR">
+      <Value>$(MGPCL_INCLUDE_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="MGPCL_LIB_DIR">
+      <Value>$(MGPCL_LIB_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="OPENSSL_LIB_DIR">
+      <Value>$(OPENSSL_LIB_DIR)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

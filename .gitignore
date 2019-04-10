@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+/deps
+/x64
+/.vs
+/jewel_jumper.ini
+/VSUserSettings.props
+/JewelJumper.vcxproj.user

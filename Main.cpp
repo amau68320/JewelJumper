@@ -5,6 +5,7 @@
 #include <mgpcl/Time.h>
 #include <gl/glew.h>
 #include <GLFW/glfw3.h>
+#include "MainApp.h"
 
 int main(int argc, char *argv[])
 {
@@ -94,24 +95,14 @@ int main(int argc, char *argv[])
     m::ProgramArgs pargs(argc, const_cast<const char **>(argv));
 
     //Jewel Jumper main loop
-    while(glfwWindowShouldClose(wnd) == GLFW_FALSE) {
-        glfwWaitEvents();
-        
-        //... process events
-
-        glDepthMask(GL_TRUE);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        //... test
-
-        glfwSwapBuffers(wnd);
-    }
+	MainApp app(wnd);
+	app.run();
 
     mlogger.info(M_LOG, "Shutting down, goodbye...");
     glfwDestroyWindow(wnd);
     glfwTerminate();
     delete m::Logger::instance();
-    m::inet::release();
+	m::inet::release();
+
     return 0;
 }

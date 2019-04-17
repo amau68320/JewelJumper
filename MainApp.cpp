@@ -26,7 +26,7 @@ void MainApp::run()
 			m_currentTimeUpdate = m::time::getTimeMs();
 			for (GameObject* object : m_objects)
 			{
-				object->update(tmpUpdate);
+				object->update(m::time::getTimeMs() - tmpUpdate);
 			}
 		}
 

@@ -8,7 +8,7 @@ class MainApp
 {
 public:
 	MainApp(GLFWwindow* wnd);
-	virtual ~MainApp();
+	~MainApp();
 	void run();
 
 private:

@@ -9,17 +9,18 @@
 
 int main(int argc, char *argv[])
 {
+    //Init MGPCL
     m::Logger::setLoggerInstance(new m::BasicLogger);
 
-    mlogger.info(M_LOG, "Initializing JewelJumper...");
+    mlogger.info(M_LOG, "Initialisation de JewelJumper...");
     m::time::initTime();
     m::inet::initialize();
 
-    //Read config
+    //Lecture de la config INI
     m::SimpleConfig cfg("jewel_jumper.ini");
     if(cfg.load() != m::kCLE_None && cfg.lastError() != m::kCLE_FileNotFound) {
         m::String err(cfg.errorString());
-        mlogger.error(M_LOG, "Could not load jewel_jumper.ini: %s", err.raw());
+        mlogger.error(M_LOG, "Impossible de lire jewel_jumper.ini: %s", err.raw());
         return 1;
     }
 
@@ -30,13 +31,14 @@ int main(int argc, char *argv[])
     const m::String &nlAddr = cfg["logging"]["netLoggerAddress"].value("127.0.0.1");
     cfg.save();
 
+    //Prise en charge du NetLogger
     if(useNetLogger) {
         m::NetLogger *nl = new m::NetLogger;
         if(autoStartNL) {
             if(nl->tryAutoStartSubprocess(true))
                 m::time::sleepMs(1000);
             else
-                mlogger.warning(M_LOG, "Could not start NetLogger!");
+                mlogger.warning(M_LOG, "Impossible de demarrer le NetLogger !");
         }
 
         if(nl->connect(nlAddr)) {
@@ -44,17 +46,18 @@ int main(int argc, char *argv[])
 
 
         } else {
-            mlogger.warning(M_LOG, "Could not connect to NetLogger; continuing with the basic logger...");
+            mlogger.warning(M_LOG, "Impossible de se connecter au NetLogger; reprise avec le logger basique...");
             delete nl;
         }
     }
 
-    //Setup SDL
+    //Init de GLFW
     if(glfwInit() == GLFW_FALSE) {
-        mlogger.error(M_LOG, "Could not initialize GLFW!");
+        mlogger.error(M_LOG, "Impossible d'intialiser GLFW !");
         return 2;
     }
 
+    //Config OpenGL & creation de la fenetre
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -63,26 +66,27 @@ int main(int argc, char *argv[])
 
     GLFWwindow *wnd = glfwCreateWindow(ww, wh, "Jewel Jumper", nullptr, nullptr);
     if(wnd == nullptr) {
-        mlogger.error(M_LOG, "Could not create window!");
+        mlogger.error(M_LOG, "Impossible de creer la fenetre !");
         glfwTerminate();
         return 3;
     }
 
     glfwMakeContextCurrent(wnd);
 
+    //On verifie que la version est bien celle demandee
     const int maj = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MAJOR);
     const int min = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MINOR);
     const int profile = glfwGetWindowAttrib(wnd, GLFW_OPENGL_PROFILE);
 
     if(maj != 3 || min != 3)
-        mlogger.warning(M_LOG, "Using OpenGL %d.%d", maj, min);
+        mlogger.warning(M_LOG, "Version d'OpenGL: %d.%d", maj, min);
 
     if(profile != GLFW_OPENGL_CORE_PROFILE)
-        mlogger.warning(M_LOG, "OpenGL profile is NOT core.");
+        mlogger.warning(M_LOG, "Le profil d'OpenGL utilise n'est pas \"core\" !");
 
     GLenum glewErr = glewInit();
     if(glewErr != GLEW_OK) {
-        mlogger.error(M_LOG, "Could initialize glew: %s (error %d)", glewGetErrorString(glewErr), glewErr);
+        mlogger.error(M_LOG, "Impossible d'initialiser glew: %s (erreur %d)", glewGetErrorString(glewErr), glewErr);
         glfwDestroyWindow(wnd);
         glfwTerminate();
         return 6;
@@ -91,14 +95,19 @@ int main(int argc, char *argv[])
     int fbw, fbh;
     glfwGetFramebufferSize(wnd, &fbw, &fbh);
 
-    //Parse args
+    //Lecture des arguments de commande
     m::ProgramArgs pargs(argc, const_cast<const char **>(argv));
 
-    //Jewel Jumper main loop
+    //Boucle principale de Jewel Jumper
 	MainApp app(wnd);
-	app.run();
 
-    mlogger.info(M_LOG, "Shutting down, goodbye...");
+    if(app.setup(pargs, fbw, fbh))
+        app.run();
+    else
+        mlogger.error(M_LOG, "Erreur lors de l'initialisation de MainApp ! Impossible de continuer...");
+
+    //Fin
+    mlogger.info(M_LOG, "Liberation des ressources...");
     glfwDestroyWindow(wnd);
     glfwTerminate();
     delete m::Logger::instance();

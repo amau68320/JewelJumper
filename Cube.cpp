@@ -1,4 +1,5 @@
 #include "Cube.h"
+#include "MainApp.h"
 
 float vertices[] = {0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
@@ -51,11 +52,19 @@ Cube::~Cube()
 	gl::deleteVertexArray(m_vertexArray);
 }
 
-void Cube::drawCube()
+void Cube::update(float dt)
 {
+}
+
+void Cube::render(float ptt)
+{
+    MainApp::instance().use3DShader(MainApp::instance().mainShader());
+
 	gl::bindVertexArray(m_vertexArray);
 	gl::bindBuffer(gl::kBT_ElementArrayBuffer, m_bufferIndexs);
 	gl::drawElements(gl::kDM_Triangles, 36, gl::kDT_UnsignedShort, nullptr);
 	gl::bindVertexArray(0);
 	gl::bindBuffer(gl::kBT_ElementArrayBuffer, 0);
+
+    Shader::unbind();
 }

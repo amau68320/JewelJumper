@@ -16,7 +16,7 @@ void GameObject::update(float dt)
 
 }
 
-void GameObject::renderer(float ptt)
+void GameObject::render(float ptt)
 {
 
 }

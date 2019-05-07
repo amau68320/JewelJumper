@@ -3,14 +3,13 @@
 #include "GameObject.h"
 #include "GL.h"
 
-class Cube : GameObject
+class Cube : public GameObject
 {
 public:
 	Cube();
 	virtual ~Cube();
 	void update(float dt);
-	void renderer(float ptt);
-	void drawCube();
+	void render(float ptt);
 
 private :
 	GLuint m_bufferData;

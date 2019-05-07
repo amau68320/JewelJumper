@@ -1,14 +1,16 @@
 #include "MainApp.h"
+#include "Cube.h"
 #include <mgpcl/Math.h>
+#include <mgpcl/Logger.h>
 
 #define UPDATE_INTERVAL 20.0
 
-static MainApp *g_instance;
+MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_objects(), m_currentTimeUpdate(0.0), m_currentTimeRenderer(0.0),
                                     m_fps(0), m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0)
 {
-    g_instance = this;
+    m_instance = this;
 
 	m_wnd = wnd;
     m_camera = new FreeCamera;
@@ -16,6 +18,9 @@ MainApp::MainApp(GLFWwindow* wnd) : m_objects(), m_currentTimeUpdate(0.0), m_cur
 
 MainApp::~MainApp()
 {
+    for(GameObject *gob : m_objects)
+        delete gob;
+
     delete m_camera;
 }
 
@@ -23,20 +28,20 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
 {
     //Handlers d'events
     glfwSetMouseButtonCallback(m_wnd, [] (GLFWwindow *, int button, int action, int mods) {
-        g_instance->handleMouseButtonEvent(button, action, mods);
+        m_instance->handleMouseButtonEvent(button, action, mods);
     });
 
     glfwSetCursorPosCallback(m_wnd, [] (GLFWwindow *, double x, double y) {
-        double dx = g_instance->m_lastCursorPosX - x;
-        double dy = g_instance->m_lastCursorPosY - y;
-        g_instance->m_lastCursorPosX = x;
-        g_instance->m_lastCursorPosY = y;
+        double dx = x - m_instance->m_lastCursorPosX;
+        double dy = y - m_instance->m_lastCursorPosY;
+        m_instance->m_lastCursorPosX = x;
+        m_instance->m_lastCursorPosY = y;
 
-        g_instance->handleMouseMotionEvent(static_cast<float>(dx), static_cast<float>(dy));
+        m_instance->handleMouseMotionEvent(static_cast<float>(dx), static_cast<float>(dy));
     });
 
     glfwSetKeyCallback(m_wnd, [] (GLFWwindow *, int key, int scancode, int action, int mods) {
-        g_instance->handleKeyboardEvent(key, scancode, action, mods);
+        m_instance->handleKeyboardEvent(key, scancode, action, mods);
     });
 
     //Creation de la matrice de projection, qui ne devrait pas changer avec le temps...
@@ -50,6 +55,13 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     m_camera->activate();
 
+    //Shader
+    if(!m_mainShader.load("shaders/main.vert", "shaders/main.frag")) {
+        mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_mainShader.errorString().raw());
+        return false;
+    }
+
+    m_objects.add(new Cube);
     return true;
 }
 
@@ -68,22 +80,31 @@ void MainApp::run()
 		{
 			tmpUpdate = m_currentTimeUpdate;
 			m_currentTimeUpdate = m::time::getTimeMs();
-			for (GameObject* object : m_objects)
-			{
-				object->update(m::time::getTimeMs() - tmpUpdate);
-			}
+            update(static_cast<float>((m::time::getTimeMs() - tmpUpdate) / 1000.0));
 		}
 
 		m_currentTimeRenderer = m::time::getTimeMs();
-        render3D(static_cast<float>((m::time::getTimeMs() - m_currentTimeUpdate) / UPDATE_INTERVAL));
+        render3D(static_cast<float>((m::time::getTimeMs() - m_currentTimeUpdate) / (1000.0 / UPDATE_INTERVAL)));
 		glfwSwapBuffers(m_wnd);
 
-		waitTime = m::math::minimum((1000.0 / UPDATE_INTERVAL) - (m::time::getTimeMs() - m_currentTimeUpdate),
-            (1000.0 / m_fps) - (m::time::getTimeMs() - m_currentTimeRenderer));
-		
-		if (waitTime >= 5)
-			m::time::sleepMs(static_cast<uint32_t>(waitTime));
+        if(m_fps > 0) {
+            waitTime = m::math::minimum((1000.0 / UPDATE_INTERVAL) - (m::time::getTimeMs() - m_currentTimeUpdate),
+                (1000.0 / m_fps) - (m::time::getTimeMs() - m_currentTimeRenderer));
+
+            if(waitTime >= 10)
+                m::time::sleepMs(static_cast<uint32_t>(waitTime));
+        }
 	}
+}
+
+void MainApp::update(float dt)
+{
+    m_camera->update(dt);
+
+    for(GameObject *object : m_objects)
+    {
+        object->update(dt);
+    }
 }
 
 void MainApp::render3D(float ptt)
@@ -106,7 +127,7 @@ void MainApp::render3D(float ptt)
     //Rendu des objets
     for(GameObject *object : m_objects)
     {
-        object->renderer(ptt);
+        object->render(ptt);
     }
 }
 

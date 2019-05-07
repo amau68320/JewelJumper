@@ -58,7 +58,24 @@ public:
         return m_model[--m_curModelMat];
     }
 
+    /*
+     * Retourne une reference vers le shader principal.
+     */
+    Shader &mainShader()
+    {
+        return m_mainShader;
+    }
+
+    /*
+     * Retourne une reference vers l'instance de MainApp.
+     */
+    static MainApp &instance()
+    {
+        return *m_instance;
+    }
+
 private:
+    void update(float dt);
     void render3D(float ptt);
     void handleMouseButtonEvent(int button, int action, int mods);
     void handleMouseMotionEvent(float dx, float dy);
@@ -76,4 +93,7 @@ private:
     Camera *m_camera;
     double m_lastCursorPosX;
     double m_lastCursorPosY;
+    Shader m_mainShader;
+
+    static MainApp *m_instance;
 };

@@ -58,7 +58,9 @@ namespace gl
         kTF_RGB = GL_RGB,
         kTF_RGBA = GL_RGBA,
         kTF_RGB8 = GL_RGB8,
-        kTF_RGBA8 = GL_RGBA8
+        kTF_RGBA8 = GL_RGBA8,
+        kTF_RGB16F = GL_RGB16F,
+        kTF_RGBA16F = GL_RGBA16F
     };
 
     enum TextureParameter
@@ -148,7 +150,9 @@ namespace gl
 
     enum FramebufferAttachment
     {
-        kFBA_ColorAttachment0 = GL_COLOR_ATTACHMENT0
+        kFBA_ColorAttachment0 = GL_COLOR_ATTACHMENT0,
+        kFBA_DepthAttachment = GL_DEPTH_ATTACHMENT,
+        kFBA_DepthStencilAttachment = GL_DEPTH_STENCIL_ATTACHMENT
     };
 
     enum FramebufferStatus
@@ -174,6 +178,17 @@ namespace gl
         kDF_GreaterOrEqual = GL_GEQUAL,
         kDF_Greater = GL_GREATER,
         kDF_Always = GL_ALWAYS
+    };
+
+    enum RenderbufferTarget
+    {
+        kRT_Renderbuffer = GL_RENDERBUFFER
+    };
+
+    enum RenderbufferFormat
+    {
+        kRF_Depth24Stencil8 = GL_DEPTH24_STENCIL8,
+        kRF_DepthComponent24 = GL_DEPTH_COMPONENT24
     };
 
     inline const char *getVendor()
@@ -222,6 +237,11 @@ namespace gl
     inline void bindTexture(TextureTarget target, GLuint id)
     {
         glBindTexture(target, id);
+    }
+
+    inline void texStorage2D(TextureTarget target, GLint levels, TextureFormat iFormat, GLuint width, GLuint height)
+    {
+        glTexStorage2D(target, levels, iFormat, width, height);
     }
 
     inline void texStorage3D(TextureTarget target, GLint levels, TextureFormat iFormat, GLsizei width, GLsizei height, GLsizei depth)
@@ -499,6 +519,11 @@ namespace gl
         glFramebufferTexture2D(ft, at, tt, texId, level);
     }
 
+    inline void framebufferRenderbuffer(FramebufferTarget ft, FramebufferAttachment at, RenderbufferTarget rt, GLuint rb)
+    {
+        glFramebufferRenderbuffer(ft, at, rt, rb);
+    }
+
     inline FramebufferStatus checkFramebufferStatus(FramebufferTarget ft)
     {
         return static_cast<FramebufferStatus>(glCheckFramebufferStatus(ft));
@@ -592,6 +617,39 @@ namespace gl
     inline void useProgram(GLuint prog)
     {
         glUseProgram(prog);
+    }
+
+    inline GLuint genRenderbuffer()
+    {
+        GLuint ret;
+        glGenRenderbuffers(1, &ret);
+
+        return ret;
+    }
+
+    inline void genRenderbuffers(GLsizei count, GLuint *ptr)
+    {
+        glGenRenderbuffers(count, ptr);
+    }
+
+    inline void deleteRenderbuffer(GLuint rb)
+    {
+        glDeleteRenderbuffers(1, &rb);
+    }
+
+    inline void deleteRenderbuffers(GLsizei count, GLuint *ptr)
+    {
+        glDeleteRenderbuffers(count, ptr);
+    }
+
+    inline void bindRenderbufffer(RenderbufferTarget target, GLuint id)
+    {
+        glBindRenderbuffer(target, id);
+    }
+
+    inline void renderbufferStorage(RenderbufferTarget target, RenderbufferFormat iFormat, GLsizei w, GLsizei h)
+    {
+        glRenderbufferStorage(target, iFormat, w, h);
     }
 
 };

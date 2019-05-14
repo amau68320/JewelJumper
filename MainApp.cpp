@@ -73,13 +73,31 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
         return false;
     }
 
+    if(!m_skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag")) {
+        mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_skyboxShader.errorString().raw());
+        return false;
+    }
+
+    if(!m_tonemapShader.load("shaders/tonemap.vert", "shaders/tonemap.frag")) {
+        mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_tonemapShader.errorString().raw());
+        return false;
+    }
+
     //Framebuffers
     m_mainFBO.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
-    m_mainFBO.createColorBuffer(gl::kTF_RGBA8); //Besoin du canal alpha ?
+    m_mainFBO.createColorBuffer(gl::kTF_RGB16F);
     m_mainFBO.createDepthBuffer();
 
     if(!m_mainFBO.finishFramebuffer()) {
         mlogger.error(M_LOG, "Erreur lors de la creation du FBO principal");
+        return false;
+    }
+
+    m_peFBO.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
+    m_peFBO.createColorBuffer(gl::kTF_RGB8);
+
+    if(!m_peFBO.finishFramebuffer()) {
+        mlogger.error(M_LOG, "Erreur lors de la creation du FBO de post-effet");
         return false;
     }
 
@@ -106,6 +124,11 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     m_invTexSize.setY(1.0f / static_cast<float>(wh));
 
     //Objets du jeu
+    if(!m_skybox.load("textures/skybox.hdr")) {
+        mlogger.error(M_LOG, "Impossible de charger la skybox HDR");
+        return false;
+    }
+
     m_objects.add(new Cube);
     return true;
 }
@@ -154,48 +177,65 @@ void MainApp::update(float dt)
 
 void MainApp::render3D(float ptt)
 {
+    /***************************** RENDU PRINCIPAL *****************************/
     //Effacer l'ecran et parametres de base
-    if(m_fxaaEnable)
-        m_mainFBO.bindForRender();
-
+    m_mainFBO.bindForRender();
     gl::depthMask(true);
-    gl::clearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    gl::clear(gl::kCF_ColorBuffer | gl::kCF_DepthBuffer);
-    gl::enable(gl::kC_DepthTest);
+    gl::clear(gl::kCF_DepthBuffer);
     gl::disable(gl::kC_CullFace);
 
     //Matrice de vue
-    m::Vector3f camPos; //OSEF pour l'instant
+    m::Vector3f camPos;
     m_camera->getTransform(m_view, camPos, ptt);
 
     //RAZ de la pile de matrice modele
     m_curModelMat = 0;
     m_model[0].loadIdentity();
 
+    //Rendu du ciel
+    gl::disable(gl::kC_DepthTest);
+    gl::depthMask(false);
+    pushMatrix().translate(camPos);
+    use3DShader(m_skyboxShader);
+    m_skybox.draw();
+    Shader::unbind();
+    popMatrix();
+
     //Rendu des objets
+    gl::depthMask(true);
+    gl::enable(gl::kC_DepthTest);
+
     for(GameObject *object : m_objects)
-    {
         object->render(ptt);
-    }
 
     Framebuffer::unbindFromRender();
 
-    if(m_fxaaEnable) {
-        //FXAA
-        gl::disable(gl::kC_DepthTest);
-        gl::depthMask(false);
-        gl::disable(gl::kC_Blend);
-        gl::disable(gl::kC_CullFace);
+    /***************************** RENDU DES EFFETS *****************************/
+    gl::disable(gl::kC_DepthTest);
+    gl::depthMask(false);
+    gl::disable(gl::kC_Blend);
+    gl::disable(gl::kC_CullFace);
 
-        m_fxaaShader.bind();
-        gl::uniform2f(m_fxaaShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
-        gl::bindTexture(gl::kTT_Texture2D, m_mainFBO.colorAttachmentID());
-        gl::bindVertexArray(m_peVAO);
-        gl::drawArrays(gl::kDM_Triangles, 0, 6);
-        gl::bindVertexArray(0);
-        gl::bindTexture(gl::kTT_Texture2D, 0);
-        Shader::unbind();
-    }
+    //Tone mapping
+    m_peFBO.bindForRender();
+    m_tonemapShader.bind();
+    gl::bindTexture(gl::kTT_Texture2D, m_mainFBO.colorAttachmentID());
+    gl::bindVertexArray(m_peVAO);
+    gl::drawArrays(gl::kDM_Triangles, 0, 6);
+    gl::bindVertexArray(0);
+    gl::bindTexture(gl::kTT_Texture2D, 0);
+    Shader::unbind();
+    Framebuffer::unbindFromRender();
+
+    //FXAA
+    m_fxaaShader.bind();
+    gl::uniform2f(m_fxaaShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
+    gl::bindTexture(gl::kTT_Texture2D, m_peFBO.colorAttachmentID());
+    gl::bindVertexArray(m_peVAO);
+    gl::drawArrays(gl::kDM_Triangles, 0, 6);
+    gl::bindVertexArray(0);
+    gl::bindTexture(gl::kTT_Texture2D, 0);
+    Shader::unbind();
 }
 
 void MainApp::use3DShader(Shader &shdr)

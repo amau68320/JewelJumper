@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "Shader.h"
 #include "Framebuffer.h"
+#include "Skybox.h"
 
 /*
  * Classe principale gerant JewelJumper.
@@ -94,13 +95,20 @@ private:
     Camera *m_camera;
     double m_lastCursorPosX;
     double m_lastCursorPosY;
+
     Shader m_mainShader;
     Shader m_fxaaShader;
+    Shader m_skyboxShader;
+    Shader m_tonemapShader;
+
     Framebuffer m_mainFBO;
+    Framebuffer m_peFBO;
+
     GLuint m_peVBO;
     GLuint m_peVAO;
     m::Vector2f m_invTexSize;
     bool m_fxaaEnable;
+    Skybox m_skybox;
 
     static MainApp *m_instance;
 };

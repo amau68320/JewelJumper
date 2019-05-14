@@ -139,7 +139,9 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainApp.cpp" />
+    <ClCompile Include="RGBE.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Skybox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -148,7 +150,9 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GL.h" />
     <ClInclude Include="MainApp.h" />
+    <ClInclude Include="RGBE.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Skybox.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

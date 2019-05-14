@@ -8,7 +8,8 @@
 MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_objects(), m_currentTimeUpdate(0.0), m_currentTimeRenderer(0.0),
-                                    m_fps(0), m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0)
+                                    m_fps(0), m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
+                                    m_peVBO(0), m_peVAO(0), m_fxaaEnable(true)
 {
     m_instance = this;
 
@@ -18,6 +19,12 @@ MainApp::MainApp(GLFWwindow* wnd) : m_objects(), m_currentTimeUpdate(0.0), m_cur
 
 MainApp::~MainApp()
 {
+    if(m_peVAO != 0)
+        gl::deleteVertexArray(m_peVAO);
+
+    if(m_peVBO != 0)
+        gl::deleteBuffer(m_peVBO);
+
     for(GameObject *gob : m_objects)
         delete gob;
 
@@ -55,12 +62,50 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     m_camera->activate();
 
-    //Shader
+    //Shaders
     if(!m_mainShader.load("shaders/main.vert", "shaders/main.frag")) {
         mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_mainShader.errorString().raw());
         return false;
     }
 
+    if(!m_fxaaShader.load("shaders/fxaa.vert", "shaders/fxaa.frag")) {
+        mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_fxaaShader.errorString().raw());
+        return false;
+    }
+
+    //Framebuffers
+    m_mainFBO.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
+    m_mainFBO.createColorBuffer(gl::kTF_RGBA8); //Besoin du canal alpha ?
+    m_mainFBO.createDepthBuffer();
+
+    if(!m_mainFBO.finishFramebuffer()) {
+        mlogger.error(M_LOG, "Erreur lors de la creation du FBO principal");
+        return false;
+    }
+
+    //VBO & VAO de post-effets
+    const float squareShape[] = {
+        -1.0f, -1.0f,   1.0f, -1.0f,   1.0f, 1.0f,
+        -1.0f, -1.0f,   -1.0f, 1.0f,   1.0f, 1.0f
+    };
+
+    m_peVBO = gl::genBuffer();
+    gl::bindBuffer(gl::kBT_ArrayBuffer, m_peVBO);
+    gl::bufferData(gl::kBT_ArrayBuffer, sizeof(squareShape), squareShape, gl::kBU_StaticDraw);
+    gl::bindBuffer(gl::kBT_ArrayBuffer, 0);
+
+    m_peVAO = gl::genVertexArray();
+    gl::bindVertexArray(m_peVAO);
+    gl::bindBuffer(gl::kBT_ArrayBuffer, m_peVBO);
+    gl::enableVertexAttribArray(0);
+    gl::vertexAttribPointer(0, 2, gl::kDT_Float, false, 0, nullptr);
+    gl::bindBuffer(gl::kBT_ArrayBuffer, 0);
+    gl::bindVertexArray(0);
+
+    m_invTexSize.setX(1.0f / static_cast<float>(ww));
+    m_invTexSize.setY(1.0f / static_cast<float>(wh));
+
+    //Objets du jeu
     m_objects.add(new Cube);
     return true;
 }
@@ -110,6 +155,9 @@ void MainApp::update(float dt)
 void MainApp::render3D(float ptt)
 {
     //Effacer l'ecran et parametres de base
+    if(m_fxaaEnable)
+        m_mainFBO.bindForRender();
+
     gl::depthMask(true);
     gl::clearColor(0.0f, 0.0f, 0.0f, 1.0f);
     gl::clear(gl::kCF_ColorBuffer | gl::kCF_DepthBuffer);
@@ -128,6 +176,25 @@ void MainApp::render3D(float ptt)
     for(GameObject *object : m_objects)
     {
         object->render(ptt);
+    }
+
+    Framebuffer::unbindFromRender();
+
+    if(m_fxaaEnable) {
+        //FXAA
+        gl::disable(gl::kC_DepthTest);
+        gl::depthMask(false);
+        gl::disable(gl::kC_Blend);
+        gl::disable(gl::kC_CullFace);
+
+        m_fxaaShader.bind();
+        gl::uniform2f(m_fxaaShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
+        gl::bindTexture(gl::kTT_Texture2D, m_mainFBO.colorAttachmentID());
+        gl::bindVertexArray(m_peVAO);
+        gl::drawArrays(gl::kDM_Triangles, 0, 6);
+        gl::bindVertexArray(0);
+        gl::bindTexture(gl::kTT_Texture2D, 0);
+        Shader::unbind();
     }
 }
 
@@ -153,7 +220,10 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
     if(action == GLFW_PRESS) {
         if(key == GLFW_KEY_ESCAPE)
             glfwSetWindowShouldClose(m_wnd, GLFW_TRUE);
-        else
+        else if(key == GLFW_KEY_Q) {
+            m_fxaaEnable = !m_fxaaEnable;
+            mlogger.info(M_LOG, "FXAA: %s", m_fxaaEnable ? "ON" : "OFF");
+        } else
             m_camera->onKeyDown(scancode);
     } else if(action == GLFW_RELEASE)
         m_camera->onKeyUp(scancode);

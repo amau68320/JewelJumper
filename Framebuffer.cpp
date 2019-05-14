@@ -43,8 +43,8 @@ void Framebuffer::createColorBuffer(gl::TextureFormat tf)
     m_color = gl::genTexture();
     gl::bindTexture(gl::kTT_Texture2D, m_color);
     gl::texStorage2D(gl::kTT_Texture2D, 1, tf, m_w, m_h);
-    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Nearest);
-    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_Nearest);
+    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Linear);
+    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_Linear);
     gl::texParameteri(gl::kTT_Texture2D, gl::kTP_WrapS, gl::kTWM_ClampToEdge);
     gl::texParameteri(gl::kTT_Texture2D, gl::kTP_WrapT, gl::kTWM_ClampToEdge);
     gl::bindTexture(gl::kTT_Texture2D, 0);

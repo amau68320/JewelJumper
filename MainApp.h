@@ -6,6 +6,7 @@
 #include "GameObject.h"
 #include "Camera.h"
 #include "Shader.h"
+#include "Framebuffer.h"
 
 /*
  * Classe principale gerant JewelJumper.
@@ -94,6 +95,12 @@ private:
     double m_lastCursorPosX;
     double m_lastCursorPosY;
     Shader m_mainShader;
+    Shader m_fxaaShader;
+    Framebuffer m_mainFBO;
+    GLuint m_peVBO;
+    GLuint m_peVAO;
+    m::Vector2f m_invTexSize;
+    bool m_fxaaEnable;
 
     static MainApp *m_instance;
 };

@@ -471,6 +471,11 @@ namespace gl
         glUniform4fv(loc, cnt, src);
     }
 
+    inline void uniform2f(GLint loc, GLfloat a, GLfloat b)
+    {
+        glUniform2f(loc, a, b);
+    }
+
     inline void uniform3f(GLint loc, GLfloat a, GLfloat b, GLfloat c)
     {
         glUniform3f(loc, a, b, c);

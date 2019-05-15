@@ -137,6 +137,7 @@
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="Gem.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainApp.cpp" />
     <ClCompile Include="RGBE.cpp" />
@@ -148,6 +149,7 @@
     <ClInclude Include="Cube.h" />
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="Gem.h" />
     <ClInclude Include="GL.h" />
     <ClInclude Include="MainApp.h" />
     <ClInclude Include="RGBE.h" />

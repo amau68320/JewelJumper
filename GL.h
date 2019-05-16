@@ -14,6 +14,12 @@ namespace gl
         kTT_Texture2D = GL_TEXTURE_2D,
         kTT_Texture3D = GL_TEXTURE_3D,
         kTT_TextureCubeMap = GL_TEXTURE_CUBE_MAP,
+        kTT_TextureCubeMapNX = GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        kTT_TextureCubeMapNY = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        kTT_TextureCubeMapNZ = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+        kTT_TextureCubeMapPX = GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        kTT_TextureCubeMapPY = GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        kTT_TextureCubeMapPZ = GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
         kTT_Texture2DArray = GL_TEXTURE_2D_ARRAY
     };
 
@@ -91,7 +97,9 @@ namespace gl
     {
         kPSP_PackAlignment = GL_PACK_ALIGNMENT,
         kPSP_UnpackAlignment = GL_UNPACK_ALIGNMENT,
-        kPSP_UnpackRowLength = GL_UNPACK_ROW_LENGTH
+        kPSP_UnpackRowLength = GL_UNPACK_ROW_LENGTH,
+        kPSP_UnpackSkipRows = GL_UNPACK_SKIP_ROWS,
+        kPSP_UnpackSkipPixels = GL_UNPACK_SKIP_PIXELS
     };
 
     enum Capability

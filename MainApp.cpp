@@ -214,6 +214,10 @@ void MainApp::render3D(float ptt)
     gl::enable(gl::kC_DepthTest);
     gl::enable(gl::kC_CullFace);
 
+    m_mainShader.bind();
+    gl::uniform3f(m_mainShader.getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
+    Shader::unbind();
+
     for(GameObject *object : m_objects)
         object->render(ptt);
 

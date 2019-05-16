@@ -39,7 +39,7 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
         m_indices  << static_cast<uint16_t>(m_vertices.size() - 1);
     }
 
-    fillColor(1.0f, 0.0f, 0.0f);
+    //fillColor(1.0f, 0.0f, 0.0f);
 
     //Triangles inferieurs
     float a1 = step * 0.5f;
@@ -64,7 +64,7 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
         m_indices  << static_cast<uint16_t>(m_vertices.size() - 1);
     }
 
-    fillColor(0.0f, 1.0f, 0.0f);
+    //fillColor(0.0f, 1.0f, 0.0f);
 
     //Triangles superieurs
     a0 = 0.0f;
@@ -89,7 +89,7 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
         m_indices  << static_cast<uint16_t>(m_vertices.size() - 1 - 2);
     }
 
-    fillColor(0.0f, 0.0f, 1.0f);
+    //fillColor(0.0f, 0.0f, 1.0f);
 
     //Face du dessus
     m_vertices << GemVertex(0.0f, y1, 0.0f);
@@ -111,7 +111,8 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
         m_indices  << static_cast<uint16_t>(m_vertices.size() - 1);
     }
 
-    fillColor(1.0f, 0.0f, 1.0f);
+    //fillColor(1.0f, 0.0f, 1.0f);
+    fillColor(1.0f, 0.0f, 0.0f);
     m_numIndices = static_cast<GLsizei>(m_indices.size());
 
     for(int i = 0; i < m_indices.size(); i += 3) {
@@ -169,11 +170,13 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
 void Gem::render(float ptt)
 {
     MainApp::instance().use3DShader(MainApp::instance().mainShader());
+    MainApp::instance().skybox().bindCubeMap();
     gl::bindVertexArray(m_vao);
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, m_ebo);
     gl::drawElements(gl::kDM_Triangles, m_numIndices, gl::kDT_UnsignedShort, nullptr);
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, 0);
     gl::bindVertexArray(0);
+    Skybox::unbindCubeMap();
     Shader::unbind();
 }
 

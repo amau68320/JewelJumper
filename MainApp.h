@@ -69,6 +69,14 @@ public:
     }
 
     /*
+     * Retourne une reference vers la skybox
+     */
+    Skybox &skybox()
+    {
+        return m_skybox;
+    }
+
+    /*
      * Retourne une reference vers l'instance de MainApp.
      */
     static MainApp &instance()

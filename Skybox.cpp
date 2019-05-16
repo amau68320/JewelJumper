@@ -1,7 +1,7 @@
 #include "Skybox.h"
 #include "RGBE.h"
 
-Skybox::Skybox() : m_tex(0), m_vbo(0), m_vao(0)
+Skybox::Skybox() : m_tex(0), m_vbo(0), m_vao(0), m_cubemap(0)
 {
 }
 
@@ -15,6 +15,16 @@ Skybox::~Skybox()
 
     if(m_tex != 0)
         gl::deleteTexture(m_tex);
+
+    if(m_cubemap != 0)
+        gl::deleteTexture(m_cubemap);
+}
+
+void myTexImage(gl::TextureTarget target, int x, int y, float *data)
+{
+    gl::pixelStorei(gl::kPSP_UnpackSkipPixels, x * 512);
+    gl::pixelStorei(gl::kPSP_UnpackSkipRows, y * 512);
+    gl::texImage2D(target, 0, gl::kTF_RGB16F, 512, 512, 0, gl::kTF_RGB, gl::kDT_Float, data);
 }
 
 bool Skybox::load(const m::String &fname)
@@ -45,6 +55,26 @@ bool Skybox::load(const m::String &fname)
     gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Linear);
     gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_Linear);
     gl::bindTexture(gl::kTT_Texture2D, 0);
+
+    if(m_cubemap != 0)
+        gl::deleteTexture(m_cubemap);
+
+    m_cubemap = gl::genTexture();
+    gl::bindTexture(gl::kTT_TextureCubeMap, m_cubemap);
+    gl::pixelStorei(gl::kPSP_UnpackRowLength, imgW);
+    myTexImage(gl::kTT_TextureCubeMapNZ, 0, 1, data);
+    myTexImage(gl::kTT_TextureCubeMapPZ, 1, 0, data);
+    myTexImage(gl::kTT_TextureCubeMapNX, 2, 0, data);
+    myTexImage(gl::kTT_TextureCubeMapPX, 0, 0, data);
+    myTexImage(gl::kTT_TextureCubeMapNY, 2, 1, data);
+    myTexImage(gl::kTT_TextureCubeMapPY, 1, 1, data);
+    gl::pixelStorei(gl::kPSP_UnpackSkipPixels, 0);
+    gl::pixelStorei(gl::kPSP_UnpackSkipRows, 0);
+    gl::pixelStorei(gl::kPSP_UnpackRowLength, 0);
+    gl::generateMipmap(gl::kTT_TextureCubeMap);
+    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Linear);
+    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_LinearMipmapLinear);
+    gl::bindTexture(gl::kTT_TextureCubeMap, 0);
     delete[] data;
 
     float vec[] = {

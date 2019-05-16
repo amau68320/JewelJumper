@@ -27,6 +27,26 @@ void myTexImage(gl::TextureTarget target, int x, int y, float *data)
     gl::texImage2D(target, 0, gl::kTF_RGB16F, 512, 512, 0, gl::kTF_RGB, gl::kDT_Float, data);
 }
 
+static void rotate90(float *data, int imgW, int i, int j)
+{
+    float *tmp = new float[512 * 512 * 3];
+    for(int y = 0; y < 512; y++)
+        m::mem::copy(tmp + y * 512 * 3, data + ((j * 512 + y) * imgW + i * 512) * 3, 512 * 3 * sizeof(float));
+
+    for(int y = 0; y < 512; y++) {
+        for(int x = 0; x < 512; x++) {
+            float *src = tmp + (y * 512 + x) * 3;
+            float *dst = data + ((j * 512 + x) * imgW + i * 512 + (511 - y)) * 3;
+
+            dst[0] = src[0];
+            dst[1] = src[1];
+            dst[2] = src[2];
+        }
+    }
+
+    delete[] tmp;
+}
+
 bool Skybox::load(const m::String &fname)
 {
     FILE *fle = nullptr;
@@ -56,6 +76,13 @@ bool Skybox::load(const m::String &fname)
     gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_Linear);
     gl::bindTexture(gl::kTT_Texture2D, 0);
 
+    //Flemme lvl 9999999999999 d'ecrire rotate270
+    rotate90(data, imgW, 1, 1);
+    rotate90(data, imgW, 1, 1);
+    rotate90(data, imgW, 1, 1);
+
+    rotate90(data, imgW, 2, 1);
+
     if(m_cubemap != 0)
         gl::deleteTexture(m_cubemap);
 
@@ -64,8 +91,8 @@ bool Skybox::load(const m::String &fname)
     gl::pixelStorei(gl::kPSP_UnpackRowLength, imgW);
     myTexImage(gl::kTT_TextureCubeMapNZ, 0, 1, data);
     myTexImage(gl::kTT_TextureCubeMapPZ, 1, 0, data);
-    myTexImage(gl::kTT_TextureCubeMapNX, 2, 0, data);
-    myTexImage(gl::kTT_TextureCubeMapPX, 0, 0, data);
+    myTexImage(gl::kTT_TextureCubeMapPX, 2, 0, data);
+    myTexImage(gl::kTT_TextureCubeMapNX, 0, 0, data);
     myTexImage(gl::kTT_TextureCubeMapNY, 2, 1, data);
     myTexImage(gl::kTT_TextureCubeMapPY, 1, 1, data);
     gl::pixelStorei(gl::kPSP_UnpackSkipPixels, 0);

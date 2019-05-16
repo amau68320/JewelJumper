@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include <GLFW/glfw3.h>
+#include <mgpcl/Time.h>
 
 #define PIF static_cast<float>(M_PI)
 
@@ -133,4 +134,22 @@ void FreeCamera::recoverAngles()
 void FreeCamera::deactivate()
 {
     m_keyStates = 0U;
+}
+
+void RotatingCamera::getTransform(m::Matrix4f &mat, m::Vector3f &camPos, float ptt)
+{
+    float theta = static_cast<float>(m::time::getTimeMs() / 1000.0) * 0.5f;
+    float phi = (std::sin(theta * 0.5f) + 1.0f) * 0.5f;
+    
+    phi *= 4.0f * PIF / 6.0f;
+    phi += PIF / 6.0f;
+
+    const float sinPhi = std::sin(phi);
+    camPos.setX(sinPhi * std::sin(theta));
+    camPos.setY(std::cos(phi));
+    camPos.setZ(sinPhi * std::cos(theta));
+    camPos *= 2.5f;
+
+    mat.loadIdentity();
+    mat.lookAt(camPos, m::Vector3f(0.0f, 0.0f, 0.0f), m::Vector3f(0.0f, 1.0f, 0.0f));
 }

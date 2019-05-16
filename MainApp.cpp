@@ -279,6 +279,15 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
         } else if(key == GLFW_KEY_Z) {
             m_useWireframe = !m_useWireframe;
             mlogger.info(M_LOG, "Wireframe: %s", m_useWireframe ? "ON" : "OFF");
+        } else if(key == GLFW_KEY_C) {
+            Camera *oldCam = m_camera;
+
+            if(dynamic_cast<RotatingCamera*>(m_camera) == nullptr)
+                m_camera = new RotatingCamera;
+            else
+                m_camera = new FreeCamera;
+
+            delete oldCam;
         } else
             m_camera->onKeyDown(scancode);
     } else if(action == GLFW_RELEASE)

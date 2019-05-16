@@ -54,3 +54,9 @@ private:
     uint32_t m_keyStates;
     int m_keyBindings[kCK_Count];
 };
+
+class RotatingCamera : public Camera
+{
+public:
+    void getTransform(m::Matrix4f &mat, m::Vector3f &camPos, float ptt) override;
+};

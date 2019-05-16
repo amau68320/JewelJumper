@@ -65,7 +65,7 @@ public:
      */
     Shader &mainShader()
     {
-        return m_mainShader;
+        return m_useWireframe ? m_wireframeShader : m_mainShader;
     }
 
     /*
@@ -100,6 +100,7 @@ private:
     Shader m_fxaaShader;
     Shader m_skyboxShader;
     Shader m_tonemapShader;
+    Shader m_wireframeShader;
 
     Framebuffer m_mainFBO;
     Framebuffer m_peFBO;
@@ -109,6 +110,7 @@ private:
     m::Vector2f m_invTexSize;
     bool m_fxaaEnable;
     Skybox m_skybox;
+    bool m_useWireframe;
 
     static MainApp *m_instance;
 };

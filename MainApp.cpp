@@ -1,5 +1,5 @@
 #include "MainApp.h"
-#include "Cube.h"
+#include "Gem.h"
 #include <mgpcl/Math.h>
 #include <mgpcl/Logger.h>
 
@@ -9,7 +9,7 @@ MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_objects(), m_currentTimeUpdate(0.0), m_currentTimeRenderer(0.0),
                                     m_fps(0), m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
-                                    m_peVBO(0), m_peVAO(0), m_fxaaEnable(true)
+                                    m_peVBO(0), m_peVAO(0), m_fxaaEnable(true), m_useWireframe(false)
 {
     m_instance = this;
 
@@ -83,6 +83,11 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
         return false;
     }
 
+    if(!m_wireframeShader.load("shaders/wireframe.vert", "shaders/wireframe.geom", "shaders/wireframe.frag")) {
+        mlogger.error(M_LOG, "Impossible de charger le shader fil de fer: %s", m_wireframeShader.errorString().raw());
+        return false;
+    }
+
     //Framebuffers
     m_mainFBO.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
     m_mainFBO.createColorBuffer(gl::kTF_RGB16F);
@@ -129,7 +134,10 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
         return false;
     }
 
-    m_objects.add(new Cube);
+    Gem *gem = new Gem;
+    gem->generate(6, 0.75f, 1.0f, 1.0f, 0.75f);
+
+    m_objects.add(gem);
     return true;
 }
 
@@ -204,6 +212,7 @@ void MainApp::render3D(float ptt)
     //Rendu des objets
     gl::depthMask(true);
     gl::enable(gl::kC_DepthTest);
+    gl::enable(gl::kC_CullFace);
 
     for(GameObject *object : m_objects)
         object->render(ptt);
@@ -263,6 +272,9 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
         else if(key == GLFW_KEY_Q) {
             m_fxaaEnable = !m_fxaaEnable;
             mlogger.info(M_LOG, "FXAA: %s", m_fxaaEnable ? "ON" : "OFF");
+        } else if(key == GLFW_KEY_Z) {
+            m_useWireframe = !m_useWireframe;
+            mlogger.info(M_LOG, "Wireframe: %s", m_useWireframe ? "ON" : "OFF");
         } else
             m_camera->onKeyDown(scancode);
     } else if(action == GLFW_RELEASE)

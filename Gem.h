@@ -12,9 +12,9 @@ public:
     }
 
     m::Vector3f pos;
+    float color[4];
     m::Vector3f normal;
     m::Vector3f tangent;
-    float color[4];
 };
 
 class Gem : public GameObject
@@ -42,10 +42,13 @@ public:
     void render(float ptt) override;
 
 private:
+    void fillColor(float r, float g, float b, float a = 1.0f);
+
     m::List<GemVertex> m_vertices;
     m::List<uint16_t> m_indices;
     GLuint m_vbo;
     GLuint m_ebo;
     GLuint m_vao;
     GLsizei m_numIndices;
+    int m_lastColor;
 };

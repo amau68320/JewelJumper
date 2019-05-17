@@ -109,9 +109,11 @@ private:
     Shader m_skyboxShader;
     Shader m_tonemapShader;
     Shader m_wireframeShader;
+    Shader m_blurXShader;
 
-    Framebuffer m_mainFBO;
-    Framebuffer m_peFBO;
+    Framebuffer m_hdrFBO0;
+    Framebuffer m_hdrFBO1;
+    Framebuffer m_sdrFBO;
 
     GLuint m_peVBO;
     GLuint m_peVAO;

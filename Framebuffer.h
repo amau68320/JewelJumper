@@ -14,7 +14,7 @@ public:
     ~Framebuffer();
 
     void init(uint32_t w, uint32_t h);
-    void createColorBuffer(gl::TextureFormat tf);
+    void createColorBuffer(int idx, gl::TextureFormat tf);
     void createDepthBuffer();
     bool finishFramebuffer();
 
@@ -28,9 +28,9 @@ public:
         gl::bindFramebuffer(gl::kFBT_DrawFramebuffer, 0);
     }
 
-    GLuint colorAttachmentID() const
+    GLuint colorAttachmentID(int idx = 0) const
     {
-        return m_color;
+        return m_color[idx];
     }
 
     Framebuffer &operator = (Framebuffer &&src);
@@ -38,7 +38,7 @@ public:
 private:
     uint32_t m_w;
     uint32_t m_h;
-    GLuint m_color;
+    GLuint m_color[2];
     GLuint m_depth;
     GLuint m_fbo;
 };

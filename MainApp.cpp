@@ -88,21 +88,36 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
         return false;
     }
 
-    //Framebuffers
-    m_mainFBO.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
-    m_mainFBO.createColorBuffer(gl::kTF_RGB16F);
-    m_mainFBO.createDepthBuffer();
-
-    if(!m_mainFBO.finishFramebuffer()) {
-        mlogger.error(M_LOG, "Erreur lors de la creation du FBO principal");
+    if(!m_blurXShader.load("shaders/blurX.vert", "shaders/blurX.frag")) {
+        mlogger.error(M_LOG, "Impossible de charger le shader de flou X: %s", m_blurXShader.errorString().raw());
         return false;
     }
 
-    m_peFBO.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
-    m_peFBO.createColorBuffer(gl::kTF_RGB8);
+    //Framebuffers
+    m_hdrFBO0.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
+    m_hdrFBO0.createColorBuffer(0, gl::kTF_RGB16F);
+    m_hdrFBO0.createColorBuffer(1, gl::kTF_RGB16F);
+    m_hdrFBO0.createDepthBuffer();
 
-    if(!m_peFBO.finishFramebuffer()) {
-        mlogger.error(M_LOG, "Erreur lors de la creation du FBO de post-effet");
+    if(!m_hdrFBO0.finishFramebuffer()) {
+        mlogger.error(M_LOG, "Erreur lors de la creation du FBO HDR 0");
+        return false;
+    }
+
+    m_hdrFBO1.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
+    m_hdrFBO1.createColorBuffer(0, gl::kTF_RGB16F);
+    m_hdrFBO1.createDepthBuffer();
+
+    if(!m_hdrFBO1.finishFramebuffer()) {
+        mlogger.error(M_LOG, "Erreur lors de la creation du FBO HDR 1");
+        return false;
+    }
+
+    m_sdrFBO.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
+    m_sdrFBO.createColorBuffer(0, gl::kTF_RGB8);
+
+    if(!m_sdrFBO.finishFramebuffer()) {
+        mlogger.error(M_LOG, "Erreur lors de la creation du FBO SDR");
         return false;
     }
 
@@ -183,14 +198,19 @@ void MainApp::update(float dt)
     }
 }
 
+static const GLuint g_allDrawBuffers[] = { gl::kFBA_ColorAttachment0, gl::kFBA_ColorAttachment1 };
+
 void MainApp::render3D(float ptt)
 {
     /***************************** RENDU PRINCIPAL *****************************/
     //Effacer l'ecran et parametres de base
-    m_mainFBO.bindForRender();
+    m_hdrFBO0.bindForRender();
     gl::depthMask(true);
     gl::clear(gl::kCF_DepthBuffer);
     gl::disable(gl::kC_CullFace);
+    gl::drawBuffer(gl::kFBA_ColorAttachment1);
+    gl::clear(gl::kCF_ColorBuffer);
+    gl::drawBuffers(2, g_allDrawBuffers);
 
     //Matrice de vue
     m::Vector3f camPos;
@@ -229,10 +249,11 @@ void MainApp::render3D(float ptt)
     gl::disable(gl::kC_Blend);
     gl::disable(gl::kC_CullFace);
 
-    //Tone mapping
-    m_peFBO.bindForRender();
-    m_tonemapShader.bind();
-    gl::bindTexture(gl::kTT_Texture2D, m_mainFBO.colorAttachmentID());
+    //Flou bloom X
+    m_hdrFBO1.bindForRender();
+    m_blurXShader.bind();
+    gl::uniform2f(m_blurXShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
+    gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID(1));
     gl::bindVertexArray(m_peVAO);
     gl::drawArrays(gl::kDM_Triangles, 0, 6);
     gl::bindVertexArray(0);
@@ -240,10 +261,27 @@ void MainApp::render3D(float ptt)
     Shader::unbind();
     Framebuffer::unbindFromRender();
 
+    //Tone mapping + bloom Y
+    m_sdrFBO.bindForRender();
+    m_tonemapShader.bind();
+    gl::uniform2f(m_tonemapShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
+    gl::uniform1i(m_tonemapShader.getUniformLocation("u_BloomTex"), 1);
+    gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID());
+    gl::activeTexture(1);
+    gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO1.colorAttachmentID());
+    gl::bindVertexArray(m_peVAO);
+    gl::drawArrays(gl::kDM_Triangles, 0, 6);
+    gl::bindVertexArray(0);
+    gl::bindTexture(gl::kTT_Texture2D, 0);
+    gl::activeTexture(0);
+    gl::bindTexture(gl::kTT_Texture2D, 0);
+    Shader::unbind();
+    Framebuffer::unbindFromRender();
+
     //FXAA
     m_fxaaShader.bind();
     gl::uniform2f(m_fxaaShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
-    gl::bindTexture(gl::kTT_Texture2D, m_peFBO.colorAttachmentID());
+    gl::bindTexture(gl::kTT_Texture2D, m_sdrFBO.colorAttachmentID());
     gl::bindVertexArray(m_peVAO);
     gl::drawArrays(gl::kDM_Triangles, 0, 6);
     gl::bindVertexArray(0);
@@ -282,10 +320,13 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
         } else if(key == GLFW_KEY_C) {
             Camera *oldCam = m_camera;
 
-            if(dynamic_cast<RotatingCamera*>(m_camera) == nullptr)
+            if(dynamic_cast<RotatingCamera *>(m_camera) == nullptr) {
                 m_camera = new RotatingCamera;
-            else
+                glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            } else {
                 m_camera = new FreeCamera;
+                glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            }
 
             delete oldCam;
         } else

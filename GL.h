@@ -159,6 +159,7 @@ namespace gl
     enum FramebufferAttachment
     {
         kFBA_ColorAttachment0 = GL_COLOR_ATTACHMENT0,
+        kFBA_ColorAttachment1 = GL_COLOR_ATTACHMENT1,
         kFBA_DepthAttachment = GL_DEPTH_ATTACHMENT,
         kFBA_DepthStencilAttachment = GL_DEPTH_STENCIL_ATTACHMENT
     };
@@ -663,6 +664,16 @@ namespace gl
     inline void renderbufferStorage(RenderbufferTarget target, RenderbufferFormat iFormat, GLsizei w, GLsizei h)
     {
         glRenderbufferStorage(target, iFormat, w, h);
+    }
+
+    inline void drawBuffer(FramebufferAttachment at)
+    {
+        glDrawBuffer(at);
+    }
+
+    inline void drawBuffers(GLsizei count, const GLenum *at)
+    {
+        glDrawBuffers(count, at);
     }
 
 };

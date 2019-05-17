@@ -1,17 +1,18 @@
 #include "Framebuffer.h"
 #include <mgpcl/Assert.h>
 
-Framebuffer::Framebuffer() : m_w(0), m_h(0), m_color(0), m_depth(0), m_fbo(0)
+Framebuffer::Framebuffer() : m_w(0), m_h(0), m_color{ 0, 0 }, m_depth(0), m_fbo(0)
 {
 }
 
-Framebuffer::Framebuffer(uint32_t w, uint32_t h) : m_w(w), m_h(h), m_color(0), m_depth(0), m_fbo(0)
+Framebuffer::Framebuffer(uint32_t w, uint32_t h) : m_w(w), m_h(h), m_color{ 0, 0 }, m_depth(0), m_fbo(0)
 {
 }
 
-Framebuffer::Framebuffer(Framebuffer &&src) : m_w(src.m_w), m_h(src.m_h), m_color(src.m_color), m_depth(src.m_depth), m_fbo(src.m_fbo)
+Framebuffer::Framebuffer(Framebuffer &&src) : m_w(src.m_w), m_h(src.m_h), m_color{ src.m_color[0], src.m_color[1] }, m_depth(src.m_depth), m_fbo(src.m_fbo)
 {
-    src.m_color = 0;
+    src.m_color[0] = 0;
+    src.m_color[1] = 0;
     src.m_depth = 0;
     src.m_fbo = 0;
 }
@@ -24,8 +25,11 @@ Framebuffer::~Framebuffer()
     if(m_depth != 0)
         gl::deleteRenderbuffer(m_depth);
 
-    if(m_color != 0)
-        gl::deleteTexture(m_color);
+    if(m_color[0] != 0)
+        gl::deleteTexture(m_color[0]);
+
+    if(m_color[1] != 0)
+        gl::deleteTexture(m_color[1]);
 }
 
 void Framebuffer::init(uint32_t w, uint32_t h)
@@ -34,14 +38,14 @@ void Framebuffer::init(uint32_t w, uint32_t h)
     m_h = h;
 }
 
-void Framebuffer::createColorBuffer(gl::TextureFormat tf)
+void Framebuffer::createColorBuffer(int idx, gl::TextureFormat tf)
 {
     mAssert(m_w != 0 && m_h != 0, "createColorBuffer() called before init()");
-    if(m_color != 0)
-        gl::deleteTexture(m_color);
+    if(m_color[idx] != 0)
+        gl::deleteTexture(m_color[idx]);
 
-    m_color = gl::genTexture();
-    gl::bindTexture(gl::kTT_Texture2D, m_color);
+    m_color[idx] = gl::genTexture();
+    gl::bindTexture(gl::kTT_Texture2D, m_color[idx]);
     gl::texStorage2D(gl::kTT_Texture2D, 1, tf, m_w, m_h);
     gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Linear);
     gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_Linear);
@@ -70,8 +74,11 @@ bool Framebuffer::finishFramebuffer()
     m_fbo = gl::genFramebuffer();
     gl::bindFramebuffer(gl::kFBT_Framebuffer, m_fbo);
 
-    if(m_color != 0)
-        gl::framebufferTexture2D(gl::kFBT_Framebuffer, gl::kFBA_ColorAttachment0, gl::kTT_Texture2D, m_color, 0);
+    if(m_color[0] != 0)
+        gl::framebufferTexture2D(gl::kFBT_Framebuffer, gl::kFBA_ColorAttachment0, gl::kTT_Texture2D, m_color[0], 0);
+
+    if(m_color[1] != 0)
+        gl::framebufferTexture2D(gl::kFBT_Framebuffer, gl::kFBA_ColorAttachment1, gl::kTT_Texture2D, m_color[1], 0);
 
     if(m_depth != 0)
         gl::framebufferRenderbuffer(gl::kFBT_Framebuffer, gl::kFBA_DepthStencilAttachment, gl::kRT_Renderbuffer, m_depth);
@@ -89,16 +96,21 @@ Framebuffer &Framebuffer::operator = (Framebuffer &&src)
     if(m_depth != 0)
         gl::deleteRenderbuffer(m_depth);
 
-    if(m_color != 0)
-        gl::deleteTexture(m_color);
+    if(m_color[0] != 0)
+        gl::deleteTexture(m_color[0]);
+
+    if(m_color[1] != 0)
+        gl::deleteTexture(m_color[1]);
 
     m_w = src.m_w;
     m_h = src.m_h;
-    m_color = src.m_color;
+    m_color[0] = src.m_color[0];
+    m_color[1] = src.m_color[1];
     m_depth = src.m_depth;
     m_fbo = src.m_fbo;
 
-    src.m_color = 0;
+    src.m_color[0] = 0;
+    src.m_color[1] = 0;
     src.m_depth = 0;
     src.m_fbo = 0;
 

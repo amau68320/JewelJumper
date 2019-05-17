@@ -7,7 +7,8 @@ in vec3 f_Normal;
 uniform samplerCube u_CubeMap;
 uniform vec3 u_CamPos;
 
-out vec4 out_Color;
+layout(location = 0) out vec4 out_Color;
+layout(location = 1) out vec4 out_Bloom;
 
 float computeFresnel(float IOR, float LdotH)
 {
@@ -32,8 +33,15 @@ void main()
 	float fresnel = computeFresnel(1.45, dot(L, H));
 	
 	//vec3 diffuse = f_Color.rgb * NdotL;
-	vec3 diffuse = texture(u_CubeMap, refract(V, N, 1.0 / 1.45)).rgb * f_Color.rgb;
-	vec3 specular = texture(u_CubeMap, R).rgb;
+	vec3 diffuse   = texture(u_CubeMap, refract(V, N, 1.0 / 1.45)).rgb * f_Color.rgb;
+	vec3 specular  = texture(u_CubeMap, R).rgb;
+    vec3 final     = diffuse * (1.0 - fresnel) + specular * fresnel;
+    float luma     = dot(final, vec3(0.2126, 0.7152, 0.0722));
     
-    out_Color = vec4(diffuse * (1.0 - fresnel) + specular * fresnel, 1.0);
+    out_Color = vec4(final, 1.0);
+    
+    if(luma > 0.75)
+        out_Bloom = vec4(final, 1.0);
+    else
+        out_Bloom = vec4(vec3(0.0), 1.0);
 }

@@ -19,6 +19,7 @@ enum JJShader
     kS_BlurX,
     kS_BlurY,
     kS_NoOp,
+    kS_Normal,
 
     //Garder en bas
     kS_Count
@@ -80,6 +81,9 @@ public:
      */
     Shader &mainShader()
     {
+        if(m_override != nullptr)
+            return *m_override;
+
         return m_useWireframe ? m_shaders[kS_Wirefame] : m_shaders[kS_Main];
     }
 
@@ -121,7 +125,9 @@ private:
     double m_lastCursorPosY;
 
     Shader m_shaders[kS_Count];
+    Shader *m_override;
 
+    Framebuffer m_normalPass;
     Framebuffer m_hdrFBO0;
     //Framebuffer m_hdrFBO1;
     Framebuffer m_bloomFBO[2];

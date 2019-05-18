@@ -9,8 +9,8 @@ MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_objects(), m_currentTimeUpdate(0.0), m_currentTimeRenderer(0.0),
                                     m_fps(0), m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
-                                    m_peVBO(0), m_peVAO(0), m_fxaaEnable(true), m_useWireframe(false),
-                                    m_ww(0), m_wh(0)
+                                    m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
+                                    m_useWireframe(false), m_ww(0), m_wh(0)
 {
     m_instance = this;
 
@@ -68,19 +68,38 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
 
     //Shaders
     try {
-        loadShader(kS_Main,     "main");
-        loadShader(kS_FXAA,     "fxaa");
-        loadShader(kS_Skybox,   "skybox");
-        loadShader(kS_Tonemap,  "tonemap");
+        loadShader(kS_Main    , "main"           );
+        loadShader(kS_FXAA    , "fxaa"           );
+        loadShader(kS_Skybox  , "skybox"         );
+        loadShader(kS_Tonemap , "tonemap"        );
         loadShader(kS_Wirefame, "wireframe", true);
-        loadShader(kS_BlurX,    "blurX");
-        loadShader(kS_BlurY,    "blurY");
-        loadShader(kS_NoOp,     "noop");
+        loadShader(kS_BlurX   , "blurX"          );
+        loadShader(kS_BlurY   , "blurY"          );
+        loadShader(kS_NoOp    , "noop"           );
+        loadShader(kS_Normal  , "normal"         );
     } catch(const char *osef) {
         return false;
     }
 
+    m_shaders[kS_Main].bind();
+    gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_BackNormal"), 1);
+    gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_BackDepth"), 2);
+    Shader::unbind();
+
+    m_shaders[kS_Tonemap].bind();
+    gl::uniform1i(m_shaders[kS_Tonemap].getUniformLocation("u_BloomTex"), 1);
+    Shader::unbind();
+
     //Framebuffers
+    m_normalPass.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
+    m_normalPass.createColorBuffer(0, gl::kTF_RGB8);
+    m_normalPass.createDepthBuffer(kFDM_DepthTexture);
+
+    if(!m_normalPass.finishFramebuffer()) {
+        mlogger.error(M_LOG, "Erreur lors de la finalisation du FBO de normales");
+        return false;
+    }
+
     m_hdrFBO0.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
     m_hdrFBO0.createColorBuffer(0, gl::kTF_RGB16F);
     m_hdrFBO0.createColorBuffer(1, gl::kTF_RGB16F);
@@ -216,14 +235,6 @@ static const GLuint g_allDrawBuffers[] = { gl::kFBA_ColorAttachment0, gl::kFBA_C
 
 void MainApp::render3D(float ptt)
 {
-    /***************************** RENDU PRINCIPAL *****************************/
-    //Effacer l'ecran et parametres de base
-    m_hdrFBO0.bindForRender();
-    gl::depthMask(true);
-    gl::clear(gl::kCF_DepthBuffer);
-    gl::disable(gl::kC_CullFace);
-    gl::drawBuffers(2, g_allDrawBuffers);
-
     //Matrice de vue
     m::Vector3f camPos;
     m_camera->getTransform(m_view, camPos, ptt);
@@ -231,6 +242,29 @@ void MainApp::render3D(float ptt)
     //RAZ de la pile de matrice modele
     m_curModelMat = 0;
     m_model[0].loadIdentity();
+
+
+    /***************************** RENDU NORMALES *****************************/
+    m_normalPass.bindForRender();
+    gl::depthMask(true);
+    gl::clear(gl::kCF_ColorBuffer | gl::kCF_DepthBuffer);
+    gl::enable(gl::kC_DepthTest);
+    gl::enable(gl::kC_CullFace);
+    gl::cullFace(gl::kF_Front);
+    m_override = &m_shaders[kS_Normal];
+
+    for(GameObject *object : m_objects)
+        object->render(ptt);
+
+    m_override = nullptr;
+    
+
+    /***************************** RENDU PRINCIPAL *****************************/
+    //Effacer l'ecran et parametres de base
+    m_hdrFBO0.bindForRender();
+    gl::clear(gl::kCF_DepthBuffer);
+    gl::disable(gl::kC_CullFace);
+    gl::drawBuffers(2, g_allDrawBuffers);
 
     //Rendu du ciel
     gl::disable(gl::kC_DepthTest);
@@ -245,14 +279,26 @@ void MainApp::render3D(float ptt)
     gl::depthMask(true);
     gl::enable(gl::kC_DepthTest);
     gl::enable(gl::kC_CullFace);
+    gl::cullFace(gl::kF_Back);
 
     use3DShader(m_shaders[kS_Main]);
     gl::uniform3f(m_shaders[kS_Main].getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
     Shader::unbind();
 
+    gl::activeTexture(1);
+    gl::bindTexture(gl::kTT_Texture2D, m_normalPass.colorAttachmentID());
+    gl::activeTexture(2);
+    gl::bindTexture(gl::kTT_Texture2D, m_normalPass.depthAttachmentID());
+    gl::activeTexture(0);
+
     for(GameObject *object : m_objects)
         object->render(ptt);
 
+    gl::activeTexture(1);
+    gl::bindTexture(gl::kTT_Texture2D, 0);
+    gl::activeTexture(2);
+    gl::bindTexture(gl::kTT_Texture2D, 0);
+    gl::activeTexture(0);
     gl::drawBuffer(gl::kFBA_ColorAttachment0);
 
     /***************************** RENDU DES EFFETS *****************************/
@@ -289,7 +335,6 @@ void MainApp::render3D(float ptt)
     //Tone mapping + bloom Y
     m_sdrFBO.bindForRender();
     m_shaders[kS_Tonemap].bind();
-    gl::uniform1i(m_shaders[kS_Tonemap].getUniformLocation("u_BloomTex"), 1);
     gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID());
     gl::activeTexture(1);
     gl::bindTexture(gl::kTT_Texture2D, m_bloomFBO[0].colorAttachmentID());

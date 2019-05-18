@@ -3,6 +3,13 @@
 #include <cstdint>
 #include <mgpcl/Util.h>
 
+enum FramebufferDepthMode
+{
+    kFDM_DepthStencilRenderbuffer,
+    kFDM_DepthRenderbuffer,
+    kFDM_DepthTexture
+};
+
 class Framebuffer
 {
     M_NON_COPYABLE(Framebuffer)
@@ -15,7 +22,7 @@ public:
 
     void init(uint32_t w, uint32_t h);
     void createColorBuffer(int idx, gl::TextureFormat tf);
-    void createDepthBuffer();
+    void createDepthBuffer(FramebufferDepthMode mode = kFDM_DepthStencilRenderbuffer);
     bool finishFramebuffer();
 
     void bindForRender()
@@ -33,6 +40,11 @@ public:
     GLuint colorAttachmentID(int idx = 0) const
     {
         return m_color[idx];
+    }
+
+    GLuint depthAttachmentID() const
+    {
+        return m_depth;
     }
 
     Framebuffer &operator = (Framebuffer &&src);
@@ -53,4 +65,5 @@ private:
     GLuint m_color[2];
     GLuint m_depth;
     GLuint m_fbo;
+    FramebufferDepthMode m_depthMode;
 };

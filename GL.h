@@ -66,7 +66,9 @@ namespace gl
         kTF_RGB8 = GL_RGB8,
         kTF_RGBA8 = GL_RGBA8,
         kTF_RGB16F = GL_RGB16F,
-        kTF_RGBA16F = GL_RGBA16F
+        kTF_RGBA16F = GL_RGBA16F,
+        kTF_DepthComponent = GL_DEPTH_COMPONENT,
+        kTF_DepthComponent24 = GL_DEPTH_COMPONENT24
     };
 
     enum TextureParameter
@@ -198,6 +200,13 @@ namespace gl
     {
         kRF_Depth24Stencil8 = GL_DEPTH24_STENCIL8,
         kRF_DepthComponent24 = GL_DEPTH_COMPONENT24
+    };
+
+    enum Face
+    {
+        kF_Front = GL_FRONT,
+        kF_Back = GL_BACK,
+        kF_FrontAndBack = GL_FRONT_AND_BACK
     };
 
     inline const char *getVendor()
@@ -674,6 +683,11 @@ namespace gl
     inline void drawBuffers(GLsizei count, const GLenum *at)
     {
         glDrawBuffers(count, at);
+    }
+
+    inline void cullFace(Face mode)
+    {
+        glCullFace(mode);
     }
 
 };

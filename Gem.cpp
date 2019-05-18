@@ -93,7 +93,7 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
 
     //Face du dessus
     m_vertices << GemVertex(0.0f, y1, 0.0f);
-    const uint16_t center = static_cast<uint16_t>(m_vertices.size());
+    const uint16_t center = static_cast<uint16_t>(m_vertices.size() - 1);
 
     a1 = step * -0.5f;
     for(int i = 0; i < numSides; i++) {

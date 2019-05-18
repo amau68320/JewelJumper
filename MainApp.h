@@ -9,6 +9,21 @@
 #include "Framebuffer.h"
 #include "Skybox.h"
 
+enum JJShader
+{
+    kS_Main = 0,
+    kS_FXAA,
+    kS_Skybox,
+    kS_Tonemap,
+    kS_Wirefame,
+    kS_BlurX,
+    kS_BlurY,
+    kS_NoOp,
+
+    //Garder en bas
+    kS_Count
+};
+
 /*
  * Classe principale gerant JewelJumper.
  */
@@ -65,7 +80,7 @@ public:
      */
     Shader &mainShader()
     {
-        return m_useWireframe ? m_wireframeShader : m_mainShader;
+        return m_useWireframe ? m_shaders[kS_Wirefame] : m_shaders[kS_Main];
     }
 
     /*
@@ -85,6 +100,7 @@ public:
     }
 
 private:
+    void loadShader(JJShader sdr, const char *name, bool hasGeom = false);
     void update(float dt);
     void render3D(float ptt);
     void handleMouseButtonEvent(int button, int action, int mods);
@@ -104,23 +120,22 @@ private:
     double m_lastCursorPosX;
     double m_lastCursorPosY;
 
-    Shader m_mainShader;
-    Shader m_fxaaShader;
-    Shader m_skyboxShader;
-    Shader m_tonemapShader;
-    Shader m_wireframeShader;
-    Shader m_blurXShader;
+    Shader m_shaders[kS_Count];
 
     Framebuffer m_hdrFBO0;
-    Framebuffer m_hdrFBO1;
+    //Framebuffer m_hdrFBO1;
+    Framebuffer m_bloomFBO[2];
     Framebuffer m_sdrFBO;
 
     GLuint m_peVBO;
     GLuint m_peVAO;
     m::Vector2f m_invTexSize;
+    m::Vector2f m_halfInvTexSize;
     bool m_fxaaEnable;
     Skybox m_skybox;
     bool m_useWireframe;
+    uint32_t m_ww;
+    uint32_t m_wh;
 
     static MainApp *m_instance;
 };

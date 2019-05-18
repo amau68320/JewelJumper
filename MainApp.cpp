@@ -9,7 +9,8 @@ MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_objects(), m_currentTimeUpdate(0.0), m_currentTimeRenderer(0.0),
                                     m_fps(0), m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
-                                    m_peVBO(0), m_peVAO(0), m_fxaaEnable(true), m_useWireframe(false)
+                                    m_peVBO(0), m_peVAO(0), m_fxaaEnable(true), m_useWireframe(false),
+                                    m_ww(0), m_wh(0)
 {
     m_instance = this;
 
@@ -33,6 +34,9 @@ MainApp::~MainApp()
 
 bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
 {
+    m_ww = static_cast<uint32_t>(ww);
+    m_wh = static_cast<uint32_t>(wh);
+
     //Handlers d'events
     glfwSetMouseButtonCallback(m_wnd, [] (GLFWwindow *, int button, int action, int mods) {
         m_instance->handleMouseButtonEvent(button, action, mods);
@@ -63,33 +67,16 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     m_camera->activate();
 
     //Shaders
-    if(!m_mainShader.load("shaders/main.vert", "shaders/main.frag")) {
-        mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_mainShader.errorString().raw());
-        return false;
-    }
-
-    if(!m_fxaaShader.load("shaders/fxaa.vert", "shaders/fxaa.frag")) {
-        mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_fxaaShader.errorString().raw());
-        return false;
-    }
-
-    if(!m_skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag")) {
-        mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_skyboxShader.errorString().raw());
-        return false;
-    }
-
-    if(!m_tonemapShader.load("shaders/tonemap.vert", "shaders/tonemap.frag")) {
-        mlogger.error(M_LOG, "Impossible de charger le shader principal: %s", m_tonemapShader.errorString().raw());
-        return false;
-    }
-
-    if(!m_wireframeShader.load("shaders/wireframe.vert", "shaders/wireframe.geom", "shaders/wireframe.frag")) {
-        mlogger.error(M_LOG, "Impossible de charger le shader fil de fer: %s", m_wireframeShader.errorString().raw());
-        return false;
-    }
-
-    if(!m_blurXShader.load("shaders/blurX.vert", "shaders/blurX.frag")) {
-        mlogger.error(M_LOG, "Impossible de charger le shader de flou X: %s", m_blurXShader.errorString().raw());
+    try {
+        loadShader(kS_Main,     "main");
+        loadShader(kS_FXAA,     "fxaa");
+        loadShader(kS_Skybox,   "skybox");
+        loadShader(kS_Tonemap,  "tonemap");
+        loadShader(kS_Wirefame, "wireframe", true);
+        loadShader(kS_BlurX,    "blurX");
+        loadShader(kS_BlurY,    "blurY");
+        loadShader(kS_NoOp,     "noop");
+    } catch(const char *osef) {
         return false;
     }
 
@@ -104,13 +91,14 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
         return false;
     }
 
-    m_hdrFBO1.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
-    m_hdrFBO1.createColorBuffer(0, gl::kTF_RGB16F);
-    m_hdrFBO1.createDepthBuffer();
+    for(int i = 0; i < 2; i++) {
+        m_bloomFBO[i].init(static_cast<uint32_t>(ww / 2), static_cast<uint32_t>(wh / 2));
+        m_bloomFBO[i].createColorBuffer(0, gl::kTF_RGB16F);
 
-    if(!m_hdrFBO1.finishFramebuffer()) {
-        mlogger.error(M_LOG, "Erreur lors de la creation du FBO HDR 1");
-        return false;
+        if(!m_bloomFBO[i].finishFramebuffer()) {
+            mlogger.error(M_LOG, "Erreur lors de la creation du FBO de bloom %d", i);
+            return false;
+        }
     }
 
     m_sdrFBO.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
@@ -142,6 +130,9 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
 
     m_invTexSize.setX(1.0f / static_cast<float>(ww));
     m_invTexSize.setY(1.0f / static_cast<float>(wh));
+
+    m_halfInvTexSize.setX(1.0f / static_cast<float>(ww / 2));
+    m_halfInvTexSize.setY(1.0f / static_cast<float>(wh / 2));
 
     //Objets du jeu
     if(!m_skybox.load("textures/skybox.hdr")) {
@@ -188,6 +179,29 @@ void MainApp::run()
 	}
 }
 
+void MainApp::loadShader(JJShader sdr, const char *name, bool hasGeom)
+{
+    m::String vert, geom, frag;
+    vert += "shaders/";
+    vert += name;
+    vert += ".vert";
+
+    frag += "shaders/";
+    frag += name;
+    frag += ".frag";
+
+    if(hasGeom) {
+        geom += "shaders/";
+        geom += name;
+        geom += ".geom";
+    }
+
+    if(!m_shaders[sdr].load(vert, geom, frag)) {
+        mlogger.error(M_LOG, "Impossible de charger le shader \"%s\": %s", name, m_shaders[sdr].errorString().raw());
+        throw name; //Parce-qu'il faut bien balancer quelque-chose...
+    }
+}
+
 void MainApp::update(float dt)
 {
     m_camera->update(dt);
@@ -208,8 +222,6 @@ void MainApp::render3D(float ptt)
     gl::depthMask(true);
     gl::clear(gl::kCF_DepthBuffer);
     gl::disable(gl::kC_CullFace);
-    gl::drawBuffer(gl::kFBA_ColorAttachment1);
-    gl::clear(gl::kCF_ColorBuffer);
     gl::drawBuffers(2, g_allDrawBuffers);
 
     //Matrice de vue
@@ -224,7 +236,7 @@ void MainApp::render3D(float ptt)
     gl::disable(gl::kC_DepthTest);
     gl::depthMask(false);
     pushMatrix().translate(camPos);
-    use3DShader(m_skyboxShader);
+    use3DShader(m_shaders[kS_Skybox]);
     m_skybox.draw();
     Shader::unbind();
     popMatrix();
@@ -234,14 +246,14 @@ void MainApp::render3D(float ptt)
     gl::enable(gl::kC_DepthTest);
     gl::enable(gl::kC_CullFace);
 
-    m_mainShader.bind();
-    gl::uniform3f(m_mainShader.getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
+    use3DShader(m_shaders[kS_Main]);
+    gl::uniform3f(m_shaders[kS_Main].getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
     Shader::unbind();
 
     for(GameObject *object : m_objects)
         object->render(ptt);
 
-    Framebuffer::unbindFromRender();
+    gl::drawBuffer(gl::kFBA_ColorAttachment0);
 
     /***************************** RENDU DES EFFETS *****************************/
     gl::disable(gl::kC_DepthTest);
@@ -249,26 +261,38 @@ void MainApp::render3D(float ptt)
     gl::disable(gl::kC_Blend);
     gl::disable(gl::kC_CullFace);
 
-    //Flou bloom X
-    m_hdrFBO1.bindForRender();
-    m_blurXShader.bind();
-    gl::uniform2f(m_blurXShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
+    //BLOOM: Reduction de la taille
+    m_bloomFBO[0].bindForRender();
+    m_shaders[kS_NoOp].bind();
     gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID(1));
     gl::bindVertexArray(m_peVAO);
     gl::drawArrays(gl::kDM_Triangles, 0, 6);
     gl::bindVertexArray(0);
     gl::bindTexture(gl::kTT_Texture2D, 0);
     Shader::unbind();
-    Framebuffer::unbindFromRender();
+
+    //BLOOM: Flou
+    for(int i = 0; i < 2; i++) {
+        Shader &shdr = m_shaders[(i == 0) ? kS_BlurX : kS_BlurY];
+
+        m_bloomFBO[1 - i].bindForRender();
+        shdr.bind();
+        gl::uniform2f(shdr.getUniformLocation("u_InvTexSize"), m_halfInvTexSize.x(), m_halfInvTexSize.y());
+        gl::bindTexture(gl::kTT_Texture2D, m_bloomFBO[i].colorAttachmentID());
+        gl::bindVertexArray(m_peVAO);
+        gl::drawArrays(gl::kDM_Triangles, 0, 6);
+        gl::bindVertexArray(0);
+        gl::bindTexture(gl::kTT_Texture2D, 0);
+        Shader::unbind();
+    }
 
     //Tone mapping + bloom Y
     m_sdrFBO.bindForRender();
-    m_tonemapShader.bind();
-    gl::uniform2f(m_tonemapShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
-    gl::uniform1i(m_tonemapShader.getUniformLocation("u_BloomTex"), 1);
+    m_shaders[kS_Tonemap].bind();
+    gl::uniform1i(m_shaders[kS_Tonemap].getUniformLocation("u_BloomTex"), 1);
     gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID());
     gl::activeTexture(1);
-    gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO1.colorAttachmentID());
+    gl::bindTexture(gl::kTT_Texture2D, m_bloomFBO[0].colorAttachmentID());
     gl::bindVertexArray(m_peVAO);
     gl::drawArrays(gl::kDM_Triangles, 0, 6);
     gl::bindVertexArray(0);
@@ -276,11 +300,11 @@ void MainApp::render3D(float ptt)
     gl::activeTexture(0);
     gl::bindTexture(gl::kTT_Texture2D, 0);
     Shader::unbind();
-    Framebuffer::unbindFromRender();
+    Framebuffer::unbindFromRender(m_ww, m_wh);
 
     //FXAA
-    m_fxaaShader.bind();
-    gl::uniform2f(m_fxaaShader.getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
+    m_shaders[kS_FXAA].bind();
+    gl::uniform2f(m_shaders[kS_FXAA].getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
     gl::bindTexture(gl::kTT_Texture2D, m_sdrFBO.colorAttachmentID());
     gl::bindVertexArray(m_peVAO);
     gl::drawArrays(gl::kDM_Triangles, 0, 6);

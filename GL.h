@@ -479,6 +479,11 @@ namespace gl
         glUniform1i(loc, value);
     }
 
+    inline void uniform1f(GLint loc, GLfloat value)
+    {
+        glUniform1f(loc, value);
+    }
+
     inline void uniform4f(GLint loc, GLfloat a, GLfloat b, GLfloat c, GLfloat d)
     {
         glUniform4f(loc, a, b, c, d);

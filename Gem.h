@@ -41,6 +41,16 @@ public:
     void generate(int numSides, float y0, float r0, float y1, float r1);
     void render(float ptt) override;
 
+    void setIOR(float ior)
+    {
+        m_ior = ior;
+    }
+
+    float ior() const
+    {
+        return m_ior;
+    }
+
 private:
     void fillColor(float r, float g, float b, float a = 1.0f);
 
@@ -51,4 +61,5 @@ private:
     GLuint m_vao;
     GLsizei m_numIndices;
     int m_lastColor;
+    float m_ior;
 };

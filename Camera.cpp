@@ -138,7 +138,7 @@ void FreeCamera::deactivate()
 
 void RotatingCamera::getTransform(m::Matrix4f &mat, m::Vector3f &camPos, float ptt)
 {
-    float theta = static_cast<float>(m::time::getTimeMs() / 1000.0) * 0.5f;
+    float theta = std::fmod(static_cast<float>(m::time::getTimeMs() / 1000.0) * 0.5f, 4.0f * PIF);
     float phi = (std::sin(theta * 0.5f) + 1.0f) * 0.5f;
     
     phi *= 4.0f * PIF / 6.0f;

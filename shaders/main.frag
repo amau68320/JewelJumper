@@ -11,6 +11,8 @@ uniform sampler2D u_BackDepth;
 uniform vec3 u_CamPos;
 uniform mat4 u_Projection;
 uniform mat4 u_View;
+uniform float u_RaytraceStep;
+uniform float u_IOR;
 
 layout(location = 0) out vec4 out_Color;
 layout(location = 1) out vec4 out_Bloom;
@@ -38,15 +40,15 @@ vec3 normalAt(vec2 pos)
 
 vec3 raytraceRefraction(vec3 V, vec3 N)
 {
-    //Attention car le pas est hardcode ici mais il depends de la taille de la fenetre
-    vec3 orig = normalize(refract(V, N, 1.0 / 1.45));
-    vec3 dir  = normalize((u_Projection * u_View * vec4(orig, 0.0)).xyz) * 0.001953125;
+    vec3 orig = normalize(refract(V, N, 1.0 / u_IOR));
+    vec4 dir4 = u_Projection * u_View * vec4(orig, 0.0);
+    vec3 dir  = normalize(dir4.xyz / dir4.w) * u_RaytraceStep;
 
     if(dir.z <= 0.0)
         return orig;
 
-    vec3 pos  = f_ScreenPos;
-    vec3 res  = vec3(0.0);
+    vec3 pos = f_ScreenPos;
+    vec3 res = vec3(0.0);
 
     for(int i = 0; i < 16; i++) {
         pos += dir;
@@ -58,7 +60,7 @@ vec3 raytraceRefraction(vec3 V, vec3 N)
     }
 
     if(dot(res, res) != 0.0)
-        orig = normalize(refract(orig, -res, 1.0 / 1.45));
+        orig = normalize(refract(orig, -res, 1.0 / u_IOR));
     
     return orig;
 }
@@ -72,14 +74,11 @@ void main()
     vec3 R2 = raytraceRefraction(V, N);
 	vec3 H  = normalize(L + V);
     
-    float NdotL = max(0.1, dot(N, -L));
-	float fresnel = computeFresnel(1.45, dot(L, H));
-	
-	//vec3 diffuse = f_Color.rgb * NdotL;
-	vec3 diffuse   = texture(u_CubeMap, R2).rgb * f_Color.rgb;
-	vec3 specular  = texture(u_CubeMap, R).rgb;
-    vec3 final     = mix(diffuse, specular, fresnel);
-    float luma     = dot(final, vec3(0.2126, 0.7152, 0.0722));
+	float fresnel = computeFresnel(u_IOR, dot(L, H));	
+	vec3 diffuse  = texture(u_CubeMap, R2).rgb * f_Color.rgb;
+	vec3 specular = texture(u_CubeMap, R).rgb;
+    vec3 final    = mix(diffuse, specular, fresnel);
+    float luma    = dot(final, vec3(0.2126, 0.7152, 0.0722));
     
     out_Color = vec4(final, 1.0);
     

@@ -3,16 +3,19 @@
 #include <mgpcl/Math.h>
 #include <mgpcl/Logger.h>
 
-#define UPDATE_INTERVAL 20.0
+#define JJ_UPDATE_PERIOD (1000.0 / 20.0)
+#define JJ_SLEEP_THRESHOLD 10.0
 
 MainApp *MainApp::m_instance = nullptr;
 
-MainApp::MainApp(GLFWwindow* wnd) : m_objects(), m_currentTimeUpdate(0.0), m_currentTimeRenderer(0.0),
-                                    m_fps(0), m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
+MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
                                     m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
                                     m_useWireframe(false), m_ww(0), m_wh(0)
 {
     m_instance = this;
+
+    m_renderPeriod = 1000.0 / 75.0;
+    m_renderDelta = m_renderPeriod;
 
 	m_wnd = wnd;
     m_camera = new FreeCamera;
@@ -81,9 +84,13 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
         return false;
     }
 
+    const float rtStepX = 2.0f / static_cast<float>(ww);
+    const float rtStepY = 2.0f / static_cast<float>(wh);
+
     m_shaders[kS_Main].bind();
     gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_BackNormal"), 1);
     gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_BackDepth"), 2);
+    gl::uniform1f(m_shaders[kS_Main].getUniformLocation("u_RaytraceStep"), m::math::minimum(rtStepX, rtStepY));
     Shader::unbind();
 
     m_shaders[kS_Tonemap].bind();
@@ -168,34 +175,49 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
 
 void MainApp::run()
 {
-	double waitTime = 0.0;
-	double tmpUpdate = 0.0;
-	m_currentTimeUpdate = m::time::getTimeMs();
-	m_currentTimeRenderer = m::time::getTimeMs();
+    double nextUpdate = m::time::getTimeMs() + JJ_UPDATE_PERIOD;
+    double nextRender = m::time::getTimeMs() + m_renderPeriod;
 
-	while (glfwWindowShouldClose(m_wnd) == GLFW_FALSE)
-	{
-		glfwPollEvents();
+    while(glfwWindowShouldClose(m_wnd) == GLFW_FALSE) {
+        //Lecture des evenements
+        glfwPollEvents();
 
-		if ((m::time::getTimeMs() - m_currentTimeUpdate) >= 1000.0 / UPDATE_INTERVAL)
-		{
-			tmpUpdate = m_currentTimeUpdate;
-			m_currentTimeUpdate = m::time::getTimeMs();
-            update(static_cast<float>((m::time::getTimeMs() - tmpUpdate) / 1000.0));
-		}
-
-		m_currentTimeRenderer = m::time::getTimeMs();
-        render3D(static_cast<float>((m::time::getTimeMs() - m_currentTimeUpdate) / (1000.0 / UPDATE_INTERVAL)));
-		glfwSwapBuffers(m_wnd);
-
-        if(m_fps > 0) {
-            waitTime = m::math::minimum((1000.0 / UPDATE_INTERVAL) - (m::time::getTimeMs() - m_currentTimeUpdate),
-                (1000.0 / m_fps) - (m::time::getTimeMs() - m_currentTimeRenderer));
-
-            if(waitTime >= 10)
-                m::time::sleepMs(static_cast<uint32_t>(waitTime));
+        //MAJ
+        double t = m::time::getTimeMs();
+        if(t >= nextUpdate) {
+            t += JJ_UPDATE_PERIOD;
+            float dt = static_cast<float>((t - nextUpdate) / 1000.0);
+            nextUpdate = t;
+            update(dt);
+            t = m::time::getTimeMs();
         }
-	}
+
+        //Rendu
+        if(t >= nextRender) {
+            m_renderDelta = t - nextRender + m_renderPeriod;
+            nextRender = t + m_renderPeriod; //FIXME: nextRender = nextRender + m_renderPeriod?
+
+            float ptt = static_cast<float>((nextUpdate - t) / JJ_UPDATE_PERIOD);
+            if(ptt <= 0.0f)
+                ptt = 1.0f;
+            else if(ptt >= 1.0f)
+                ptt = 0.0f;
+            else
+                ptt = 1.0f - ptt;
+
+            render3D(ptt);
+            /*m_numDrawcalls = gl::numDrawcalls;
+            gl::numDrawcalls = 0;*/
+
+            glfwSwapBuffers(m_wnd);
+            t = m::time::getTimeMs();
+        }
+
+        //Mettre en pause le programme, eventuellement...
+        double pause = m::math::minimum(nextUpdate, nextRender) - t;
+        if(pause >= JJ_SLEEP_THRESHOLD)
+            m::time::sleepMs(static_cast<uint32_t>(pause));
+    }
 }
 
 void MainApp::loadShader(JJShader sdr, const char *name, bool hasGeom)
@@ -332,7 +354,7 @@ void MainApp::render3D(float ptt)
         Shader::unbind();
     }
 
-    //Tone mapping + bloom Y
+    //Ajout du bloom + Tone mapping
     m_sdrFBO.bindForRender();
     m_shaders[kS_Tonemap].bind();
     gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID());
@@ -382,14 +404,14 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
             glfwSetWindowShouldClose(m_wnd, GLFW_TRUE);
         else if(key == GLFW_KEY_Q) {
             m_fxaaEnable = !m_fxaaEnable;
-            mlogger.info(M_LOG, "FXAA: %s", m_fxaaEnable ? "ON" : "OFF");
+            mlogger.info(M_LOG, "FXAA: %s", m_fxaaEnable ? "ACTIF" : "DESACTIVE");
         } else if(key == GLFW_KEY_Z) {
             m_useWireframe = !m_useWireframe;
-            mlogger.info(M_LOG, "Wireframe: %s", m_useWireframe ? "ON" : "OFF");
+            mlogger.info(M_LOG, "Fil de fer: %s", m_useWireframe ? "OACTIFN" : "DESACTIVE");
         } else if(key == GLFW_KEY_C) {
             Camera *oldCam = m_camera;
 
-            if(dynamic_cast<RotatingCamera *>(m_camera) == nullptr) {
+            if(dynamic_cast<RotatingCamera*>(m_camera) == nullptr) {
                 m_camera = new RotatingCamera;
                 glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             } else {

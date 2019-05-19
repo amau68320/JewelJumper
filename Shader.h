@@ -16,19 +16,9 @@ public:
     bool load(const m::String &vert, const m::String &geom, const m::String &frag);
     Shader &operator = (Shader &&src);
 
-    void setAttribLocation(const char *var, GLuint id) const
-    {
-        gl::bindAttribLocation(m_prog, id, var);
-    }
-
     GLint getUniformLocation(const char *var) const
     {
         return gl::getUniformLocation(m_prog, var);
-    }
-
-    void setAttribLocation(const m::String &var, GLuint id) const
-    {
-        gl::bindAttribLocation(m_prog, id, var.raw());
     }
 
     GLint getUniformLocation(const m::String &var) const

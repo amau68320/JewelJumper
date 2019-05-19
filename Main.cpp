@@ -62,9 +62,9 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    GLFWwindow *wnd = glfwCreateWindow(ww, wh, "Jewel Jumper", nullptr, nullptr);
+    GLFWwindow *wnd = glfwCreateWindow(ww, wh, "THE JEWEL EDITOR - Copyright (C) 2019 A. Einholtz & N. Barbotin - IN55 P2019", nullptr, nullptr);
     if(wnd == nullptr) {
         mlogger.error(M_LOG, "Impossible de creer la fenetre !");
         glfwTerminate();

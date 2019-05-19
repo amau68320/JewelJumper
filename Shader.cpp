@@ -84,7 +84,7 @@ static const char *shaderTypeName(gl::ShaderType type)
 {
     switch(type) {
     case gl::kST_VertexShader  : return "vertex";
-    case gl::kST_GeometryShader: return "geometry";
+    case gl::kST_GeometryShader: return "geometrie";
     case gl::kST_FragmentShader: return "fragment";
     default: return "wtf";
     }
@@ -92,17 +92,17 @@ static const char *shaderTypeName(gl::ShaderType type)
 
 GLuint Shader::loadShader(const m::String &file, gl::ShaderType type)
 {
-    mlogger.debug(M_LOG, "Loading %s shader \"%s\"...", shaderTypeName(type), file.raw());
+    mlogger.debug(M_LOG, "Chargement du shader de %s \"%s\"...", shaderTypeName(type), file.raw());
 
     m::FileInputStream fis;
     m::FileInputStream::OpenError err = fis.open(file);
     if(err == m::FileInputStream::kOE_FileNotFound) {
-        m_log = "Shader source \"";
+        m_log = "Le fichier source du shader \"";
         m_log += file;
-        m_log += "\" could not be found!";
+        m_log += "\" n'a pas ete trouvee !";
         return 0;
     } else if(err != m::FileInputStream::kOE_Success) {
-        m_log = "Could not open shader source \"";
+        m_log = "Impossible d'ouvrir le fichier source du shader \"";
         m_log += file;
         m_log += '"';
         return 0;
@@ -110,7 +110,7 @@ GLuint Shader::loadShader(const m::String &file, gl::ShaderType type)
 
     m::StringOStream sos;
     if(!m::IO::transfer(&sos, &fis)) {
-        m_log = "Could not read shader source \"";
+        m_log = "Impossible de lire le fichier source du shader \"";
         m_log += file;
         m_log += '"';
         return 0;
@@ -118,7 +118,7 @@ GLuint Shader::loadShader(const m::String &file, gl::ShaderType type)
 
     GLuint ret = gl::createShader(type);
     if(ret == 0) {
-        m_log = "gl::createShader() failed!";
+        m_log = "gl::createShader() a echoue !";
         return 0;
     }
 

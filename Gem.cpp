@@ -1,7 +1,7 @@
 #include "Gem.h"
 #include "MainApp.h"
 
-Gem::Gem() : m_vbo(0), m_ebo(0), m_vao(0), m_numIndices(0), m_lastColor(0)
+Gem::Gem() : m_vbo(0), m_ebo(0), m_vao(0), m_numIndices(0), m_lastColor(0), m_ior(1.45f)
 {
 }
 
@@ -169,7 +169,13 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
 
 void Gem::render(float ptt)
 {
-    MainApp::instance().use3DShader(MainApp::instance().mainShader());
+    Shader &shdr = MainApp::instance().mainShader();
+    MainApp::instance().use3DShader(shdr);
+
+    GLint iorUniformLoc = shdr.getUniformLocation("u_IOR");
+    if(iorUniformLoc != -1)
+        gl::uniform1f(iorUniformLoc, m_ior);
+
     MainApp::instance().skybox().bindCubeMap();
     gl::bindVertexArray(m_vao);
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, m_ebo);

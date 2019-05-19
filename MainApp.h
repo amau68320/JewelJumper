@@ -112,9 +112,8 @@ private:
     void handleKeyboardEvent(int key, int scancode, int action, int mods);
 
 	m::List<GameObject*> m_objects;
-	double m_currentTimeUpdate;
-	double m_currentTimeRenderer;
-	int m_fps;
+	double m_renderPeriod;
+    double m_renderDelta;
 	GLFWwindow* m_wnd;
     m::Matrix4f m_proj;
     m::Matrix4f m_view;

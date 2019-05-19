@@ -42,7 +42,7 @@ vec3 raytraceRefraction(vec3 V, vec3 N)
 {
     vec3 orig = normalize(refract(V, N, 1.0 / u_IOR));
     vec4 dir4 = u_Projection * u_View * vec4(orig, 0.0);
-    vec3 dir  = normalize(dir4.xyz / dir4.w) * u_RaytraceStep;
+    vec3 dir  = normalize(dir4.xyz) * u_RaytraceStep;
 
     if(dir.z <= 0.0)
         return orig;

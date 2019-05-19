@@ -51,10 +51,19 @@ vec3 raytraceRefraction(vec3 V, vec3 N)
     vec3 res = vec3(0.0);
 
     for(int i = 0; i < 16; i++) {
-        pos += dir;
+        pos += dir * 4.0; //Recherche grossiere
 
         if(pos.z >= depthAt(pos.xy)) {
-            res = normalAt(pos.xy);
+            for(int j = 0; j < 4; j++) {
+                pos -= dir; //Recherche fine
+
+                if(pos.z < depthAt(pos.xy)) {
+                    pos += dir * 0.5; //Est-ce vraiment utile ?
+                    res = normalAt(pos.xy);
+                    break;
+                }
+            }
+
             break;
         }
     }

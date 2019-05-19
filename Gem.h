@@ -1,6 +1,6 @@
 #pragma once
 #include "GameObject.h"
-#include "GL.h"
+#include <aiso/GL.h>
 #include <mgpcl/Vector3.h>
 #include <mgpcl/List.h>
 

@@ -169,7 +169,7 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
 
 void Gem::render(float ptt)
 {
-    Shader &shdr = MainApp::instance().mainShader();
+    UIShader &shdr = MainApp::instance().mainShader();
     MainApp::instance().use3DShader(shdr);
 
     GLint iorUniformLoc = shdr.getUniformLocation("u_IOR");
@@ -183,7 +183,7 @@ void Gem::render(float ptt)
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, 0);
     gl::bindVertexArray(0);
     Skybox::unbindCubeMap();
-    Shader::unbind();
+    UIShader::unbind();
 }
 
 void Gem::fillColor(float r, float g, float b, float a)

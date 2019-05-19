@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "GameObject.h"
-#include "GL.h"
+#include <aiso/GL.h>
 
 class Cube : public GameObject
 {

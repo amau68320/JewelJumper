@@ -4,9 +4,9 @@
 #include <mgpcl/Time.h>
 #include <mgpcl/Matrix3.h>
 #include <GLFW/glfw3.h>
+#include <aiso/UIShader.h>
 #include "GameObject.h"
 #include "Camera.h"
-#include "Shader.h"
 #include "Framebuffer.h"
 #include "Skybox.h"
 
@@ -56,7 +56,7 @@ public:
      * use3DShader() bind le shader (glUseProgram) et lui envoi les
      * matrices de modele, vue et projection.
      */
-    void use3DShader(Shader &shdr);
+    void use3DShader(UIShader &shdr);
 
     /*
      * pushMatrix() sauvegarde la matrice de modele actuelle sur la pile,
@@ -80,7 +80,7 @@ public:
     /*
      * Retourne une reference vers le shader principal.
      */
-    Shader &mainShader()
+    UIShader &mainShader()
     {
         if(m_override != nullptr)
             return *m_override;
@@ -125,8 +125,8 @@ private:
     double m_lastCursorPosX;
     double m_lastCursorPosY;
 
-    Shader m_shaders[kS_Count];
-    Shader *m_override;
+    UIShader m_shaders[kS_Count];
+    UIShader *m_override;
 
     Framebuffer m_normalPass;
     Framebuffer m_hdrFBO0;
@@ -145,6 +145,7 @@ private:
     uint32_t m_wh;
     m::Matrix3f m_2Dmat;
     bool m_doDebugDraw;
+    GLuint m_numDrawcalls;
 
     static MainApp *m_instance;
 };

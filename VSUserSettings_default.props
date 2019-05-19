@@ -6,6 +6,8 @@
     <MGPCL_INCLUDE_DIR>fill_me</MGPCL_INCLUDE_DIR>
     <MGPCL_LIB_DIR>fill_me</MGPCL_LIB_DIR>
     <OPENSSL_LIB_DIR>fill_me</OPENSSL_LIB_DIR>
+    <AISO_INCLUDE_DIR>fill_me</AISO_INCLUDE_DIR>
+    <AISO_LIB_DIR>fill_me</AISO_LIB_DIR>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />
@@ -18,6 +20,12 @@
     </BuildMacro>
     <BuildMacro Include="OPENSSL_LIB_DIR">
       <Value>$(OPENSSL_LIB_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="AISO_INCLUDE_DIR">
+      <Value>$(AISO_INCLUDE_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="AISO_LIB_DIR">
+      <Value>$(AISO_LIB_DIR)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

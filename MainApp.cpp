@@ -10,7 +10,8 @@ MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
                                     m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
-                                    m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false)
+                                    m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false),
+                                    m_numDrawcalls(0)
 {
     m_instance = this;
 
@@ -91,11 +92,11 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_BackNormal"), 1);
     gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_BackDepth"), 2);
     gl::uniform1f(m_shaders[kS_Main].getUniformLocation("u_RaytraceStep"), m::math::minimum(rtStepX, rtStepY));
-    Shader::unbind();
+    UIShader::unbind();
 
     m_shaders[kS_Tonemap].bind();
     gl::uniform1i(m_shaders[kS_Tonemap].getUniformLocation("u_BloomTex"), 1);
-    Shader::unbind();
+    UIShader::unbind();
 
     //Framebuffers
     m_normalPass.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
@@ -206,8 +207,8 @@ void MainApp::run()
                 ptt = 1.0f - ptt;
 
             render3D(ptt);
-            /*m_numDrawcalls = gl::numDrawcalls;
-            gl::numDrawcalls = 0;*/
+            m_numDrawcalls = gl::numDrawcalls;
+            gl::numDrawcalls = 0;
 
             glfwSwapBuffers(m_wnd);
             t = m::time::getTimeMs();
@@ -294,7 +295,7 @@ void MainApp::render3D(float ptt)
     pushMatrix().translate(camPos);
     use3DShader(m_shaders[kS_Skybox]);
     m_skybox.draw();
-    Shader::unbind();
+    UIShader::unbind();
     popMatrix();
 
     //Rendu des objets
@@ -305,7 +306,7 @@ void MainApp::render3D(float ptt)
 
     use3DShader(m_shaders[kS_Main]);
     gl::uniform3f(m_shaders[kS_Main].getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
-    Shader::unbind();
+    UIShader::unbind();
 
     gl::activeTexture(1);
     gl::bindTexture(gl::kTT_Texture2D, m_normalPass.colorAttachmentID());
@@ -339,11 +340,11 @@ void MainApp::render3D(float ptt)
     gl::drawArrays(gl::kDM_Triangles, 0, 6);
     gl::bindVertexArray(0);
     gl::bindTexture(gl::kTT_Texture2D, 0);
-    Shader::unbind();
+    UIShader::unbind();
 
     //BLOOM: Flou
     for(int i = 0; i < 2; i++) {
-        Shader &shdr = m_shaders[(i == 0) ? kS_BlurX : kS_BlurY];
+        UIShader &shdr = m_shaders[(i == 0) ? kS_BlurX : kS_BlurY];
 
         m_bloomFBO[1 - i].bindForRender();
         shdr.bind();
@@ -353,7 +354,7 @@ void MainApp::render3D(float ptt)
         gl::drawArrays(gl::kDM_Triangles, 0, 6);
         gl::bindVertexArray(0);
         gl::bindTexture(gl::kTT_Texture2D, 0);
-        Shader::unbind();
+        UIShader::unbind();
     }
 
     //Ajout du bloom + Tone mapping
@@ -368,7 +369,7 @@ void MainApp::render3D(float ptt)
     gl::bindTexture(gl::kTT_Texture2D, 0);
     gl::activeTexture(0);
     gl::bindTexture(gl::kTT_Texture2D, 0);
-    Shader::unbind();
+    UIShader::unbind();
     Framebuffer::unbindFromRender(m_ww, m_wh);
 
     //FXAA
@@ -379,7 +380,7 @@ void MainApp::render3D(float ptt)
     gl::drawArrays(gl::kDM_Triangles, 0, 6);
     gl::bindVertexArray(0);
     gl::bindTexture(gl::kTT_Texture2D, 0);
-    Shader::unbind();
+    UIShader::unbind();
 
     if(m_doDebugDraw) {
         m_2Dmat.loadIdentity();
@@ -392,7 +393,7 @@ void MainApp::render3D(float ptt)
         debugDrawTexture(m_normalPass.depthAttachmentID());
         m_2Dmat.translate(-2.0f, 0.0f);
         debugDrawTexture(m_bloomFBO[0].colorAttachmentID());
-        Shader::unbind();
+        UIShader::unbind();
     }
 }
 
@@ -406,7 +407,7 @@ void MainApp::debugDrawTexture(GLuint tex)
     gl::bindTexture(gl::kTT_Texture2D, 0);
 }
 
-void MainApp::use3DShader(Shader &shdr)
+void MainApp::use3DShader(UIShader &shdr)
 {
     shdr.bind();
     gl::uniformMatrix4fv(shdr.getUniformLocation("u_Projection"), 1, false, m_proj.data());

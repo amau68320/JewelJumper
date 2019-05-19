@@ -1,5 +1,5 @@
 #pragma once
-#include "GL.h"
+#include <aiso/GL.h>
 #include <mgpcl/String.h>
 
 class Skybox

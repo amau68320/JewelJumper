@@ -66,5 +66,5 @@ void Cube::render(float ptt)
 	gl::bindVertexArray(0);
 	gl::bindBuffer(gl::kBT_ElementArrayBuffer, 0);
 
-    Shader::unbind();
+    UIShader::unbind();
 }

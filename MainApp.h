@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include <mgpcl/ProgramArgs.h>
 #include <mgpcl/Time.h>
+#include <mgpcl/Matrix3.h>
 #include <GLFW/glfw3.h>
 #include "GameObject.h"
 #include "Camera.h"
@@ -110,6 +111,7 @@ private:
     void handleMouseButtonEvent(int button, int action, int mods);
     void handleMouseMotionEvent(float dx, float dy);
     void handleKeyboardEvent(int key, int scancode, int action, int mods);
+    void debugDrawTexture(GLuint tex);
 
 	m::List<GameObject*> m_objects;
 	double m_renderPeriod;
@@ -141,6 +143,8 @@ private:
     bool m_useWireframe;
     uint32_t m_ww;
     uint32_t m_wh;
+    m::Matrix3f m_2Dmat;
+    bool m_doDebugDraw;
 
     static MainApp *m_instance;
 };

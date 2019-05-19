@@ -474,6 +474,11 @@ namespace gl
         glUniformMatrix4fv(loc, cnt, static_cast<GLboolean>(transpose), src);
     }
 
+    inline void uniformMatrix3fv(GLint loc, GLsizei cnt, bool transpose, const GLfloat *src)
+    {
+        glUniformMatrix3fv(loc, cnt, static_cast<GLboolean>(transpose), src);
+    }
+
     inline void uniform1i(GLint loc, GLint value)
     {
         glUniform1i(loc, value);

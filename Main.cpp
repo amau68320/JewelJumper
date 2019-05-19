@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
 
     //Config OpenGL & creation de la fenetre
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     const int min = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MINOR);
     const int profile = glfwGetWindowAttrib(wnd, GLFW_OPENGL_PROFILE);
 
-    if(maj != 3 || min != 3)
+    if(maj != 4 || min != 6)
         mlogger.warning(M_LOG, "Version d'OpenGL: %d.%d", maj, min);
 
     if(profile != GLFW_OPENGL_CORE_PROFILE)

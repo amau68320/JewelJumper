@@ -10,7 +10,7 @@ MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
                                     m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
-                                    m_useWireframe(false), m_ww(0), m_wh(0)
+                                    m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false)
 {
     m_instance = this;
 
@@ -61,7 +61,7 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     //Creation de la matrice de projection, qui ne devrait pas changer avec le temps...
     m_proj = m::Matrix4f::perspective(80.0f * static_cast<float>(M_PI) / 180.0f,
                                       static_cast<float>(ww) / static_cast<float>(wh),
-                                      0.01f, 1000.0f);
+                                      0.1f, 10.0f);
     //Capture du curseur
     m_lastCursorPosX = static_cast<double>(ww / 2);
     m_lastCursorPosY = static_cast<double>(wh / 2);
@@ -330,8 +330,10 @@ void MainApp::render3D(float ptt)
     gl::disable(gl::kC_CullFace);
 
     //BLOOM: Reduction de la taille
+    m_2Dmat.loadIdentity();
     m_bloomFBO[0].bindForRender();
     m_shaders[kS_NoOp].bind();
+    gl::uniformMatrix3fv(m_shaders[kS_NoOp].getUniformLocation("u_Matrix"), 1, false, m_2Dmat.data());
     gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID(1));
     gl::bindVertexArray(m_peVAO);
     gl::drawArrays(gl::kDM_Triangles, 0, 6);
@@ -378,6 +380,30 @@ void MainApp::render3D(float ptt)
     gl::bindVertexArray(0);
     gl::bindTexture(gl::kTT_Texture2D, 0);
     Shader::unbind();
+
+    if(m_doDebugDraw) {
+        m_2Dmat.loadIdentity();
+        m_2Dmat.scale(0.25f);
+        m_2Dmat.translate(3.0f, -3.0f);
+
+        m_shaders[kS_NoOp].bind();
+        debugDrawTexture(m_normalPass.colorAttachmentID());
+        m_2Dmat.translate(-2.0f, 0.0f);
+        debugDrawTexture(m_normalPass.depthAttachmentID());
+        m_2Dmat.translate(-2.0f, 0.0f);
+        debugDrawTexture(m_bloomFBO[0].colorAttachmentID());
+        Shader::unbind();
+    }
+}
+
+void MainApp::debugDrawTexture(GLuint tex)
+{
+    gl::uniformMatrix3fv(m_shaders[kS_NoOp].getUniformLocation("u_Matrix"), 1, false, m_2Dmat.data());
+    gl::bindTexture(gl::kTT_Texture2D, tex);
+    gl::bindVertexArray(m_peVAO);
+    gl::drawArrays(gl::kDM_Triangles, 0, 6);
+    gl::bindVertexArray(0);
+    gl::bindTexture(gl::kTT_Texture2D, 0);
 }
 
 void MainApp::use3DShader(Shader &shdr)
@@ -407,7 +433,10 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
             mlogger.info(M_LOG, "FXAA: %s", m_fxaaEnable ? "ACTIF" : "DESACTIVE");
         } else if(key == GLFW_KEY_Z) {
             m_useWireframe = !m_useWireframe;
-            mlogger.info(M_LOG, "Fil de fer: %s", m_useWireframe ? "OACTIFN" : "DESACTIVE");
+            mlogger.info(M_LOG, "Fil de fer: %s", m_useWireframe ? "ACTIF" : "DESACTIVE");
+        } else if(key == GLFW_KEY_ENTER) {
+            m_doDebugDraw = !m_doDebugDraw;
+            mlogger.info(M_LOG, "Buffers internes: %s", m_doDebugDraw ? "AFFICHES" : "CACHES");
         } else if(key == GLFW_KEY_C) {
             Camera *oldCam = m_camera;
 

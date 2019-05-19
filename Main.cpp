@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
         mlogger.error(M_LOG, "Erreur lors de l'initialisation de MainApp ! Impossible de continuer...");
 
     //Fin
+    glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     mlogger.info(M_LOG, "Liberation des ressources...");
     glfwDestroyWindow(wnd);
     glfwTerminate();

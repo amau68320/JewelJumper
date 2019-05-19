@@ -2,6 +2,7 @@
 #include "Gem.h"
 #include <mgpcl/Math.h>
 #include <mgpcl/Logger.h>
+#include <aiso/UICore.h>
 
 #define JJ_UPDATE_PERIOD (1000.0 / 20.0)
 #define JJ_SLEEP_THRESHOLD 10.0
@@ -11,7 +12,7 @@ MainApp *MainApp::m_instance = nullptr;
 MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
                                     m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
                                     m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false),
-                                    m_numDrawcalls(0)
+                                    m_numDrawcalls(0), m_relativeMouse(true)
 {
     m_instance = this;
 
@@ -19,20 +20,26 @@ MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_l
     m_renderDelta = m_renderPeriod;
 
 	m_wnd = wnd;
-    m_camera = new FreeCamera;
+    m_camera = new RotatingCamera;
 }
 
 MainApp::~MainApp()
 {
+    //Interface utilisateur
+    uiCore.destroy();
+
+    //VBO+VAO post-effets
     if(m_peVAO != 0)
         gl::deleteVertexArray(m_peVAO);
 
     if(m_peVBO != 0)
         gl::deleteBuffer(m_peVBO);
 
+    //Objets du jeu
     for(GameObject *gob : m_objects)
         delete gob;
 
+    //Camera
     delete m_camera;
 }
 
@@ -47,12 +54,15 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     });
 
     glfwSetCursorPosCallback(m_wnd, [] (GLFWwindow *, double x, double y) {
-        double dx = x - m_instance->m_lastCursorPosX;
-        double dy = y - m_instance->m_lastCursorPosY;
-        m_instance->m_lastCursorPosX = x;
-        m_instance->m_lastCursorPosY = y;
+        if(m_instance->m_relativeMouse) {
+            double dx = x - m_instance->m_lastCursorPosX;
+            double dy = y - m_instance->m_lastCursorPosY;
+            m_instance->m_lastCursorPosX = x;
+            m_instance->m_lastCursorPosY = y;
 
-        m_instance->handleMouseMotionEvent(static_cast<float>(dx), static_cast<float>(dy));
+            m_instance->handleMouseMotionEvent(static_cast<float>(dx), static_cast<float>(dy));
+        } else
+            uiCore.handleMouseMotionEvent(static_cast<int>(x), static_cast<int>(y));
     });
 
     glfwSetKeyCallback(m_wnd, [] (GLFWwindow *, int key, int scancode, int action, int mods) {
@@ -63,12 +73,6 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     m_proj = m::Matrix4f::perspective(80.0f * static_cast<float>(M_PI) / 180.0f,
                                       static_cast<float>(ww) / static_cast<float>(wh),
                                       0.1f, 10.0f);
-    //Capture du curseur
-    m_lastCursorPosX = static_cast<double>(ww / 2);
-    m_lastCursorPosY = static_cast<double>(wh / 2);
-    glfwSetCursorPos(m_wnd, m_lastCursorPosX, m_lastCursorPosY);
-    glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    m_camera->activate();
 
     //Shaders
     try {
@@ -169,8 +173,12 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
 
     Gem *gem = new Gem;
     gem->generate(6, 0.75f, 1.0f, 1.0f, 0.75f);
-
     m_objects.add(gem);
+
+    //Interface utilisateur
+    UICore::create().setup(ww, wh);
+    grabMouse(false);
+
     return true;
 }
 
@@ -207,6 +215,9 @@ void MainApp::run()
                 ptt = 1.0f - ptt;
 
             render3D(ptt);
+            gl::clear(gl::kCF_DepthBuffer);
+            uiCore.render(static_cast<float>(t));
+
             m_numDrawcalls = gl::numDrawcalls;
             gl::numDrawcalls = 0;
 
@@ -407,6 +418,29 @@ void MainApp::debugDrawTexture(GLuint tex)
     gl::bindTexture(gl::kTT_Texture2D, 0);
 }
 
+void MainApp::grabMouse(bool grabbed)
+{
+    if(grabbed) {
+        m_relativeMouse = true;
+        m_lastCursorPosX = static_cast<double>(m_ww) * 0.5;
+        m_lastCursorPosY = static_cast<double>(m_wh) * 0.5;
+
+        glfwSetCursorPos(m_wnd, m_lastCursorPosX, m_lastCursorPosY);
+        glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        uiCore.setCursorShown(false);
+
+        if(m_camera != nullptr)
+            m_camera->activate();
+    } else {
+        m_relativeMouse = false;
+        glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        uiCore.setCursorShown(true);
+
+        if(m_camera != nullptr)
+            m_camera->deactivate();
+    }
+}
+
 void MainApp::use3DShader(UIShader &shdr)
 {
     shdr.bind();
@@ -417,6 +451,7 @@ void MainApp::use3DShader(UIShader &shdr)
 
 void MainApp::handleMouseButtonEvent(int button, int action, int mods)
 {
+    uiCore.handleMouseButtonEvent(button, action, mods);
 }
 
 void MainApp::handleMouseMotionEvent(float dx, float dy)
@@ -443,15 +478,19 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
 
             if(dynamic_cast<RotatingCamera*>(m_camera) == nullptr) {
                 m_camera = new RotatingCamera;
-                glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                grabMouse(false);
             } else {
                 m_camera = new FreeCamera;
-                glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                grabMouse(true);
             }
 
             delete oldCam;
         } else
             m_camera->onKeyDown(scancode);
-    } else if(action == GLFW_RELEASE)
+
+        uiCore.handleKeyDownEvent(key, scancode, mods);
+    } else if(action == GLFW_RELEASE) {
         m_camera->onKeyUp(scancode);
+        uiCore.handleKeyUpEvent(key, scancode, mods);
+    }
 }

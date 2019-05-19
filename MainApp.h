@@ -112,6 +112,7 @@ private:
     void handleMouseMotionEvent(float dx, float dy);
     void handleKeyboardEvent(int key, int scancode, int action, int mods);
     void debugDrawTexture(GLuint tex);
+    void grabMouse(bool grabbed);
 
 	m::List<GameObject*> m_objects;
 	double m_renderPeriod;
@@ -146,6 +147,7 @@ private:
     m::Matrix3f m_2Dmat;
     bool m_doDebugDraw;
     GLuint m_numDrawcalls;
+    bool m_relativeMouse;
 
     static MainApp *m_instance;
 };

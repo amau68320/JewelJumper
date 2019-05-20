@@ -3,6 +3,7 @@
 #include <mgpcl/ProgramArgs.h>
 #include <mgpcl/Time.h>
 #include <mgpcl/Matrix3.h>
+#include <mgpcl/SignalSlot.h>
 #include <GLFW/glfw3.h>
 #include <aiso/UIShader.h>
 #include "GameObject.h"
@@ -26,10 +27,12 @@ enum JJShader
     kS_Count
 };
 
+class UIElement;
+
 /*
  * Classe principale gerant JewelJumper.
  */
-class MainApp
+class MainApp : public m::SlotCapable
 {
 public:
 	MainApp(GLFWwindow* wnd);
@@ -113,6 +116,9 @@ private:
     void handleKeyboardEvent(int key, int scancode, int action, int mods);
     void debugDrawTexture(GLuint tex);
     void grabMouse(bool grabbed);
+    bool changeIOR(UIElement *e);
+    bool changeColor(UIElement *e);
+    bool changeSides(UIElement *e);
 
 	m::List<GameObject*> m_objects;
 	double m_renderPeriod;
@@ -148,6 +154,7 @@ private:
     bool m_doDebugDraw;
     GLuint m_numDrawcalls;
     bool m_relativeMouse;
+    int m_oldSides;
 
     static MainApp *m_instance;
 };

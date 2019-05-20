@@ -1,7 +1,8 @@
 #include "Gem.h"
 #include "MainApp.h"
 
-Gem::Gem() : m_vbo(0), m_ebo(0), m_vao(0), m_numIndices(0), m_lastColor(0), m_ior(1.45f)
+Gem::Gem() : m_vbo(0), m_ebo(0), m_vao(0), m_numIndices(0), m_ior(1.45f),
+             m_numVertices(0), m_color{ 1.0f, 0.0f, 0.0f, 1.0f }
 {
 }
 
@@ -38,8 +39,6 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
         m_vertices << GemVertex(x, y0, z);
         m_indices  << static_cast<uint16_t>(m_vertices.size() - 1);
     }
-
-    //fillColor(1.0f, 0.0f, 0.0f);
 
     //Triangles inferieurs
     float a1 = step * 0.5f;
@@ -111,8 +110,13 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
         m_indices  << static_cast<uint16_t>(m_vertices.size() - 1);
     }
 
-    //fillColor(1.0f, 0.0f, 1.0f);
-    fillColor(1.0f, 0.0f, 0.0f);
+    for(GemVertex &v: m_vertices) {
+        v.color[0] = m_color[0];
+        v.color[1] = m_color[1];
+        v.color[2] = m_color[2];
+        v.color[3] = m_color[3];
+    }
+
     m_numIndices = static_cast<GLsizei>(m_indices.size());
 
     for(int i = 0; i < m_indices.size(); i += 3) {
@@ -129,28 +133,26 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
         v2.normal = n;
     }
 
-    if(m_vbo != 0)
-        gl::deleteBuffer(m_vbo);
+    if(m_vbo == 0)
+        m_vbo = gl::genBuffer();
 
-    m_vbo = gl::genBuffer();
     gl::bindBuffer(gl::kBT_ArrayBuffer, m_vbo);
     gl::bufferData(gl::kBT_ArrayBuffer, m_vertices.size() * sizeof(GemVertex), m_vertices.begin(), gl::kBU_StaticDraw);
     gl::bindBuffer(gl::kBT_ArrayBuffer, 0);
+    m_numVertices = m_vertices.size();
     m_vertices.clear();
 
-    if(m_ebo != 0)
-        gl::deleteBuffer(m_ebo);
+    if(m_ebo == 0)
+        m_ebo = gl::genBuffer();
 
-    m_ebo = gl::genBuffer();
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, m_ebo);
     gl::bufferData(gl::kBT_ElementArrayBuffer, m_indices.size() * sizeof(uint16_t), m_indices.begin(), gl::kBU_StaticDraw);
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, 0);
     m_indices.clear();
 
-    if(m_vao != 0)
-        gl::deleteVertexArray(m_vao);
+    if(m_vao == 0)
+        m_vao = gl::genVertexArray();
 
-    m_vao = gl::genVertexArray();
     gl::bindVertexArray(m_vao);
     gl::bindBuffer(gl::kBT_ArrayBuffer, m_vbo);
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, m_ebo);
@@ -186,14 +188,27 @@ void Gem::render(float ptt)
     UIShader::unbind();
 }
 
-void Gem::fillColor(float r, float g, float b, float a)
+void Gem::changeColor(float r, float g, float b, float a)
 {
-    for(int i = m_lastColor; i < ~m_vertices; i++) {
-        m_vertices[i].color[0] = r;
-        m_vertices[i].color[1] = g;
-        m_vertices[i].color[2] = b;
-        m_vertices[i].color[3] = a;
+    m_color[0] = r;
+    m_color[1] = g;
+    m_color[2] = b;
+    m_color[3] = a;
+
+    if(m_vbo == 0)
+        return;
+
+    gl::bindBuffer(gl::kBT_ArrayBuffer, m_vbo);
+    GemVertex *data = static_cast<GemVertex *>(gl::mapBuffer(gl::kBT_ArrayBuffer, gl::kBA_ReadWrite));
+
+    for(int i = 0; i < m_numVertices; i++) {
+        data[i].color[0] = r;
+        data[i].color[1] = g;
+        data[i].color[2] = b;
+        data[i].color[3] = a;
     }
 
-    m_lastColor = ~m_vertices;
+    gl::unmapBuffer(gl::kBT_ArrayBuffer);
+    gl::bindBuffer(gl::kBT_ArrayBuffer, 0);
 }
+

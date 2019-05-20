@@ -3,6 +3,8 @@
 #include <mgpcl/Math.h>
 #include <mgpcl/Logger.h>
 #include <aiso/UICore.h>
+#include <aiso/UILoader.h>
+#include <aiso/UISlider.h>
 
 #define JJ_UPDATE_PERIOD (1000.0 / 20.0)
 #define JJ_SLEEP_THRESHOLD 10.0
@@ -12,7 +14,7 @@ MainApp *MainApp::m_instance = nullptr;
 MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
                                     m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
                                     m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false),
-                                    m_numDrawcalls(0), m_relativeMouse(true)
+                                    m_numDrawcalls(0), m_relativeMouse(true), m_oldSides(6)
 {
     m_instance = this;
 
@@ -172,13 +174,49 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
     }
 
     Gem *gem = new Gem;
-    gem->generate(6, 0.75f, 1.0f, 1.0f, 0.75f);
+    gem->generate(m_oldSides, 0.75f, 1.0f, 1.0f, 0.75f);
     m_objects.add(gem);
 
     //Interface utilisateur
     UICore::create().setup(ww, wh);
-    grabMouse(false);
 
+    try {
+        UIWindow *wnd = new UIWindow;
+        ui::load("ruby", wnd);
+
+        UISlider *s = wnd->byName<UISlider>("sIOR");
+        s->setValue(0.725f);
+        s->onValueChanged.connect(this, &MainApp::changeIOR);
+
+        s = wnd->byName<UISlider>("sCR");
+        s->setValue(1.0f);
+        s->onValueChanged.connect(this, &MainApp::changeColor);
+
+        s = wnd->byName<UISlider>("sCG");
+        s->setValue(0.0f);
+        s->onValueChanged.connect(this, &MainApp::changeColor);
+
+        s = wnd->byName<UISlider>("sCB");
+        s->setValue(0.0f);
+        s->onValueChanged.connect(this, &MainApp::changeColor);
+
+        s = wnd->byName<UISlider>("sSides");
+        s->setValue(static_cast<float>(m_oldSides - 3) / 7.0f);
+        s->onValueChanged.connect(this, &MainApp::changeSides);
+
+        wnd->pack(false, true);
+        wnd->setPos(ww - wnd->rect().width() - 10, wh - wnd->rect().height() - 10);
+        uiCore.addWindow(wnd);
+        wnd->removeRef();
+    } catch(UILoadException &ex) {
+        mlogger.error(M_LOG, "Erreur lors de la lecture du fichier d'interface graphique: %s", ex.what());
+        return false;
+    } catch(UIUnknownElementException &ex) {
+        mlogger.error(M_LOG, "Il manque un element d'interface graphique: %s", ex.what());
+        return false;
+    }
+
+    grabMouse(false);
     return true;
 }
 
@@ -215,6 +253,7 @@ void MainApp::run()
                 ptt = 1.0f - ptt;
 
             render3D(ptt);
+            gl::depthMask(true);
             gl::clear(gl::kCF_DepthBuffer);
             uiCore.render(static_cast<float>(t));
 
@@ -439,6 +478,46 @@ void MainApp::grabMouse(bool grabbed)
         if(m_camera != nullptr)
             m_camera->deactivate();
     }
+}
+
+bool MainApp::changeIOR(UIElement *e)
+{
+    float val = static_cast<UISlider *>(e)->value();
+    if(val <= 0.5f)
+        val = 0.5f + val;
+    else
+        val = val * 2.0f;
+
+    static_cast<Gem *>(m_objects[0])->setIOR(val);
+    return false;
+}
+
+bool MainApp::changeColor(UIElement *e)
+{
+    UIContainer *c = static_cast<UIContainer *>(e->parent());
+    float r, g, b;
+
+    try {
+        r = c->byName<UISlider>("sCR")->value();
+        g = c->byName<UISlider>("sCG")->value();
+        b = c->byName<UISlider>("sCB")->value();
+    } catch(UIUnknownElementException &ex) {
+        return false;
+    }
+
+    static_cast<Gem *>(m_objects[0])->changeColor(r, g, b);
+    return false;
+}
+
+bool MainApp::changeSides(UIElement *e)
+{
+    int s = static_cast<int>(static_cast<UISlider *>(e)->value() * 7.0f) + 3;
+    if(m_oldSides != s) {
+        static_cast<Gem *>(m_objects[0])->generate(s, 0.75f, 1.0f, 1.0f, 0.75f);
+        m_oldSides = s;
+    }
+
+    return false;
 }
 
 void MainApp::use3DShader(UIShader &shdr)

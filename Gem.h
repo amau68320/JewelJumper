@@ -40,6 +40,7 @@ public:
      */
     void generate(int numSides, float y0, float r0, float y1, float r1);
     void render(float ptt) override;
+    void changeColor(float r, float g, float b, float a = 1.0f);
 
     void setIOR(float ior)
     {
@@ -52,14 +53,13 @@ public:
     }
 
 private:
-    void fillColor(float r, float g, float b, float a = 1.0f);
-
     m::List<GemVertex> m_vertices;
     m::List<uint16_t> m_indices;
     GLuint m_vbo;
     GLuint m_ebo;
     GLuint m_vao;
     GLsizei m_numIndices;
-    int m_lastColor;
     float m_ior;
+    int m_numVertices;
+    float m_color[4];
 };

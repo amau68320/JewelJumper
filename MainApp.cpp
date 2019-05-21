@@ -16,7 +16,8 @@ MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_l
                                     m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
                                     m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false),
                                     m_numDrawcalls(0), m_relativeMouse(true), m_oldSides(6),
-                                    m_exposure(2.0f), m_internalRefraction(true), m_bloomEnable(true)
+                                    m_exposure(2.0f), m_internalRefraction(true), m_bloomEnable(true),
+                                    m_bloomThreshold(0.75f)
 {
     m_instance = this;
 
@@ -234,6 +235,10 @@ bool MainApp::setup(int ww, int wh)
         s->setValue((0.5f - 0.1f) / 1.9f);
         s->onValueChanged.connect(this, &MainApp::changeCameraSpeed);
 
+        s = wnd->byName<UISlider>("sBloomThreshold");
+        s->setValue(0.75f / 8.0f);
+        s->onValueChanged.connect(this, &MainApp::changeBloomThreshold);
+
         UICheckBox *cb = wnd->byName<UICheckBox>("cbRefraction");
         cb->setChecked();
         cb->onChanged.connect(this, &MainApp::changeViewSettings);
@@ -357,21 +362,23 @@ void MainApp::render3D(float ptt)
     //RAZ de la pile de matrice modele
     m_curModelMat = 0;
     m_model[0].loadIdentity();
-
-
-    /***************************** RENDU NORMALES *****************************/
-    m_normalPass.bindForRender();
     gl::depthMask(true);
-    gl::clear(gl::kCF_ColorBuffer | gl::kCF_DepthBuffer);
-    gl::enable(gl::kC_DepthTest);
-    gl::enable(gl::kC_CullFace);
-    gl::cullFace(gl::kF_Front);
-    m_override = &m_shaders[kS_Normal];
 
-    for(GameObject *object : m_objects)
-        object->render(ptt);
 
-    m_override = nullptr;
+    if(m_internalRefraction) {
+        /***************************** RENDU NORMALES *****************************/
+        m_normalPass.bindForRender();
+        gl::clear(gl::kCF_ColorBuffer | gl::kCF_DepthBuffer);
+        gl::enable(gl::kC_DepthTest);
+        gl::enable(gl::kC_CullFace);
+        gl::cullFace(gl::kF_Front);
+        m_override = &m_shaders[kS_Normal];
+
+        for(GameObject *object : m_objects)
+            object->render(ptt);
+
+        m_override = nullptr;
+    }
     
 
     /***************************** RENDU PRINCIPAL *****************************/
@@ -386,6 +393,7 @@ void MainApp::render3D(float ptt)
     gl::depthMask(false);
     pushMatrix().translate(camPos);
     use3DShader(m_shaders[kS_Skybox]);
+    gl::uniform1f(m_shaders[kS_Skybox].getUniformLocation("u_BloomThreshold"), m_bloomThreshold);
     m_skybox.draw();
     UIShader::unbind();
     popMatrix();
@@ -398,6 +406,8 @@ void MainApp::render3D(float ptt)
 
     use3DShader(m_shaders[kS_Main]);
     gl::uniform3f(m_shaders[kS_Main].getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
+    gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_DisableRaytrace"), m_internalRefraction ? 0 : 1);
+    gl::uniform1f(m_shaders[kS_Main].getUniformLocation("u_BloomThreshold"), m_bloomThreshold);
     UIShader::unbind();
 
     gl::activeTexture(1);
@@ -617,6 +627,12 @@ bool MainApp::changeViewSettings(UIElement *e)
     else if(name == "cbFXAA")
         m_fxaaEnable = val;
 
+    return false;
+}
+
+bool MainApp::changeBloomThreshold(UIElement *e)
+{
+    m_bloomThreshold = static_cast<UISlider *>(e)->value() * 8.0f;
     return false;
 }
 

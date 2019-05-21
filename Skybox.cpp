@@ -1,6 +1,14 @@
 #include "Skybox.h"
 #include "RGBE.h"
 
+class HDRImageData
+{
+public:
+    float *data;
+    int tileSz;
+    int imgW;
+};
+
 Skybox::Skybox() : m_tex(0), m_vbo(0), m_vao(0), m_cubemap(0)
 {
 }
@@ -20,23 +28,23 @@ Skybox::~Skybox()
         gl::deleteTexture(m_cubemap);
 }
 
-void myTexImage(gl::TextureTarget target, int x, int y, float *data)
+void myTexImage(gl::TextureTarget target, int x, int y, HDRImageData &img)
 {
-    gl::pixelStorei(gl::kPSP_UnpackSkipPixels, x * 512);
-    gl::pixelStorei(gl::kPSP_UnpackSkipRows, y * 512);
-    gl::texImage2D(target, 0, gl::kTF_RGB16F, 512, 512, 0, gl::kTF_RGB, gl::kDT_Float, data);
+    gl::pixelStorei(gl::kPSP_UnpackSkipPixels, x * img.tileSz);
+    gl::pixelStorei(gl::kPSP_UnpackSkipRows, y * img.tileSz);
+    gl::texImage2D(target, 0, gl::kTF_RGB16F, img.tileSz, img.tileSz, 0, gl::kTF_RGB, gl::kDT_Float, img.data);
 }
 
-static void rotate90(float *data, int imgW, int i, int j)
+static void rotate90(HDRImageData &img, int i, int j)
 {
-    float *tmp = new float[512 * 512 * 3];
-    for(int y = 0; y < 512; y++)
-        m::mem::copy(tmp + y * 512 * 3, data + ((j * 512 + y) * imgW + i * 512) * 3, 512 * 3 * sizeof(float));
+    float *tmp = new float[img.tileSz * img.tileSz * 3];
+    for(int y = 0; y < img.tileSz; y++)
+        m::mem::copy(tmp + y * img.tileSz * 3, img.data + ((j * img.tileSz + y) * img.imgW + i * img.tileSz) * 3, img.tileSz * 3 * sizeof(float));
 
     for(int y = 0; y < 512; y++) {
         for(int x = 0; x < 512; x++) {
-            float *src = tmp + (y * 512 + x) * 3;
-            float *dst = data + ((j * 512 + x) * imgW + i * 512 + (511 - y)) * 3;
+            float *src = tmp + (y * img.tileSz + x) * 3;
+            float *dst = img.data + ((j * img.tileSz + x) * img.imgW + i * img.tileSz + (img.tileSz - y - 1)) * 3;
 
             dst[0] = src[0];
             dst[1] = src[1];
@@ -76,12 +84,17 @@ bool Skybox::load(const m::String &fname)
     gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_Linear);
     gl::bindTexture(gl::kTT_Texture2D, 0);
 
-    //Flemme lvl 9999999999999 d'ecrire rotate270
-    rotate90(data, imgW, 1, 1);
-    rotate90(data, imgW, 1, 1);
-    rotate90(data, imgW, 1, 1);
+    HDRImageData img;
+    img.data = data;
+    img.tileSz = imgH / 2;
+    img.imgW = imgW;
 
-    rotate90(data, imgW, 2, 1);
+    //Flemme lvl 9999999999999 d'ecrire rotate270
+    rotate90(img, 1, 1);
+    rotate90(img, 1, 1);
+    rotate90(img, 1, 1);
+
+    rotate90(img, 2, 1);
 
     if(m_cubemap != 0)
         gl::deleteTexture(m_cubemap);
@@ -89,12 +102,12 @@ bool Skybox::load(const m::String &fname)
     m_cubemap = gl::genTexture();
     gl::bindTexture(gl::kTT_TextureCubeMap, m_cubemap);
     gl::pixelStorei(gl::kPSP_UnpackRowLength, imgW);
-    myTexImage(gl::kTT_TextureCubeMapNZ, 0, 1, data);
-    myTexImage(gl::kTT_TextureCubeMapPZ, 1, 0, data);
-    myTexImage(gl::kTT_TextureCubeMapPX, 2, 0, data);
-    myTexImage(gl::kTT_TextureCubeMapNX, 0, 0, data);
-    myTexImage(gl::kTT_TextureCubeMapNY, 2, 1, data);
-    myTexImage(gl::kTT_TextureCubeMapPY, 1, 1, data);
+    myTexImage(gl::kTT_TextureCubeMapNZ, 0, 1, img);
+    myTexImage(gl::kTT_TextureCubeMapPZ, 1, 0, img);
+    myTexImage(gl::kTT_TextureCubeMapPX, 2, 0, img);
+    myTexImage(gl::kTT_TextureCubeMapNX, 0, 0, img);
+    myTexImage(gl::kTT_TextureCubeMapNY, 2, 1, img);
+    myTexImage(gl::kTT_TextureCubeMapPY, 1, 1, img);
     gl::pixelStorei(gl::kPSP_UnpackSkipPixels, 0);
     gl::pixelStorei(gl::kPSP_UnpackSkipRows, 0);
     gl::pixelStorei(gl::kPSP_UnpackRowLength, 0);

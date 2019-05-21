@@ -161,14 +161,6 @@ void RotatingCamera::getTransform(m::Matrix4f &mat, m::Vector3f &camPos, float p
 
 void RotatingCamera::setSpeed(float spd)
 {
-    //((T - curOffset) / 1000.0) * curSpeed = ((T - newOffset) / 1000.0) * newSpeed
-    //((T - curOffset) / 1000.0) * curSpeed / newSpeed = (T - newOffset) / 1000.0
-    //(T - curOffset) * curSpeed / newSpeed = T - newOffset
-    //newOffset = T - (T - curOffset) * curSpeed / newSpeed
-    //r = curSpeed / newSpeed
-    //newOffset = T - T * r + curOffset * r
-    //newOffset = T(1 - r) + curOffset * r
-
     double r = static_cast<double>(m_speed / spd);
     m_speed = spd;
     m_timeOffset = m::time::getTimeMs() * (1.0 - r) + m_timeOffset * r;

@@ -122,6 +122,7 @@ private:
     bool changeExposure(UIElement *e);
     bool changeCameraSpeed(UIElement *e);
     bool changeViewSettings(UIElement *e);
+    bool changeBloomThreshold(UIElement *e);
 
 	m::List<GameObject*> m_objects;
 	double m_renderPeriod;
@@ -162,6 +163,7 @@ private:
 
     bool m_internalRefraction;
     bool m_bloomEnable;
+    float m_bloomThreshold;
 
     static MainApp *m_instance;
 };

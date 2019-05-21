@@ -13,6 +13,8 @@ uniform mat4 u_Projection;
 uniform mat4 u_View;
 uniform float u_RaytraceStep;
 uniform float u_IOR;
+uniform int u_DisableRaytrace;
+uniform float u_BloomThreshold;
 
 layout(location = 0) out vec4 out_Color;
 layout(location = 1) out vec4 out_Bloom;
@@ -40,6 +42,9 @@ vec3 normalAt(vec2 pos)
 
 vec3 raytraceRefraction(vec3 V, vec3 N)
 {
+    if(u_DisableRaytrace)
+        return normalize(refract(V, N, 1.0 / u_IOR));
+
     vec3 orig = normalize(refract(V, N, 1.0 / u_IOR));
     vec4 dir4 = u_Projection * u_View * vec4(orig, 0.0);
     vec3 dir  = normalize(dir4.xyz) * u_RaytraceStep;
@@ -91,7 +96,7 @@ void main()
     
     out_Color = vec4(final, 1.0);
     
-    if(luma > 0.75)
+    if(luma > u_BloomThreshold)
         out_Bloom = vec4(final, 1.0);
     else
         out_Bloom = vec4(vec3(0.0), 1.0);

@@ -3,6 +3,8 @@ Base(title: "Vue", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), 
     Slider(name: "sFOV", constraints: "y"),
     Label(text: "Exposition", constraints: "y"),
     Slider(name: "sExposure", constraints: "y"),
+    Label(text: "Seuil de bloom", constraints: "y"),
+    Slider(name: "sBloomThreshold", constraints: "y"),
 	Label(text: "Vitesse de la caméra", constraints: "y"),
     Slider(name: "sCamSpeed", constraints: "y"),
     

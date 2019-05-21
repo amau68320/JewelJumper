@@ -58,5 +58,12 @@ private:
 class RotatingCamera : public Camera
 {
 public:
+    RotatingCamera();
+
     void getTransform(m::Matrix4f &mat, m::Vector3f &camPos, float ptt) override;
+    void setSpeed(float spd);
+
+private:
+    double m_timeOffset;
+    float m_speed;
 };

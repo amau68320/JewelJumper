@@ -5,6 +5,7 @@
 #include <aiso/UICore.h>
 #include <aiso/UILoader.h>
 #include <aiso/UISlider.h>
+#include <aiso/UICheckBox.h>
 
 #define JJ_UPDATE_PERIOD (1000.0 / 20.0)
 #define JJ_SLEEP_THRESHOLD 10.0
@@ -14,11 +15,12 @@ MainApp *MainApp::m_instance = nullptr;
 MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
                                     m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
                                     m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false),
-                                    m_numDrawcalls(0), m_relativeMouse(true), m_oldSides(6)
+                                    m_numDrawcalls(0), m_relativeMouse(true), m_oldSides(6),
+                                    m_exposure(2.0f), m_internalRefraction(true), m_bloomEnable(true)
 {
     m_instance = this;
 
-    m_renderPeriod = 1000.0 / 75.0;
+    m_renderPeriod = 1000.0 / 60.0;
     m_renderDelta = m_renderPeriod;
 
 	m_wnd = wnd;
@@ -45,7 +47,7 @@ MainApp::~MainApp()
     delete m_camera;
 }
 
-bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
+bool MainApp::setup(int ww, int wh)
 {
     m_ww = static_cast<uint32_t>(ww);
     m_wh = static_cast<uint32_t>(wh);
@@ -209,10 +211,50 @@ bool MainApp::setup(m::ProgramArgs &pargs, int ww, int wh)
         uiCore.addWindow(wnd);
         wnd->removeRef();
     } catch(UILoadException &ex) {
-        mlogger.error(M_LOG, "Erreur lors de la lecture du fichier d'interface graphique: %s", ex.what());
+        mlogger.error(M_LOG, "Erreur lors de la lecture du fichier d'interface graphique (ruby): %s", ex.what());
         return false;
     } catch(UIUnknownElementException &ex) {
-        mlogger.error(M_LOG, "Il manque un element d'interface graphique: %s", ex.what());
+        mlogger.error(M_LOG, "Il manque un element d'interface graphique (ruby): %s", ex.what());
+        return false;
+    }
+
+    try {
+        UIWindow *wnd = new UIWindow;
+        ui::load("view", wnd);
+
+        UISlider *s = wnd->byName<UISlider>("sFOV");
+        s->setValue((80.0f - 60.0f) / (150.0f - 60.0f));
+        s->onValueChanged.connect(this, &MainApp::changeFOV);
+
+        s = wnd->byName<UISlider>("sExposure");
+        s->setValue((m_exposure - 0.25f) / 3.75f);
+        s->onValueChanged.connect(this, &MainApp::changeExposure);
+
+        s = wnd->byName<UISlider>("sCamSpeed");
+        s->setValue((0.5f - 0.1f) / 1.9f);
+        s->onValueChanged.connect(this, &MainApp::changeCameraSpeed);
+
+        UICheckBox *cb = wnd->byName<UICheckBox>("cbRefraction");
+        cb->setChecked();
+        cb->onChanged.connect(this, &MainApp::changeViewSettings);
+
+        cb = wnd->byName<UICheckBox>("cbBloom");
+        cb->setChecked();
+        cb->onChanged.connect(this, &MainApp::changeViewSettings);
+
+        cb = wnd->byName<UICheckBox>("cbFXAA");
+        cb->setChecked();
+        cb->onChanged.connect(this, &MainApp::changeViewSettings);
+
+        wnd->pack(false, true);
+        wnd->setPos(10, wh - wnd->rect().height() - 10);
+        uiCore.addWindow(wnd);
+        wnd->removeRef();
+    } catch(UILoadException & ex) {
+        mlogger.error(M_LOG, "Erreur lors de la lecture du fichier d'interface graphique (view): %s", ex.what());
+        return false;
+    } catch(UIUnknownElementException & ex) {
+        mlogger.error(M_LOG, "Il manque un element d'interface graphique (view): %s", ex.what());
         return false;
     }
 
@@ -380,36 +422,46 @@ void MainApp::render3D(float ptt)
     gl::disable(gl::kC_Blend);
     gl::disable(gl::kC_CullFace);
 
-    //BLOOM: Reduction de la taille
-    m_2Dmat.loadIdentity();
-    m_bloomFBO[0].bindForRender();
-    m_shaders[kS_NoOp].bind();
-    gl::uniformMatrix3fv(m_shaders[kS_NoOp].getUniformLocation("u_Matrix"), 1, false, m_2Dmat.data());
-    gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID(1));
-    gl::bindVertexArray(m_peVAO);
-    gl::drawArrays(gl::kDM_Triangles, 0, 6);
-    gl::bindVertexArray(0);
-    gl::bindTexture(gl::kTT_Texture2D, 0);
-    UIShader::unbind();
-
-    //BLOOM: Flou
-    for(int i = 0; i < 2; i++) {
-        UIShader &shdr = m_shaders[(i == 0) ? kS_BlurX : kS_BlurY];
-
-        m_bloomFBO[1 - i].bindForRender();
-        shdr.bind();
-        gl::uniform2f(shdr.getUniformLocation("u_InvTexSize"), m_halfInvTexSize.x(), m_halfInvTexSize.y());
-        gl::bindTexture(gl::kTT_Texture2D, m_bloomFBO[i].colorAttachmentID());
+    if(m_bloomEnable) {
+        //BLOOM: Reduction de la taille
+        m_2Dmat.loadIdentity();
+        m_bloomFBO[0].bindForRender();
+        m_shaders[kS_NoOp].bind();
+        gl::uniformMatrix3fv(m_shaders[kS_NoOp].getUniformLocation("u_Matrix"), 1, false, m_2Dmat.data());
+        gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID(1));
         gl::bindVertexArray(m_peVAO);
         gl::drawArrays(gl::kDM_Triangles, 0, 6);
         gl::bindVertexArray(0);
         gl::bindTexture(gl::kTT_Texture2D, 0);
         UIShader::unbind();
+
+        //BLOOM: Flou
+        for(int i = 0; i < 2; i++) {
+            UIShader &shdr = m_shaders[(i == 0) ? kS_BlurX : kS_BlurY];
+
+            m_bloomFBO[1 - i].bindForRender();
+            shdr.bind();
+            gl::uniform2f(shdr.getUniformLocation("u_InvTexSize"), m_halfInvTexSize.x(), m_halfInvTexSize.y());
+            gl::bindTexture(gl::kTT_Texture2D, m_bloomFBO[i].colorAttachmentID());
+            gl::bindVertexArray(m_peVAO);
+            gl::drawArrays(gl::kDM_Triangles, 0, 6);
+            gl::bindVertexArray(0);
+            gl::bindTexture(gl::kTT_Texture2D, 0);
+            UIShader::unbind();
+        }
+    } else {
+        m_bloomFBO[0].bindForRender();
+        gl::clear(gl::kCF_ColorBuffer);
     }
 
+    if(m_fxaaEnable)
+        m_sdrFBO.bindForRender();
+    else
+        Framebuffer::unbindFromRender(m_ww, m_wh);
+
     //Ajout du bloom + Tone mapping
-    m_sdrFBO.bindForRender();
     m_shaders[kS_Tonemap].bind();
+    gl::uniform1f(m_shaders[kS_Tonemap].getUniformLocation("u_Exposure"), m_exposure);
     gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID());
     gl::activeTexture(1);
     gl::bindTexture(gl::kTT_Texture2D, m_bloomFBO[0].colorAttachmentID());
@@ -420,17 +472,20 @@ void MainApp::render3D(float ptt)
     gl::activeTexture(0);
     gl::bindTexture(gl::kTT_Texture2D, 0);
     UIShader::unbind();
-    Framebuffer::unbindFromRender(m_ww, m_wh);
 
-    //FXAA
-    m_shaders[kS_FXAA].bind();
-    gl::uniform2f(m_shaders[kS_FXAA].getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
-    gl::bindTexture(gl::kTT_Texture2D, m_sdrFBO.colorAttachmentID());
-    gl::bindVertexArray(m_peVAO);
-    gl::drawArrays(gl::kDM_Triangles, 0, 6);
-    gl::bindVertexArray(0);
-    gl::bindTexture(gl::kTT_Texture2D, 0);
-    UIShader::unbind();
+    if(m_fxaaEnable) {
+        //FXAA
+        Framebuffer::unbindFromRender(m_ww, m_wh);
+
+        m_shaders[kS_FXAA].bind();
+        gl::uniform2f(m_shaders[kS_FXAA].getUniformLocation("u_InvTexSize"), m_invTexSize.x(), m_invTexSize.y());
+        gl::bindTexture(gl::kTT_Texture2D, m_sdrFBO.colorAttachmentID());
+        gl::bindVertexArray(m_peVAO);
+        gl::drawArrays(gl::kDM_Triangles, 0, 6);
+        gl::bindVertexArray(0);
+        gl::bindTexture(gl::kTT_Texture2D, 0);
+        UIShader::unbind();
+    }
 
     if(m_doDebugDraw) {
         m_2Dmat.loadIdentity();
@@ -511,11 +566,56 @@ bool MainApp::changeColor(UIElement *e)
 
 bool MainApp::changeSides(UIElement *e)
 {
-    int s = static_cast<int>(static_cast<UISlider *>(e)->value() * 7.0f) + 3;
+    UISlider *slider = static_cast<UISlider *>(e);
+    int s = static_cast<int>(slider->value() * 7.0f) + 3;
+
     if(m_oldSides != s) {
         static_cast<Gem *>(m_objects[0])->generate(s, 0.75f, 1.0f, 1.0f, 0.75f);
         m_oldSides = s;
     }
+
+    return false;
+}
+
+bool MainApp::changeFOV(UIElement *e)
+{
+    float fov = static_cast<UISlider *>(e)->value() * (150.0f - 60.0f) + 60.0f;
+
+    m_proj = m::Matrix4f::perspective(fov * static_cast<float>(M_PI) / 180.0f,
+                                      static_cast<float>(m_ww) / static_cast<float>(m_wh),
+                                      0.1f, 10.0f);
+
+    return false;
+}
+
+bool MainApp::changeExposure(UIElement *e)
+{
+    m_exposure = static_cast<UISlider *>(e)->value() * 3.75f + 0.25f;
+    return false;
+}
+
+bool MainApp::changeCameraSpeed(UIElement *e)
+{
+    float spd = static_cast<UISlider *>(e)->value() * 1.9f + 0.1f;
+    RotatingCamera *cam = dynamic_cast<RotatingCamera *>(m_camera);
+
+    if(cam != nullptr)
+        cam->setSpeed(spd);
+
+    return false;
+}
+
+bool MainApp::changeViewSettings(UIElement *e)
+{
+    bool val = static_cast<UICheckBox *>(e)->isChecked();
+    const m::String &name = e->name();
+
+    if(name == "cbRefraction")
+        m_internalRefraction = val;
+    else if(name == "cbBloom")
+        m_bloomEnable = val;
+    else if(name == "cbFXAA")
+        m_fxaaEnable = val;
 
     return false;
 }
@@ -543,10 +643,7 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
     if(action == GLFW_PRESS) {
         if(key == GLFW_KEY_ESCAPE)
             glfwSetWindowShouldClose(m_wnd, GLFW_TRUE);
-        else if(key == GLFW_KEY_Q) {
-            m_fxaaEnable = !m_fxaaEnable;
-            mlogger.info(M_LOG, "FXAA: %s", m_fxaaEnable ? "ACTIF" : "DESACTIVE");
-        } else if(key == GLFW_KEY_Z) {
+        else if(key == GLFW_KEY_Z) {
             m_useWireframe = !m_useWireframe;
             mlogger.info(M_LOG, "Fil de fer: %s", m_useWireframe ? "ACTIF" : "DESACTIVE");
         } else if(key == GLFW_KEY_ENTER) {

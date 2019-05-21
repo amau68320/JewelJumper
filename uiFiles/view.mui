@@ -1,0 +1,17 @@
+Base(title: "Vue", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), icon: "eye") [
+    Label(text: "Champ de vision", constraints: "y"),
+    Slider(name: "sFOV", constraints: "y"),
+    Label(text: "Exposition", constraints: "y"),
+    Slider(name: "sExposure", constraints: "y"),
+	Label(text: "Vitesse de la caméra", constraints: "y"),
+    Slider(name: "sCamSpeed", constraints: "y"),
+    
+    Label(text: "Effets", constraints: "y"),
+    Container(layout: VBoxLayout(), constraints: "y") [
+		CheckBox(label: "Réfraction", name: "cbRefraction"),
+        CheckBox(label: "Bloom", name: "cbBloom"),
+		CheckBox(label: "FXAA", name: "cbFXAA")
+    ],
+    
+    Spacer()
+]

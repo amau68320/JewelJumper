@@ -1,7 +1,6 @@
 #include <mgpcl/SimpleConfig.h>
 #include <mgpcl/BasicLogger.h>
 #include <mgpcl/NetLogger.h>
-#include <mgpcl/ProgramArgs.h>
 #include <mgpcl/Time.h>
 #include <gl/glew.h>
 #include <GLFW/glfw3.h>
@@ -24,8 +23,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    const int ww = cfg["window"]["width"].asInt(1024);
-    const int wh = cfg["window"]["height"].asInt(576);
+    int ww = cfg["window"]["width"].asInt(0);
+    int wh = cfg["window"]["height"].asInt(0);
     const bool useNetLogger = cfg["logging"]["useNetLogger"].asBool();
     const bool autoStartNL = cfg["logging"]["autoStartNetLogger"].asBool();
     const m::String &nlAddr = cfg["logging"]["netLoggerAddress"].value("127.0.0.1");
@@ -59,12 +58,42 @@ int main(int argc, char *argv[])
 
     //Config OpenGL & creation de la fenetre
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    GLFWwindow *wnd = glfwCreateWindow(ww, wh, "THE JEWEL EDITOR - Copyright (C) 2019 A. Einholtz & N. Barbotin - IN55 P2019", nullptr, nullptr);
+    GLFWmonitor *mainMon = glfwGetPrimaryMonitor();
+    int monW, monH;
+    glfwGetMonitorWorkarea(mainMon, nullptr, nullptr, &monW, &monH);
+
+    if(monW <= 0 || monH <= 0) {
+        monW = 1366;
+        monH = 768;
+    }
+
+    if(ww <= 0 && wh <= 0) {
+        ww = monW * 3 / 4;
+        wh = monH * 3 / 4;
+    } else if(ww <= 0)
+        ww = wh * 16 / 9;
+    else if(wh <= 0)
+        wh = ww * 9 / 16;
+
+    int maj = 4;
+    int min = 6;
+    GLFWwindow *wnd = nullptr;
+
+    while(wnd == nullptr && (maj > 3 || min >= 3)) {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, maj);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, min);
+
+        wnd = glfwCreateWindow(ww, wh, "THE JEWEL EDITOR - Copyright (C) 2019 A. Einholtz & N. Barbotin - IN55 P2019", nullptr, nullptr);
+
+        if(--min <= 0) {
+            maj = 3;
+            min = 3;
+        }
+    }
+
     if(wnd == nullptr) {
         mlogger.error(M_LOG, "Impossible de creer la fenetre !");
         glfwTerminate();
@@ -74,15 +103,11 @@ int main(int argc, char *argv[])
     glfwMakeContextCurrent(wnd);
 
     //On verifie que la version est bien celle demandee
-    const int maj = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MAJOR);
-    const int min = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MINOR);
+    maj = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MAJOR);
+    min = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MINOR);
     const int profile = glfwGetWindowAttrib(wnd, GLFW_OPENGL_PROFILE);
 
-    if(maj != 4 || min != 6)
-        mlogger.warning(M_LOG, "Version d'OpenGL: %d.%d", maj, min);
-
-    if(profile != GLFW_OPENGL_CORE_PROFILE)
-        mlogger.warning(M_LOG, "Le profil d'OpenGL utilise n'est pas \"core\" !");
+    mlogger.info(M_LOG, "Version d'OpenGL: %d.%d %s", maj, min, (profile == GLFW_OPENGL_CORE_PROFILE) ? "CORE" : "COMPAT");
 
     GLenum glewErr = glewInit();
     if(glewErr != GLEW_OK) {
@@ -92,16 +117,16 @@ int main(int argc, char *argv[])
         return 6;
     }
 
+    mlogger.info(M_LOG, "Carte graphique: %s", gl::getRenderer());
+    mlogger.info(M_LOG, "Vendeur: %s", gl::getVendor());
+
     int fbw, fbh;
     glfwGetFramebufferSize(wnd, &fbw, &fbh);
-
-    //Lecture des arguments de commande
-    m::ProgramArgs pargs(argc, const_cast<const char **>(argv));
 
     //Boucle principale de Jewel Jumper
 	MainApp app(wnd);
 
-    if(app.setup(pargs, fbw, fbh))
+    if(app.setup(fbw, fbh))
         app.run();
     else
         mlogger.error(M_LOG, "Erreur lors de l'initialisation de MainApp ! Impossible de continuer...");

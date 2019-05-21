@@ -1,6 +1,5 @@
 #pragma once
 #include <GL/glew.h>
-#include <mgpcl/ProgramArgs.h>
 #include <mgpcl/Time.h>
 #include <mgpcl/Matrix3.h>
 #include <mgpcl/SignalSlot.h>
@@ -46,7 +45,7 @@ public:
      * Retourne true si tout c'est bien passe, et false en cas
      * d'erreur.
      */
-    bool setup(m::ProgramArgs &pargs, int ww, int wh);
+    bool setup(int ww, int wh);
 
     /*
      * run() lance la boucle principale du jeu. Cette fonction
@@ -119,6 +118,10 @@ private:
     bool changeIOR(UIElement *e);
     bool changeColor(UIElement *e);
     bool changeSides(UIElement *e);
+    bool changeFOV(UIElement *e);
+    bool changeExposure(UIElement *e);
+    bool changeCameraSpeed(UIElement *e);
+    bool changeViewSettings(UIElement *e);
 
 	m::List<GameObject*> m_objects;
 	double m_renderPeriod;
@@ -155,6 +158,10 @@ private:
     GLuint m_numDrawcalls;
     bool m_relativeMouse;
     int m_oldSides;
+    float m_exposure;
+
+    bool m_internalRefraction;
+    bool m_bloomEnable;
 
     static MainApp *m_instance;
 };

@@ -1,4 +1,4 @@
-Base(title: "Jewel Customization", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), icon: "ruby") [
+Base(title: "Customisation", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), icon: "ruby") [
     Label(text: "Côtés", constraints: "y"),
     Slider(name: "sSides", constraints: "y"),
     Label(text: "Indice de réfraction", constraints: "y"),
@@ -6,9 +6,9 @@ Base(title: "Jewel Customization", x: 10, y: 10, width: 400, height: 400, layout
     
     Label(text: "Couleur", constraints: "y"),
     Container(layout: FormLayout(), constraints: "y") [
-        Label(text: "R    ", constraints: "y"), Slider(name: "sCR", constraints: "y"),
-        Label(text: "V    ", constraints: "y"), Slider(name: "sCG", constraints: "y"),
-        Label(text: "B    ", constraints: "y"), Slider(name: "sCB", constraints: "y")
+        Label(text: "R", xAlign: "center"), Slider(name: "sCR"),
+        Label(text: "V", xAlign: "center"), Slider(name: "sCG"),
+        Label(text: "B", xAlign: "center"), Slider(name: "sCB")
     ],
     
     Spacer()

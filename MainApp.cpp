@@ -22,8 +22,8 @@ MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_l
 {
     m_instance = this;
 
-    m_renderPeriod = 1000.0 / 60.0;
-    m_renderDelta = m_renderPeriod;
+    m_renderPeriod = 0.0;
+    m_renderDelta = 1000.0 / 60.0;
 
 	m_wnd = wnd;
     m_camera = new RotatingCamera;
@@ -256,10 +256,10 @@ bool MainApp::setup(int ww, int wh)
         cb->onChanged.connect(this, &MainApp::changeViewSettings);
 
         cb = wnd->byName<UICheckBox>("cbLimitFPS");
-        cb->setChecked();
         cb->onChanged.connect(this, &MainApp::changeViewSettings);
 
         cb = wnd->byName<UICheckBox>("cbVSync");
+        cb->setChecked();
         cb->onChanged.connect(this, &MainApp::changeViewSettings);
 
         cb = wnd->byName<UICheckBox>("cbInfos");

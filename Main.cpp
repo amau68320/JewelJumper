@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
 
     glfwSetWindowPos(wnd, monX + (monW - ww) / 2, monY + (monH - wh) / 2);
     glfwMakeContextCurrent(wnd);
+    glfwSwapInterval(1);
 
     //On verifie que la version est bien celle demandee
     maj = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MAJOR);

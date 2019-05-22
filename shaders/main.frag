@@ -62,7 +62,7 @@ vec3 raytraceRefraction(vec3 V, vec3 N)
     vec3 pos = f_ScreenPos;
     vec3 res = vec3(0.0);
 
-    for(int i = 0; i < 16; i++) {
+    for(int i = 0; i < 32; i++) {
         pos += dir * 4.0; //Recherche grossiere
 
         if(pos.z >= depthAt(pos.xy)) {

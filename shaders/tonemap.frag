@@ -15,7 +15,8 @@ void main()
     //Bloom
     color += texture(u_BloomTex, f_TexCoord).rgb;
   
-    //Tone mapping de Krzysztof Narkowicz (luv u Shell32 <3)
+    //ACES Filmic Tone mapping par Krzysztof Narkowicz (luv u Shell32 <3)
+    //Issu de https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
     vec3 mapped = (color * (2.51 * color + 0.04)) / (color * (2.51 * color + 0.59) + 0.14);
     out_Color = vec4(mapped, 1.0);
 }

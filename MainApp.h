@@ -13,6 +13,7 @@
 enum JJShader
 {
     kS_Main = 0,
+    kS_MainNoRT,
     kS_FXAA,
     kS_Skybox,
     kS_Tonemap,
@@ -88,7 +89,10 @@ public:
         if(m_override != nullptr)
             return *m_override;
 
-        return m_useWireframe ? m_shaders[kS_Wirefame] : m_shaders[kS_Main];
+        if(m_useWireframe)
+            return m_shaders[kS_Wirefame];
+
+        return m_shaders[m_internalRefraction ? kS_Main : kS_MainNoRT];
     }
 
     /*

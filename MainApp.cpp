@@ -82,7 +82,10 @@ bool MainApp::setup(int ww, int wh)
 
     //Shaders
     try {
+        m_shaders[kS_MainNoRT].addDefine("NO_RAYTRACE");
+
         loadShader(kS_Main    , "main"           );
+        loadShader(kS_MainNoRT, "main"           );
         loadShader(kS_FXAA    , "fxaa"           );
         loadShader(kS_Skybox  , "skybox"         );
         loadShader(kS_Tonemap , "tonemap"        );
@@ -121,7 +124,7 @@ bool MainApp::setup(int ww, int wh)
     m_hdrFBO0.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
     m_hdrFBO0.createColorBuffer(0, gl::kTF_RGB16F);
     m_hdrFBO0.createColorBuffer(1, gl::kTF_RGB16F);
-    m_hdrFBO0.createDepthBuffer();
+    m_hdrFBO0.createDepthBuffer(kFDM_DepthTexture); //On utilise une texture pour pouvoir lire dedans pour le lens flare
 
     if(!m_hdrFBO0.finishFramebuffer()) {
         mlogger.error(M_LOG, "Erreur lors de la creation du FBO HDR 0");
@@ -427,11 +430,11 @@ void MainApp::render3D(float ptt)
     gl::enable(gl::kC_CullFace);
     gl::cullFace(gl::kF_Back);
 
-    use3DShader(m_shaders[kS_Main]);
-    gl::uniform3f(m_shaders[kS_Main].getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
-    gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_DisableRaytrace"), m_internalRefraction ? 0 : 1);
-    gl::uniform1f(m_shaders[kS_Main].getUniformLocation("u_Exposure"), m_exposure);
-    gl::uniform1f(m_shaders[kS_Main].getUniformLocation("u_BloomThreshold"), m_bloomThreshold);
+    UIShader &mainShdr = m_shaders[m_internalRefraction ? kS_Main : kS_MainNoRT];
+    use3DShader(mainShdr);
+    gl::uniform3f(mainShdr.getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
+    gl::uniform1f(mainShdr.getUniformLocation("u_Exposure"), m_exposure);
+    gl::uniform1f(mainShdr.getUniformLocation("u_BloomThreshold"), m_bloomThreshold);
     UIShader::unbind();
 
     gl::activeTexture(1);

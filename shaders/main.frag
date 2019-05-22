@@ -6,16 +6,18 @@ in vec3 f_Normal;
 in vec3 f_ScreenPos;
 
 uniform samplerCube u_CubeMap;
-uniform sampler2D u_BackNormal;
-uniform sampler2D u_BackDepth;
 uniform vec3 u_CamPos;
 uniform mat4 u_Projection;
 uniform mat4 u_View;
-uniform float u_RaytraceStep;
 uniform float u_IOR;
-uniform int u_DisableRaytrace;
 uniform float u_Exposure;
 uniform float u_BloomThreshold;
+
+#ifndef NO_RAYTRACE
+uniform sampler2D u_BackNormal;
+uniform sampler2D u_BackDepth;
+uniform float u_RaytraceStep;
+#endif
 
 layout(location = 0) out vec4 out_Color;
 layout(location = 1) out vec4 out_Bloom;
@@ -31,6 +33,8 @@ float computeFresnel(float IOR, float LdotH)
 	return 0.5 * a * a / (b * b) * (c * c / (d * d) + 1.0);
 }
 
+#ifndef NO_RAYTRACE
+
 float depthAt(vec2 pos)
 {
     return texture(u_BackDepth, (pos + 1.0) * 0.5).r * 2.0 - 1.0;
@@ -41,11 +45,13 @@ vec3 normalAt(vec2 pos)
     return normalize(texture(u_BackNormal, (pos + 1.0) * 0.5).rgb * 2.0 - 1.0);
 }
 
+#endif
+
 vec3 raytraceRefraction(vec3 V, vec3 N)
 {
-    if(u_DisableRaytrace != 0)
-        return normalize(refract(V, N, 1.0 / u_IOR));
-
+#ifdef NO_RAYTRACE
+    return normalize(refract(V, N, 1.0 / u_IOR));
+#else
     vec3 orig = normalize(refract(V, N, 1.0 / u_IOR));
     vec4 dir4 = u_Projection * u_View * vec4(orig, 0.0);
     vec3 dir  = normalize(dir4.xyz) * u_RaytraceStep;
@@ -78,6 +84,7 @@ vec3 raytraceRefraction(vec3 V, vec3 N)
         orig = normalize(refract(orig, -res, 1.0 / u_IOR));
     
     return orig;
+#endif
 }
 
 void main()

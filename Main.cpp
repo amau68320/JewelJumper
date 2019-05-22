@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
     glfwTerminate();
     delete m::Logger::instance();
 	m::inet::release();
-    //system("pause");
+    system("pause");
 
     return 0;
 }

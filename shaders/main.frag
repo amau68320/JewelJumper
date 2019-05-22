@@ -14,6 +14,7 @@ uniform mat4 u_View;
 uniform float u_RaytraceStep;
 uniform float u_IOR;
 uniform int u_DisableRaytrace;
+uniform float u_Exposure;
 uniform float u_BloomThreshold;
 
 layout(location = 0) out vec4 out_Color;
@@ -42,7 +43,7 @@ vec3 normalAt(vec2 pos)
 
 vec3 raytraceRefraction(vec3 V, vec3 N)
 {
-    if(u_DisableRaytrace)
+    if(u_DisableRaytrace != 0)
         return normalize(refract(V, N, 1.0 / u_IOR));
 
     vec3 orig = normalize(refract(V, N, 1.0 / u_IOR));
@@ -91,7 +92,7 @@ void main()
 	float fresnel = computeFresnel(u_IOR, dot(L, H));	
 	vec3 diffuse  = texture(u_CubeMap, R2).rgb * f_Color.rgb;
 	vec3 specular = texture(u_CubeMap, R).rgb;
-    vec3 final    = mix(diffuse, specular, fresnel);
+    vec3 final    = mix(diffuse, specular, fresnel) * u_Exposure;
     float luma    = dot(final, vec3(0.2126, 0.7152, 0.0722));
     
     out_Color = vec4(final, 1.0);

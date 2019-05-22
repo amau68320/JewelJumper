@@ -14,6 +14,13 @@ Base(title: "Vue", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), 
         CheckBox(label: "Bloom", name: "cbBloom"),
 		CheckBox(label: "FXAA", name: "cbFXAA")
     ],
+
+    Label(text: "Affichage", constraints: "y"),
+    Container(layout: VBoxLayout(), constraints: "y") [
+		CheckBox(label: "Limiter IPS", name: "cbLimitFPS"),
+        CheckBox(label: "Synchro v.", name: "cbVSync"),
+		CheckBox(label: "Infos", name: "cbInfos")
+    ],
     
     Spacer()
 ]

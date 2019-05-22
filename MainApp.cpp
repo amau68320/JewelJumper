@@ -6,6 +6,7 @@
 #include <aiso/UILoader.h>
 #include <aiso/UISlider.h>
 #include <aiso/UICheckBox.h>
+#include <aiso/UIFontLibrary.h>
 
 #define JJ_UPDATE_PERIOD (1000.0 / 20.0)
 #define JJ_SLEEP_THRESHOLD 10.0
@@ -17,7 +18,7 @@ MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_l
                                     m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false),
                                     m_numDrawcalls(0), m_relativeMouse(true), m_oldSides(6),
                                     m_exposure(2.0f), m_internalRefraction(true), m_bloomEnable(true),
-                                    m_bloomThreshold(0.75f)
+                                    m_bloomThreshold(0.75f), m_displayDebugString(true)
 {
     m_instance = this;
 
@@ -251,6 +252,17 @@ bool MainApp::setup(int ww, int wh)
         cb->setChecked();
         cb->onChanged.connect(this, &MainApp::changeViewSettings);
 
+        cb = wnd->byName<UICheckBox>("cbLimitFPS");
+        cb->setChecked();
+        cb->onChanged.connect(this, &MainApp::changeViewSettings);
+
+        cb = wnd->byName<UICheckBox>("cbVSync");
+        cb->onChanged.connect(this, &MainApp::changeViewSettings);
+
+        cb = wnd->byName<UICheckBox>("cbInfos");
+        cb->setChecked();
+        cb->onChanged.connect(this, &MainApp::changeViewSettings);
+
         wnd->pack(false, true);
         wnd->setPos(10, wh - wnd->rect().height() - 10);
         uiCore.addWindow(wnd);
@@ -263,6 +275,7 @@ bool MainApp::setup(int ww, int wh)
         return false;
     }
 
+    m_font = uiFontLib.get("Roboto-Regular", 12);
     grabMouse(false);
     return true;
 }
@@ -303,6 +316,7 @@ void MainApp::run()
             gl::depthMask(true);
             gl::clear(gl::kCF_DepthBuffer);
             uiCore.render(static_cast<float>(t));
+            renderHUD();
 
             m_numDrawcalls = gl::numDrawcalls;
             gl::numDrawcalls = 0;
@@ -314,7 +328,7 @@ void MainApp::run()
         //Mettre en pause le programme, eventuellement...
         double pause = m::math::minimum(nextUpdate, nextRender) - t;
         if(pause >= JJ_SLEEP_THRESHOLD)
-            m::time::sleepMs(static_cast<uint32_t>(pause));
+            m::time::sleepMs(static_cast<uint32_t>(pause) - 5); //-5ms pour avoir de la marge
     }
 }
 
@@ -348,6 +362,14 @@ void MainApp::update(float dt)
     for(GameObject *object : m_objects)
     {
         object->update(dt);
+    }
+
+    if(m_displayDebugString) {
+        m_debugString.cleanup();
+        m_debugString.append("IPS: ", 5);
+        m_debugString += m::String::fromDouble(1000.0 / m_renderDelta, 2);
+        m_debugString.append("\nDrawcalls: ", 12);
+        m_debugString += m::String::fromUInteger(m_numDrawcalls);
     }
 }
 
@@ -393,6 +415,7 @@ void MainApp::render3D(float ptt)
     gl::depthMask(false);
     pushMatrix().translate(camPos);
     use3DShader(m_shaders[kS_Skybox]);
+    gl::uniform1f(m_shaders[kS_Skybox].getUniformLocation("u_Exposure"), m_exposure);
     gl::uniform1f(m_shaders[kS_Skybox].getUniformLocation("u_BloomThreshold"), m_bloomThreshold);
     m_skybox.draw();
     UIShader::unbind();
@@ -407,6 +430,7 @@ void MainApp::render3D(float ptt)
     use3DShader(m_shaders[kS_Main]);
     gl::uniform3f(m_shaders[kS_Main].getUniformLocation("u_CamPos"), camPos.x(), camPos.y(), camPos.z());
     gl::uniform1i(m_shaders[kS_Main].getUniformLocation("u_DisableRaytrace"), m_internalRefraction ? 0 : 1);
+    gl::uniform1f(m_shaders[kS_Main].getUniformLocation("u_Exposure"), m_exposure);
     gl::uniform1f(m_shaders[kS_Main].getUniformLocation("u_BloomThreshold"), m_bloomThreshold);
     UIShader::unbind();
 
@@ -471,7 +495,6 @@ void MainApp::render3D(float ptt)
 
     //Ajout du bloom + Tone mapping
     m_shaders[kS_Tonemap].bind();
-    gl::uniform1f(m_shaders[kS_Tonemap].getUniformLocation("u_Exposure"), m_exposure);
     gl::bindTexture(gl::kTT_Texture2D, m_hdrFBO0.colorAttachmentID());
     gl::activeTexture(1);
     gl::bindTexture(gl::kTT_Texture2D, m_bloomFBO[0].colorAttachmentID());
@@ -626,6 +649,12 @@ bool MainApp::changeViewSettings(UIElement *e)
         m_bloomEnable = val;
     else if(name == "cbFXAA")
         m_fxaaEnable = val;
+    else if(name == "cbLimitFPS")
+        m_renderPeriod = val ? (1000.0 / 60.0) : 0.0;
+    else if(name == "cbVSync")
+        glfwSwapInterval(val ? 1 : 0);
+    else if(name == "cbInfos")
+        m_displayDebugString = val;
 
     return false;
 }
@@ -634,6 +663,17 @@ bool MainApp::changeBloomThreshold(UIElement *e)
 {
     m_bloomThreshold = static_cast<UISlider *>(e)->value() * 8.0f;
     return false;
+}
+
+void MainApp::renderHUD()
+{
+    if(m_displayDebugString) {
+        gl::enable(gl::kC_Blend);
+        gl::blendFunc(gl::kBM_SrcAlpha, gl::kBM_OneMinusSrcAlpha);
+
+        UIVStreamer &vs = uiCore.vertexStreamer();
+        vs.drawString(10.0f, 10.0f, m_font, m_debugString);
+    }
 }
 
 void MainApp::use3DShader(UIShader &shdr)

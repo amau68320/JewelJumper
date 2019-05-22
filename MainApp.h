@@ -27,6 +27,7 @@ enum JJShader
 };
 
 class UIElement;
+class UIFontFace;
 
 /*
  * Classe principale gerant JewelJumper.
@@ -123,6 +124,7 @@ private:
     bool changeCameraSpeed(UIElement *e);
     bool changeViewSettings(UIElement *e);
     bool changeBloomThreshold(UIElement *e);
+    void renderHUD();
 
 	m::List<GameObject*> m_objects;
 	double m_renderPeriod;
@@ -164,6 +166,9 @@ private:
     bool m_internalRefraction;
     bool m_bloomEnable;
     float m_bloomThreshold;
+    UIFontFace *m_font;
+    m::String m_debugString;
+    bool m_displayDebugString;
 
     static MainApp *m_instance;
 };

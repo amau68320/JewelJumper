@@ -62,8 +62,8 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     GLFWmonitor *mainMon = glfwGetPrimaryMonitor();
-    int monW, monH;
-    glfwGetMonitorWorkarea(mainMon, nullptr, nullptr, &monW, &monH);
+    int monX, monY, monW, monH;
+    glfwGetMonitorWorkarea(mainMon, &monX, &monY, &monW, &monH);
 
     if(monW <= 0 || monH <= 0) {
         monW = 1366;
@@ -71,8 +71,8 @@ int main(int argc, char *argv[])
     }
 
     if(ww <= 0 && wh <= 0) {
-        ww = monW * 3 / 4;
-        wh = monH * 3 / 4;
+        ww = monW * 7 / 8;
+        wh = monH * 7 / 8;
     } else if(ww <= 0)
         ww = wh * 16 / 9;
     else if(wh <= 0)
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, maj);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, min);
 
-        wnd = glfwCreateWindow(ww, wh, "THE JEWEL EDITOR - Copyright (C) 2019 A. Einholtz & N. Barbotin - IN55 P2019", nullptr, nullptr);
+        wnd = glfwCreateWindow(ww, wh, "GemStudio - Copyright (C) 2019 A. Einholtz & N. Barbotin - IN55 P2019", nullptr, nullptr);
 
         if(--min <= 0) {
             maj = 3;
@@ -100,6 +100,7 @@ int main(int argc, char *argv[])
         return 3;
     }
 
+    glfwSetWindowPos(wnd, monX + (monW - ww) / 2, monY + (monH - wh) / 2);
     glfwMakeContextCurrent(wnd);
 
     //On verifie que la version est bien celle demandee

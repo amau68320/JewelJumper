@@ -13,19 +13,17 @@
 
 MainApp *MainApp::m_instance = nullptr;
 
-MainApp::MainApp(GLFWwindow* wnd) : m_curModelMat(0), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
-                                    m_override(nullptr), m_peVBO(0), m_peVAO(0), m_fxaaEnable(true),
-                                    m_useWireframe(false), m_ww(0), m_wh(0), m_doDebugDraw(false),
-                                    m_numDrawcalls(0), m_relativeMouse(true), m_oldSides(6),
-                                    m_exposure(2.0f), m_internalRefraction(true), m_bloomEnable(true),
-                                    m_bloomThreshold(0.75f), m_displayDebugString(true)
+MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
+                                    m_ww(0), m_wh(0), m_curModelMat(0), m_override(nullptr), m_exposure(2.0f),
+                                    m_bloomThreshold(0.75f), m_fxaaEnable(true), m_useWireframe(false), m_doDebugDraw(false),
+                                    m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(true),
+                                    m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr)
 {
     m_instance = this;
 
-    m_renderPeriod = 0.0;
+    m_renderPeriod = 0.0; //IPS illimite par defaut
     m_renderDelta = 1000.0 / 60.0;
 
-	m_wnd = wnd;
     m_camera = new RotatingCamera;
 }
 
@@ -191,25 +189,12 @@ bool MainApp::setup(int ww, int wh)
         UIWindow *wnd = new UIWindow;
         ui::load("ruby", wnd);
 
-        UISlider *s = wnd->byName<UISlider>("sIOR");
-        s->setValue(0.725f);
-        s->onValueChanged.connect(this, &MainApp::changeIOR);
+        wnd->byName<UISlider>("sCR")->setValue(1.0f)->onValueChanged.connect(this, &MainApp::changeColor);
+        wnd->byName<UISlider>("sCG")->setValue(0.0f)->onValueChanged.connect(this, &MainApp::changeColor);
+        wnd->byName<UISlider>("sCB")->setValue(0.0f)->onValueChanged.connect(this, &MainApp::changeColor);
 
-        s = wnd->byName<UISlider>("sCR");
-        s->setValue(1.0f);
-        s->onValueChanged.connect(this, &MainApp::changeColor);
-
-        s = wnd->byName<UISlider>("sCG");
-        s->setValue(0.0f);
-        s->onValueChanged.connect(this, &MainApp::changeColor);
-
-        s = wnd->byName<UISlider>("sCB");
-        s->setValue(0.0f);
-        s->onValueChanged.connect(this, &MainApp::changeColor);
-
-        s = wnd->byName<UISlider>("sSides");
-        s->setValue(static_cast<float>(m_oldSides - 3) / 7.0f);
-        s->onValueChanged.connect(this, &MainApp::changeSides);
+        wnd->byName<UISlider>("sIOR")->setRange(1.0f, 2.0f)->setValue(1.45f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+        wnd->byName<UISlider>("sSides")->setRange(3.0f, 10.0f, true)->setValue(6)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
 
         wnd->pack(false, true);
         wnd->setPos(ww - wnd->rect().width() - 10, wh - wnd->rect().height() - 10);
@@ -227,44 +212,17 @@ bool MainApp::setup(int ww, int wh)
         UIWindow *wnd = new UIWindow;
         ui::load("view", wnd);
 
-        UISlider *s = wnd->byName<UISlider>("sFOV");
-        s->setValue((80.0f - 60.0f) / (150.0f - 60.0f));
-        s->onValueChanged.connect(this, &MainApp::changeFOV);
+        wnd->byName<UISlider>("sFOV")->setRange(60.0f, 150.0f)->setValue(80.0f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+        wnd->byName<UISlider>("sExposure")->setRange(0.25f, 4.0f)->setValue(m_exposure)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+        wnd->byName<UISlider>("sCamSpeed")->setRange(0.1f, 2.0f)->setValue(0.5f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+        wnd->byName<UISlider>("sBloomThreshold")->setMax(8.0f)->setValue(0.75f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
 
-        s = wnd->byName<UISlider>("sExposure");
-        s->setValue((m_exposure - 0.25f) / 3.75f);
-        s->onValueChanged.connect(this, &MainApp::changeExposure);
-
-        s = wnd->byName<UISlider>("sCamSpeed");
-        s->setValue((0.5f - 0.1f) / 1.9f);
-        s->onValueChanged.connect(this, &MainApp::changeCameraSpeed);
-
-        s = wnd->byName<UISlider>("sBloomThreshold");
-        s->setValue(0.75f / 8.0f);
-        s->onValueChanged.connect(this, &MainApp::changeBloomThreshold);
-
-        UICheckBox *cb = wnd->byName<UICheckBox>("cbRefraction");
-        cb->setChecked();
-        cb->onChanged.connect(this, &MainApp::changeViewSettings);
-
-        cb = wnd->byName<UICheckBox>("cbBloom");
-        cb->setChecked();
-        cb->onChanged.connect(this, &MainApp::changeViewSettings);
-
-        cb = wnd->byName<UICheckBox>("cbFXAA");
-        cb->setChecked();
-        cb->onChanged.connect(this, &MainApp::changeViewSettings);
-
-        cb = wnd->byName<UICheckBox>("cbLimitFPS");
-        cb->onChanged.connect(this, &MainApp::changeViewSettings);
-
-        cb = wnd->byName<UICheckBox>("cbVSync");
-        cb->setChecked();
-        cb->onChanged.connect(this, &MainApp::changeViewSettings);
-
-        cb = wnd->byName<UICheckBox>("cbInfos");
-        cb->setChecked();
-        cb->onChanged.connect(this, &MainApp::changeViewSettings);
+        wnd->byName<UICheckBox>("cbRefraction")->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbBloom"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbFXAA"      )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbVSync"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbInfos"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbLimitFPS"  )->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
 
         wnd->pack(false, true);
         wnd->setPos(10, wh - wnd->rect().height() - 10);
@@ -571,15 +529,31 @@ void MainApp::grabMouse(bool grabbed)
     }
 }
 
-bool MainApp::changeIOR(UIElement *e)
+bool MainApp::onSliderValueChanged(UIElement *e)
 {
     float val = static_cast<UISlider *>(e)->value();
-    if(val <= 0.5f)
-        val = 0.5f + val;
-    else
-        val = val * 2.0f;
+    const m::String &name = e->name();
+    Gem *gem = static_cast<Gem *>(m_objects[0]);
 
-    static_cast<Gem *>(m_objects[0])->setIOR(val);
+    if(name == "sIOR")
+        gem->setIOR(val);
+    else if(name == "sSides")
+        gem->generate(static_cast<int>(val), 0.75f, 1.0f, 1.0f, 0.75f);
+    else if(name == "sExposure")
+        m_exposure = val;
+    else if(name == "sBloomThreshold")
+        m_bloomThreshold = val;
+    else if(name == "sFOV") {
+        m_proj = m::Matrix4f::perspective(val * static_cast<float>(M_PI) / 180.0f,
+                                          static_cast<float>(m_ww) / static_cast<float>(m_wh),
+                                          0.1f, 10.0f);
+    } else if(name == "sCamSpeed") {
+        RotatingCamera *cam = dynamic_cast<RotatingCamera *>(m_camera);
+
+        if(cam != nullptr)
+            cam->setSpeed(val);
+    }
+
     return false;
 }
 
@@ -600,48 +574,7 @@ bool MainApp::changeColor(UIElement *e)
     return false;
 }
 
-bool MainApp::changeSides(UIElement *e)
-{
-    UISlider *slider = static_cast<UISlider *>(e);
-    int s = static_cast<int>(slider->value() * 7.0f) + 3;
-
-    if(m_oldSides != s) {
-        static_cast<Gem *>(m_objects[0])->generate(s, 0.75f, 1.0f, 1.0f, 0.75f);
-        m_oldSides = s;
-    }
-
-    return false;
-}
-
-bool MainApp::changeFOV(UIElement *e)
-{
-    float fov = static_cast<UISlider *>(e)->value() * (150.0f - 60.0f) + 60.0f;
-
-    m_proj = m::Matrix4f::perspective(fov * static_cast<float>(M_PI) / 180.0f,
-                                      static_cast<float>(m_ww) / static_cast<float>(m_wh),
-                                      0.1f, 10.0f);
-
-    return false;
-}
-
-bool MainApp::changeExposure(UIElement *e)
-{
-    m_exposure = static_cast<UISlider *>(e)->value() * 3.75f + 0.25f;
-    return false;
-}
-
-bool MainApp::changeCameraSpeed(UIElement *e)
-{
-    float spd = static_cast<UISlider *>(e)->value() * 1.9f + 0.1f;
-    RotatingCamera *cam = dynamic_cast<RotatingCamera *>(m_camera);
-
-    if(cam != nullptr)
-        cam->setSpeed(spd);
-
-    return false;
-}
-
-bool MainApp::changeViewSettings(UIElement *e)
+bool MainApp::onCheckboxValueChanged(UIElement *e)
 {
     bool val = static_cast<UICheckBox *>(e)->isChecked();
     const m::String &name = e->name();
@@ -659,12 +592,6 @@ bool MainApp::changeViewSettings(UIElement *e)
     else if(name == "cbInfos")
         m_displayDebugString = val;
 
-    return false;
-}
-
-bool MainApp::changeBloomThreshold(UIElement *e)
-{
-    m_bloomThreshold = static_cast<UISlider *>(e)->value() * 8.0f;
     return false;
 }
 

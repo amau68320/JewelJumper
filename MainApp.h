@@ -120,59 +120,66 @@ private:
     void handleKeyboardEvent(int key, int scancode, int action, int mods);
     void debugDrawTexture(GLuint tex);
     void grabMouse(bool grabbed);
-    bool changeIOR(UIElement *e);
     bool changeColor(UIElement *e);
-    bool changeSides(UIElement *e);
-    bool changeFOV(UIElement *e);
-    bool changeExposure(UIElement *e);
-    bool changeCameraSpeed(UIElement *e);
-    bool changeViewSettings(UIElement *e);
-    bool changeBloomThreshold(UIElement *e);
+    bool onCheckboxValueChanged(UIElement *e);
+    bool onSliderValueChanged(UIElement *e);
     void renderHUD();
 
+    //Contenu
 	m::List<GameObject*> m_objects;
+    Camera *m_camera;
+    Skybox m_skybox;
+
+    //Timing
 	double m_renderPeriod;
     double m_renderDelta;
+    
+    //Gestion de la fenetre
 	GLFWwindow* m_wnd;
+    bool m_relativeMouse;
+    double m_lastCursorPosX;
+    double m_lastCursorPosY;
+    uint32_t m_ww;
+    uint32_t m_wh;
+
+    //Matrices
     m::Matrix4f m_proj;
     m::Matrix4f m_view;
     m::Matrix4f m_model[16];
     int m_curModelMat;
-    Camera *m_camera;
-    double m_lastCursorPosX;
-    double m_lastCursorPosY;
+    m::Matrix3f m_2Dmat;
 
+    //Shaders
     UIShader m_shaders[kS_Count];
     UIShader *m_override;
 
+    //Framebuffers
     Framebuffer m_normalPass;
     Framebuffer m_hdrFBO0;
-    //Framebuffer m_hdrFBO1;
     Framebuffer m_bloomFBO[2];
     Framebuffer m_sdrFBO;
 
-    GLuint m_peVBO;
-    GLuint m_peVAO;
+    //Uniforms
     m::Vector2f m_invTexSize;
     m::Vector2f m_halfInvTexSize;
-    bool m_fxaaEnable;
-    Skybox m_skybox;
-    bool m_useWireframe;
-    uint32_t m_ww;
-    uint32_t m_wh;
-    m::Matrix3f m_2Dmat;
-    bool m_doDebugDraw;
-    GLuint m_numDrawcalls;
-    bool m_relativeMouse;
-    int m_oldSides;
     float m_exposure;
+    float m_bloomThreshold;
 
+    //Fonctionnalites
+    bool m_fxaaEnable;
+    bool m_useWireframe;
+    bool m_doDebugDraw;
     bool m_internalRefraction;
     bool m_bloomEnable;
-    float m_bloomThreshold;
+    bool m_displayDebugString;
+
+    //Divers
+    GLuint m_peVBO;
+    GLuint m_peVAO;
+    GLuint m_numDrawcalls;
+    int m_oldSides;
     UIFontFace *m_font;
     m::String m_debugString;
-    bool m_displayDebugString;
 
     static MainApp *m_instance;
 };

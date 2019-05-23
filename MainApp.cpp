@@ -11,6 +11,7 @@
 
 #define JJ_UPDATE_PERIOD (1000.0 / 20.0)
 #define JJ_SLEEP_THRESHOLD 10.0
+#define JJ_LENS_FLARE_MEASURE 32
 
 MainApp *MainApp::m_instance = nullptr;
 
@@ -19,7 +20,7 @@ MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCur
                                     m_bloomThreshold(4.75f), m_fxaaEnable(true), m_useWireframe(false), m_doDebugDraw(false),
                                     m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(true),
                                     m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr),
-                                    m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisible(false), m_lensFlareSprite(0)
+                                    m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0)
 {
     m_instance = this;
 
@@ -184,7 +185,7 @@ bool MainApp::setup(int ww, int wh)
         m_PBOs[i] = gl::genBuffer();
 
         gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[i]);
-        gl::bufferData(gl::kBT_PixelPackBuffer, sizeof(float), nullptr, gl::kBU_StreamRead);
+        gl::bufferData(gl::kBT_PixelPackBuffer, JJ_LENS_FLARE_MEASURE * JJ_LENS_FLARE_MEASURE * sizeof(float), nullptr, gl::kBU_StreamRead);
         gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
     }
 
@@ -451,19 +452,38 @@ void MainApp::render3D(float ptt)
 
         m_sunPos = sunPosViewport.cast<int>();
 
+        float visMultiplier = 1.0f;
+        int minCoord = m::math::minimum(m_sunPos.x(), m_sunPos.y());
+        int maxCoord = m::math::maximum(m_sunPos.x() - static_cast<int>(m_ww) + JJ_LENS_FLARE_MEASURE, m_sunPos.y() - static_cast<int>(m_wh) + JJ_LENS_FLARE_MEASURE);
+
+        if(minCoord < JJ_LENS_FLARE_MEASURE)
+            visMultiplier = static_cast<float>(minCoord) / static_cast<float>(JJ_LENS_FLARE_MEASURE);
+        else if(maxCoord > 0)
+            visMultiplier = 1.0f - static_cast<float>(maxCoord) / static_cast<float>(JJ_LENS_FLARE_MEASURE);
+
+        const int bufX = m::math::clamp(m_sunPos.x() - JJ_LENS_FLARE_MEASURE / 2, 0, static_cast<int>(m_ww) - JJ_LENS_FLARE_MEASURE);
+        const int bufY = m::math::clamp(static_cast<int>(m_wh) - (m_sunPos.y() - JJ_LENS_FLARE_MEASURE / 2) - 1, 0, static_cast<int>(m_wh) - JJ_LENS_FLARE_MEASURE);
+
         gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[m_curPBO]);
-        gl::readPixels(m_sunPos.x(), m_wh - m_sunPos.y() - 1, 1, 1, gl::kTF_DepthComponent, gl::kDT_Float, nullptr);
+        gl::readPixels(bufX, bufY, JJ_LENS_FLARE_MEASURE, JJ_LENS_FLARE_MEASURE, gl::kTF_DepthComponent, gl::kDT_Float, nullptr);
         gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
         m_curPBO = (m_curPBO + 1) % 2;
 
         //La profondeur a une trame de retard, mais c'est pas trop grave...
         gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[m_curPBO]);
         float *ptrDepth = static_cast<float *>(gl::mapBuffer(gl::kBT_PixelPackBuffer, gl::kBA_ReadOnly));
-        m_sunVisible = *ptrDepth >= 0.9999f;
+        int visibleCount = 0;
+
+        for(int i = 0; i < JJ_LENS_FLARE_MEASURE * JJ_LENS_FLARE_MEASURE; i++) {
+            if(ptrDepth[i] >= 0.9999f)
+                visibleCount++;
+        }
+
+        m_sunVisibility = static_cast<float>(visibleCount) * visMultiplier / static_cast<float>(JJ_LENS_FLARE_MEASURE * JJ_LENS_FLARE_MEASURE);
         gl::unmapBuffer(gl::kBT_PixelPackBuffer);
         gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
     } else
-        m_sunVisible = false;
+        m_sunVisibility = 0.0f;
 
 
     /***************************** RENDU DES EFFETS *****************************/
@@ -536,7 +556,7 @@ void MainApp::render3D(float ptt)
         UIShader::unbind();
     }
 
-    if(m_sunVisible)
+    if(m_sunVisibility > 0.0f)
         renderLensFlare();
 
     if(m_doDebugDraw) {
@@ -704,10 +724,11 @@ void MainApp::renderLensFlare()
     for(int i = 0; i < sizeof(g_lfEntries) / sizeof(LensFlareEntry); i++) {
         LensFlareEntry &entry = g_lfEntries[i];
         m::Vector2f pos = sunPos + dirVec * entry.l - entry.size * 0.5f;
+        float alpha = static_cast<float>(entry.color[3]) * m_sunVisibility;
 
         vs.quadf(pos, entry.size);
         vs.quadTexf(0.0f, 0.0f, 1.0f, 1.0f);
-        vs.quadColor(entry.color[0], entry.color[1], entry.color[2], entry.color[3]);
+        vs.quadColor(entry.color[0], entry.color[1], entry.color[2], static_cast<uint8_t>(alpha));
     }
 
     vs.draw();

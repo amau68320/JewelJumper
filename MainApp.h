@@ -184,7 +184,7 @@ private:
     GLuint m_PBOs[2];
     int m_curPBO;
     m::Vector2i m_sunPos;
-    bool m_sunVisible;
+    float m_sunVisibility;
     GLuint m_lensFlareSprite;
 
     static MainApp *m_instance;

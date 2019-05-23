@@ -27,13 +27,13 @@ public:
 
     void bindForRender()
     {
-        gl::bindFramebuffer(gl::kFBT_DrawFramebuffer, m_fbo);
+        gl::bindFramebuffer(gl::kFBT_Framebuffer, m_fbo);
         gl::viewport(0, 0, static_cast<GLsizei>(m_w), static_cast<GLsizei>(m_h));
     }
 
     static void unbindFromRender(uint32_t w, uint32_t h)
     {
-        gl::bindFramebuffer(gl::kFBT_DrawFramebuffer, 0);
+        gl::bindFramebuffer(gl::kFBT_Framebuffer, 0);
         gl::viewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
     }
 

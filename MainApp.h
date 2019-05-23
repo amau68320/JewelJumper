@@ -124,6 +124,7 @@ private:
     bool onCheckboxValueChanged(UIElement *e);
     bool onSliderValueChanged(UIElement *e);
     void renderHUD();
+    void renderLensFlare();
 
     //Contenu
 	m::List<GameObject*> m_objects;
@@ -180,6 +181,11 @@ private:
     int m_oldSides;
     UIFontFace *m_font;
     m::String m_debugString;
+    GLuint m_PBOs[2];
+    int m_curPBO;
+    m::Vector2i m_sunPos;
+    bool m_sunVisible;
+    GLuint m_lensFlareSprite;
 
     static MainApp *m_instance;
 };

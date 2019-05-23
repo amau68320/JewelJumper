@@ -7,6 +7,7 @@
 #include <aiso/UISlider.h>
 #include <aiso/UICheckBox.h>
 #include <aiso/UIFontLibrary.h>
+#include <aiso/UIImage.h>
 
 #define JJ_UPDATE_PERIOD (1000.0 / 20.0)
 #define JJ_SLEEP_THRESHOLD 10.0
@@ -14,10 +15,11 @@
 MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
-                                    m_ww(0), m_wh(0), m_curModelMat(0), m_override(nullptr), m_exposure(2.0f),
-                                    m_bloomThreshold(0.75f), m_fxaaEnable(true), m_useWireframe(false), m_doDebugDraw(false),
+                                    m_ww(0), m_wh(0), m_curModelMat(0), m_override(nullptr), m_exposure(2.5f),
+                                    m_bloomThreshold(4.75f), m_fxaaEnable(true), m_useWireframe(false), m_doDebugDraw(false),
                                     m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(true),
-                                    m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr)
+                                    m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr),
+                                    m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisible(false), m_lensFlareSprite(0)
 {
     m_instance = this;
 
@@ -38,6 +40,11 @@ MainApp::~MainApp()
 
     if(m_peVBO != 0)
         gl::deleteBuffer(m_peVBO);
+
+    for(int i = 0; i < 2; i++) {
+        if(m_PBOs[i] != 0)
+            gl::deleteBuffer(m_PBOs[i]);
+    }
 
     //Objets du jeu
     for(GameObject *gob : m_objects)
@@ -122,7 +129,7 @@ bool MainApp::setup(int ww, int wh)
     m_hdrFBO0.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
     m_hdrFBO0.createColorBuffer(0, gl::kTF_RGB16F);
     m_hdrFBO0.createColorBuffer(1, gl::kTF_RGB16F);
-    m_hdrFBO0.createDepthBuffer(kFDM_DepthTexture); //On utilise une texture pour pouvoir lire dedans pour le lens flare
+    m_hdrFBO0.createDepthBuffer();
 
     if(!m_hdrFBO0.finishFramebuffer()) {
         mlogger.error(M_LOG, "Erreur lors de la creation du FBO HDR 0");
@@ -172,6 +179,24 @@ bool MainApp::setup(int ww, int wh)
     m_halfInvTexSize.setX(1.0f / static_cast<float>(ww / 2));
     m_halfInvTexSize.setY(1.0f / static_cast<float>(wh / 2));
 
+    //Lens flare
+    for(int i = 0; i < 2; i++) {
+        m_PBOs[i] = gl::genBuffer();
+
+        gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[i]);
+        gl::bufferData(gl::kBT_PixelPackBuffer, sizeof(float), nullptr, gl::kBU_StreamRead);
+        gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
+    }
+
+    UIImage *lensFlareImg = UIImage::loadFrom("textures/lens_flare.png", kUIILF_AddAlpha);
+    if(lensFlareImg == nullptr) {
+        mlogger.error(M_LOG, "Impossible de charger le sprite de lens flare");
+        return false;
+    }
+
+    m_lensFlareSprite = lensFlareImg->makeGLTexture(0, gl::kTF_Linear, gl::kTF_Linear);
+    delete lensFlareImg;
+
     //Objets du jeu
     if(!m_skybox.load("textures/skybox.hdr")) {
         mlogger.error(M_LOG, "Impossible de charger la skybox HDR");
@@ -215,7 +240,7 @@ bool MainApp::setup(int ww, int wh)
         wnd->byName<UISlider>("sFOV")->setRange(60.0f, 150.0f)->setValue(80.0f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
         wnd->byName<UISlider>("sExposure")->setRange(0.25f, 4.0f)->setValue(m_exposure)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
         wnd->byName<UISlider>("sCamSpeed")->setRange(0.1f, 2.0f)->setValue(0.5f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
-        wnd->byName<UISlider>("sBloomThreshold")->setMax(8.0f)->setValue(0.75f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+        wnd->byName<UISlider>("sBloomThreshold")->setMax(8.0f)->setValue(m_bloomThreshold)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
 
         wnd->byName<UICheckBox>("cbRefraction")->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
         wnd->byName<UICheckBox>("cbBloom"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
@@ -411,6 +436,36 @@ void MainApp::render3D(float ptt)
     gl::activeTexture(0);
     gl::drawBuffer(gl::kFBA_ColorAttachment0);
 
+    //Position et visibilite du soleil pour le lens flare
+    m::Vector3f sunPosWorldSpace(0.23f, 0.72f, -1.0f);
+    sunPosWorldSpace *= 10.0f; //Surtout, loin de la camera
+    float w = 1.0f;
+
+    m::Vector3f sunPosScreenSpace((m_proj * m_view).multiplyEx(sunPosWorldSpace, w));
+    m::Vector2f sunPosViewport(sunPosScreenSpace.xy() / w);
+
+    if(sunPosViewport.x() >= -1.0f && sunPosViewport.x() <= 1.0f && sunPosViewport.y() >= -1.0f && sunPosViewport.y() <= 1.0f && sunPosScreenSpace.z() > 0.0f) {
+        sunPosViewport.setY(-sunPosViewport.y());
+        sunPosViewport = (sunPosViewport + 1.0f) * 0.5f;
+        sunPosViewport *= m::Vector2<uint32_t>(m_ww, m_wh).cast<float>();
+
+        m_sunPos = sunPosViewport.cast<int>();
+
+        gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[m_curPBO]);
+        gl::readPixels(m_sunPos.x(), m_wh - m_sunPos.y() - 1, 1, 1, gl::kTF_DepthComponent, gl::kDT_Float, nullptr);
+        gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
+        m_curPBO = (m_curPBO + 1) % 2;
+
+        //La profondeur a une trame de retard, mais c'est pas trop grave...
+        gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[m_curPBO]);
+        float *ptrDepth = static_cast<float *>(gl::mapBuffer(gl::kBT_PixelPackBuffer, gl::kBA_ReadOnly));
+        m_sunVisible = *ptrDepth >= 0.9999f;
+        gl::unmapBuffer(gl::kBT_PixelPackBuffer);
+        gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
+    } else
+        m_sunVisible = false;
+
+
     /***************************** RENDU DES EFFETS *****************************/
     gl::disable(gl::kC_DepthTest);
     gl::depthMask(false);
@@ -480,6 +535,9 @@ void MainApp::render3D(float ptt)
         gl::bindTexture(gl::kTT_Texture2D, 0);
         UIShader::unbind();
     }
+
+    if(m_sunVisible)
+        renderLensFlare();
 
     if(m_doDebugDraw) {
         m_2Dmat.loadIdentity();
@@ -600,10 +658,62 @@ void MainApp::renderHUD()
     if(m_displayDebugString) {
         gl::enable(gl::kC_Blend);
         gl::blendFunc(gl::kBM_SrcAlpha, gl::kBM_OneMinusSrcAlpha);
-
-        UIVStreamer &vs = uiCore.vertexStreamer();
-        vs.drawString(10.0f, 10.0f, m_font, m_debugString);
+        uiCore.vertexStreamer().drawString(10.0f, 10.0f, m_font, m_debugString);
+        gl::disable(gl::kC_Blend);
     }
+
+    /*
+    GLenum err = glGetError();
+    if(err != 0)
+        mlogger.error(M_LOG, "OpenGL error %d", err);
+     */
+}
+
+typedef struct
+{
+    float l;
+    float size;
+    uint8_t color[4];
+} LensFlareEntry;
+
+static LensFlareEntry g_lfEntries[] = {
+    { 0.5f , 80.0f , { 170, 255,   0, 20 } }, //G
+    { 0.75f, 100.0f, { 170, 255,   0, 30 } }, //G
+    { 1.0f , 80.0f , { 170, 255,   0, 20 } }, //G
+
+    { 1.5f , 40.0f , { 255, 203,   0, 30 } },
+    { 1.75f, 100.0f, { 255, 203,   0, 40 } },
+    { 2.25f, 100.0f, { 170, 255,   0, 40 } }, //G
+
+    { 3.0f , 150.0f, { 255, 203,   0, 50 } },
+    { 4.0f , 250.0f, { 170, 255,   0, 50 } }  //G
+};
+
+void MainApp::renderLensFlare()
+{
+    m::Vector2f sunPos(m_sunPos.cast<float>());
+    m::Vector2f dirVec(m::Vector2<uint32_t>(m_ww, m_wh).cast<float>() * 0.5f - sunPos);
+    UIVStreamer &vs = uiCore.vertexStreamer();
+
+    gl::enable(gl::kC_Blend);
+    gl::blendFunc(gl::kBM_SrcAlpha, gl::kBM_OneMinusSrcAlpha);
+
+    gl::bindTexture(gl::kTT_Texture2D, m_lensFlareSprite);
+    vs.begin(gl::kDM_Triangles, true);
+
+    for(int i = 0; i < sizeof(g_lfEntries) / sizeof(LensFlareEntry); i++) {
+        LensFlareEntry &entry = g_lfEntries[i];
+        m::Vector2f pos = sunPos + dirVec * entry.l - entry.size * 0.5f;
+
+        vs.quadf(pos, entry.size);
+        vs.quadTexf(0.0f, 0.0f, 1.0f, 1.0f);
+        vs.quadColor(entry.color[0], entry.color[1], entry.color[2], entry.color[3]);
+    }
+
+    vs.draw();
+    gl::bindTexture(gl::kTT_Texture2D, 0);
+
+    gl::disable(gl::kC_Blend);
 }
 
 void MainApp::use3DShader(UIShader &shdr)

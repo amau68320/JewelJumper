@@ -1,12 +1,16 @@
 #include "MainApp.h"
 #include "Gem.h"
+#include "DownloadManager.h"
 #include <mgpcl/Math.h>
 #include <mgpcl/Logger.h>
 #include <mgpcl/FileIOStream.h>
+#include <mgpcl/File.h>
 #include <aiso/UICore.h>
 #include <aiso/UILoader.h>
 #include <aiso/UISlider.h>
 #include <aiso/UICheckBox.h>
+#include <aiso/UILabel.h>
+#include <aiso/UIProgressBar.h>
 #include <aiso/UIFontLibrary.h>
 #include <aiso/UIImage.h>
 
@@ -21,7 +25,8 @@ MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCur
                                     m_bloomThreshold(4.75f), m_fxaaEnable(true), m_useWireframe(false), m_doDebugDraw(false),
                                     m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(true),
                                     m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr),
-                                    m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0)
+                                    m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0),
+                                    m_lastDownload(-1), m_dlLabel(nullptr), m_dlProgress(nullptr)
 {
     m_instance = this;
 
@@ -29,11 +34,18 @@ MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCur
     m_renderDelta = 1000.0 / 60.0;
 
     m_camera = new RotatingCamera;
+    DownloadManager::create();
 }
 
 MainApp::~MainApp()
 {
     //Interface utilisateur
+    if(m_dlLabel != nullptr)
+        m_dlLabel->removeRef();
+
+    if(m_dlProgress != nullptr)
+        m_dlProgress->removeRef();
+
     uiCore.destroy();
 
     //VBO+VAO post-effets
@@ -54,6 +66,10 @@ MainApp::~MainApp()
 
     //Camera
     delete m_camera;
+
+    //Gestionnaire de telechargement
+    dlMgr.onQuit();
+    DownloadManager::destroy();
 }
 
 bool MainApp::setup(int ww, int wh)
@@ -199,7 +215,7 @@ bool MainApp::setup(int ww, int wh)
     m_lensFlareSprite = lensFlareImg->makeGLTexture(0, gl::kTF_Linear, gl::kTF_Linear);
     delete lensFlareImg;
 
-    //Objets du jeu
+    //Gestion des skyboxes
     m::SSharedPtr<m::FileInputStream> fis(new m::FileInputStream);
 
     if(fis->open("textures/skyboxes.json") != m::FileInputStream::kOE_Success) {
@@ -229,6 +245,24 @@ bool MainApp::setup(int ww, int wh)
         return false;
     }
 
+    //Telechargement de skybox additionnelles
+    m::File textureRoot("textures");
+    bool shouldDlSkyboxes = false;
+
+    for(int i = 1; i < m_skyboxData.size(); i++) {
+        const m::JSONElement &fname = m_skyboxData[i]["filename"];
+
+        if(fname.isString()) {
+            m::File fle(textureRoot, fname.asString());
+
+            if(!fle.exists()) {
+                shouldDlSkyboxes = true;
+                dlMgr.queueDownload(fname.asString());
+            }
+        }
+    }
+
+    //Objets du jeu
     Gem *gem = new Gem;
     gem->generate(m_oldSides, 0.75f, 1.0f, 1.0f, 0.75f);
     m_objects.add(gem);
@@ -279,12 +313,37 @@ bool MainApp::setup(int ww, int wh)
         wnd->setPos(10, wh - wnd->rect().height() - 10);
         uiCore.addWindow(wnd);
         wnd->removeRef();
-    } catch(UILoadException & ex) {
+    } catch(UILoadException &ex) {
         mlogger.error(M_LOG, "Erreur lors de la lecture du fichier d'interface graphique (view): %s", ex.what());
         return false;
-    } catch(UIUnknownElementException & ex) {
+    } catch(UIUnknownElementException &ex) {
         mlogger.error(M_LOG, "Il manque un element d'interface graphique (view): %s", ex.what());
         return false;
+    }
+
+    if(shouldDlSkyboxes) {
+        try {
+            UIWindow *wnd = new UIWindow;
+            ui::load("download", wnd);
+
+            m_dlLabel = wnd->byName<UILabel>("lLabel");
+            m_dlProgress = wnd->byName<UIProgressBar>("pbProgress");
+            m_dlLabel->addRef();
+            m_dlProgress->addRef();
+
+            wnd->pack(false, true);
+            wnd->setPos(ww - wnd->rect().width() - 10, 10);
+            uiCore.addWindow(wnd);
+            wnd->removeRef();
+        } catch(UILoadException &ex) {
+            mlogger.error(M_LOG, "Erreur lors de la lecture du fichier d'interface graphique (download): %s", ex.what());
+            return false;
+        } catch(UIUnknownElementException &ex) {
+            mlogger.error(M_LOG, "Il manque un element d'interface graphique (download): %s", ex.what());
+            return false;
+        }
+
+        dlMgr.startDownloadManager();
     }
 
     m_font = uiFontLib.get("Roboto-Regular", 12);
@@ -370,6 +429,7 @@ void MainApp::loadShader(JJShader sdr, const char *name, bool hasGeom)
 void MainApp::update(float dt)
 {
     m_camera->update(dt);
+    uiCore.update(dt);
 
     for(GameObject *object : m_objects)
     {
@@ -382,6 +442,31 @@ void MainApp::update(float dt)
         m_debugString += m::String::fromDouble(1000.0 / m_renderDelta, 2);
         m_debugString.append("\nDrawcalls: ", 12);
         m_debugString += m::String::fromUInteger(m_numDrawcalls);
+    }
+
+    if(m_dlLabel != nullptr && m_dlProgress != nullptr) {
+        int curFile = dlMgr.currentFile();
+        float progress = dlMgr.progress();
+        bool updateProgress = true;
+
+        if(curFile != m_lastDownload) {
+            m_lastDownload = curFile;
+
+            if(curFile < 0) {
+                UIWindow *wnd = static_cast<UIWindow *>(m_dlLabel->parent()); //FIXME: c'est pas bien ca
+                m_dlLabel->removeRef();
+                m_dlProgress->removeRef();
+                uiCore.deleteNextTick(wnd);
+
+                m_dlLabel = nullptr;
+                m_dlProgress = nullptr;
+                updateProgress = false;
+            } else
+                m_dlLabel->setText(dlMgr.fileName(curFile));
+        }
+
+        if(updateProgress && m_dlProgress->progress() != progress)
+            m_dlProgress->setProgress(progress);
     }
 }
 

@@ -30,6 +30,8 @@ enum JJShader
 
 class UIElement;
 class UIFontFace;
+class UILabel;
+class UIProgressBar;
 
 /*
  * Classe principale gerant JewelJumper.
@@ -184,11 +186,18 @@ private:
     int m_oldSides;
     UIFontFace *m_font;
     m::String m_debugString;
+
+    //Lens flare
     GLuint m_PBOs[2];
     int m_curPBO;
     m::Vector2i m_sunPos;
     float m_sunVisibility;
     GLuint m_lensFlareSprite;
+
+    //Gestion des telechargements
+    int m_lastDownload;
+    UILabel *m_dlLabel;
+    UIProgressBar *m_dlProgress;
 
     static MainApp *m_instance;
 };

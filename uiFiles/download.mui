@@ -1,0 +1,6 @@
+Base(title: "Téléchargements", x: 10, y: 10, width: 300, height: 80, layout: HBoxLayout(), icon: "download") [
+    Label(name: "lLabel", text: "Préparation...", constraints: "y"),
+    ProgressBar(name: "pbProgress", constraints: "y"),
+    
+    Spacer()
+]

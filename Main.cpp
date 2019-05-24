@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
     mlogger.info(M_LOG, "Initialisation de JewelJumper...");
     m::time::initTime();
     m::inet::initialize();
+    m::inet::initSSL();
 
     //Lecture de la config INI
     m::SimpleConfig cfg("jewel_jumper.ini");
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
     glfwTerminate();
     delete m::Logger::instance();
 	m::inet::release();
-    system("pause");
+    //system("pause");
 
     return 0;
 }

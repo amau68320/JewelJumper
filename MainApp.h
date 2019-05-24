@@ -3,6 +3,7 @@
 #include <mgpcl/Time.h>
 #include <mgpcl/Matrix3.h>
 #include <mgpcl/SignalSlot.h>
+#include <mgpcl/JSON.h>
 #include <GLFW/glfw3.h>
 #include <aiso/UIShader.h>
 #include "GameObject.h"
@@ -130,6 +131,8 @@ private:
 	m::List<GameObject*> m_objects;
     Camera *m_camera;
     Skybox m_skybox;
+    m::JSONElement m_skyboxData;
+    m::Vector3f m_sunPosWorldSpace;
 
     //Timing
 	double m_renderPeriod;

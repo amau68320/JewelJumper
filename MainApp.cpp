@@ -2,6 +2,7 @@
 #include "Gem.h"
 #include <mgpcl/Math.h>
 #include <mgpcl/Logger.h>
+#include <mgpcl/FileIOStream.h>
 #include <aiso/UICore.h>
 #include <aiso/UILoader.h>
 #include <aiso/UISlider.h>
@@ -199,6 +200,30 @@ bool MainApp::setup(int ww, int wh)
     delete lensFlareImg;
 
     //Objets du jeu
+    m::SSharedPtr<m::FileInputStream> fis(new m::FileInputStream);
+
+    if(fis->open("textures/skyboxes.json") != m::FileInputStream::kOE_Success) {
+        mlogger.error(M_LOG, "Impossible d'ouvrir la liste des skybox");
+        return false;
+    }
+
+    m::String skyboxParseError;
+    if(!m::json::parse(fis.staticCast<m::InputStream>(), m_skyboxData, skyboxParseError)) {
+        mlogger.error(M_LOG, "Impossible de lire la liste des skybox: %s", skyboxParseError.raw());
+        return false;
+    }
+    
+    fis->close();
+
+    if(!m_skyboxData.isArray() || m_skyboxData.size() <= 0 || !m_skyboxData[0].isObject()) {
+        mlogger.error(M_LOG, "La liste des skybox contient des donnees invalides.");
+        return false;
+    }
+
+    const m::JSONElement &sunPos = m_skyboxData[0]["sunPos"];
+    if(sunPos.isArray() && sunPos.size() == 3)
+        m_sunPosWorldSpace = m::Vector3d(sunPos[0].asDouble(), sunPos[1].asDouble(), sunPos[2].asDouble()).cast<float>();
+
     if(!m_skybox.load("textures/skybox.hdr")) {
         mlogger.error(M_LOG, "Impossible de charger la skybox HDR");
         return false;
@@ -241,7 +266,7 @@ bool MainApp::setup(int ww, int wh)
         wnd->byName<UISlider>("sFOV")->setRange(60.0f, 150.0f)->setValue(80.0f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
         wnd->byName<UISlider>("sExposure")->setRange(0.25f, 4.0f)->setValue(m_exposure)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
         wnd->byName<UISlider>("sCamSpeed")->setRange(0.1f, 2.0f)->setValue(0.5f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
-        wnd->byName<UISlider>("sBloomThreshold")->setMax(8.0f)->setValue(m_bloomThreshold)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+        wnd->byName<UISlider>("sBloomThreshold")->setMax(32.0f)->setValue(m_bloomThreshold)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
 
         wnd->byName<UICheckBox>("cbRefraction")->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
         wnd->byName<UICheckBox>("cbBloom"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
@@ -438,11 +463,8 @@ void MainApp::render3D(float ptt)
     gl::drawBuffer(gl::kFBA_ColorAttachment0);
 
     //Position et visibilite du soleil pour le lens flare
-    m::Vector3f sunPosWorldSpace(0.23f, 0.72f, -1.0f);
-    sunPosWorldSpace *= 10.0f; //Surtout, loin de la camera
     float w = 1.0f;
-
-    m::Vector3f sunPosScreenSpace((m_proj * m_view).multiplyEx(sunPosWorldSpace, w));
+    m::Vector3f sunPosScreenSpace((m_proj * m_view).multiplyEx(m_sunPosWorldSpace, w));
     m::Vector2f sunPosViewport(sunPosScreenSpace.xy() / w);
 
     if(sunPosViewport.x() >= -1.0f && sunPosViewport.x() <= 1.0f && sunPosViewport.y() >= -1.0f && sunPosViewport.y() <= 1.0f && sunPosScreenSpace.z() > 0.0f) {

@@ -11,6 +11,7 @@
 #include <aiso/UICheckBox.h>
 #include <aiso/UILabel.h>
 #include <aiso/UIProgressBar.h>
+#include <aiso/UIPushButton.h>
 #include <aiso/UIFontLibrary.h>
 #include <aiso/UIImage.h>
 
@@ -26,7 +27,8 @@ MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCur
                                     m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(true),
                                     m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr),
                                     m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0),
-                                    m_lastDownload(-1), m_dlLabel(nullptr), m_dlProgress(nullptr)
+                                    m_lastDownload(-1), m_dlLabel(nullptr), m_dlProgress(nullptr), m_skyboxBtn(nullptr),
+                                    m_curSkybox(0)
 {
     m_instance = this;
 
@@ -45,6 +47,9 @@ MainApp::~MainApp()
 
     if(m_dlProgress != nullptr)
         m_dlProgress->removeRef();
+
+    if(m_skyboxBtn != nullptr)
+        m_skyboxBtn->removeRef();
 
     uiCore.destroy();
 
@@ -309,6 +314,10 @@ bool MainApp::setup(int ww, int wh)
         wnd->byName<UICheckBox>("cbInfos"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
         wnd->byName<UICheckBox>("cbLimitFPS"  )->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
 
+        m_skyboxBtn = wnd->byName<UIPushButton>("btnSkybox");
+        m_skyboxBtn->onClicked.connect(this, &MainApp::onChangeSkyboxClicked);
+        m_skyboxBtn->addRef();
+
         wnd->pack(false, true);
         wnd->setPos(10, wh - wnd->rect().height() - 10);
         uiCore.addWindow(wnd);
@@ -468,6 +477,9 @@ void MainApp::update(float dt)
         if(updateProgress && m_dlProgress->progress() != progress)
             m_dlProgress->setProgress(progress);
     }
+
+    if(m_skybox.update() && m_skyboxBtn != nullptr)
+        m_skyboxBtn->setDisabled(false);
 }
 
 static const GLuint g_allDrawBuffers[] = { gl::kFBA_ColorAttachment0, gl::kFBA_ColorAttachment1 };
@@ -547,48 +559,51 @@ void MainApp::render3D(float ptt)
     gl::activeTexture(0);
     gl::drawBuffer(gl::kFBA_ColorAttachment0);
 
-    //Position et visibilite du soleil pour le lens flare
-    float w = 1.0f;
-    m::Vector3f sunPosScreenSpace((m_proj * m_view).multiplyEx(m_sunPosWorldSpace, w));
-    m::Vector2f sunPosViewport(sunPosScreenSpace.xy() / w);
+    if(m_sunPosWorldSpace.length2() > 0.0f) {
+        //Position et visibilite du soleil pour le lens flare
+        float w = 1.0f;
+        m::Vector3f sunPosScreenSpace((m_proj * m_view).multiplyEx(m_sunPosWorldSpace, w));
+        m::Vector2f sunPosViewport(sunPosScreenSpace.xy() / w);
 
-    if(sunPosViewport.x() >= -1.0f && sunPosViewport.x() <= 1.0f && sunPosViewport.y() >= -1.0f && sunPosViewport.y() <= 1.0f && sunPosScreenSpace.z() > 0.0f) {
-        sunPosViewport.setY(-sunPosViewport.y());
-        sunPosViewport = (sunPosViewport + 1.0f) * 0.5f;
-        sunPosViewport *= m::Vector2<uint32_t>(m_ww, m_wh).cast<float>();
+        if(sunPosViewport.x() >= -1.0f && sunPosViewport.x() <= 1.0f && sunPosViewport.y() >= -1.0f && sunPosViewport.y() <= 1.0f && sunPosScreenSpace.z() > 0.0f) {
+            sunPosViewport.setY(-sunPosViewport.y());
+            sunPosViewport = (sunPosViewport + 1.0f) * 0.5f;
+            sunPosViewport *= m::Vector2<uint32_t>(m_ww, m_wh).cast<float>();
 
-        m_sunPos = sunPosViewport.cast<int>();
+            m_sunPos = sunPosViewport.cast<int>();
 
-        float visMultiplier = 1.0f;
-        int minCoord = m::math::minimum(m_sunPos.x(), m_sunPos.y());
-        int maxCoord = m::math::maximum(m_sunPos.x() - static_cast<int>(m_ww) + JJ_LENS_FLARE_MEASURE, m_sunPos.y() - static_cast<int>(m_wh) + JJ_LENS_FLARE_MEASURE);
+            float visMultiplier = 1.0f;
+            int minCoord = m::math::minimum(m_sunPos.x(), m_sunPos.y());
+            int maxCoord = m::math::maximum(m_sunPos.x() - static_cast<int>(m_ww) + JJ_LENS_FLARE_MEASURE, m_sunPos.y() - static_cast<int>(m_wh) + JJ_LENS_FLARE_MEASURE);
 
-        if(minCoord < JJ_LENS_FLARE_MEASURE)
-            visMultiplier = static_cast<float>(minCoord) / static_cast<float>(JJ_LENS_FLARE_MEASURE);
-        else if(maxCoord > 0)
-            visMultiplier = 1.0f - static_cast<float>(maxCoord) / static_cast<float>(JJ_LENS_FLARE_MEASURE);
+            if(minCoord < JJ_LENS_FLARE_MEASURE)
+                visMultiplier = static_cast<float>(minCoord) / static_cast<float>(JJ_LENS_FLARE_MEASURE);
+            else if(maxCoord > 0)
+                visMultiplier = 1.0f - static_cast<float>(maxCoord) / static_cast<float>(JJ_LENS_FLARE_MEASURE);
 
-        const int bufX = m::math::clamp(m_sunPos.x() - JJ_LENS_FLARE_MEASURE / 2, 0, static_cast<int>(m_ww) - JJ_LENS_FLARE_MEASURE);
-        const int bufY = m::math::clamp(static_cast<int>(m_wh) - (m_sunPos.y() - JJ_LENS_FLARE_MEASURE / 2) - 1, 0, static_cast<int>(m_wh) - JJ_LENS_FLARE_MEASURE);
+            const int bufX = m::math::clamp(m_sunPos.x() - JJ_LENS_FLARE_MEASURE / 2, 0, static_cast<int>(m_ww) - JJ_LENS_FLARE_MEASURE);
+            const int bufY = m::math::clamp(static_cast<int>(m_wh) - (m_sunPos.y() - JJ_LENS_FLARE_MEASURE / 2) - 1, 0, static_cast<int>(m_wh) - JJ_LENS_FLARE_MEASURE);
 
-        gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[m_curPBO]);
-        gl::readPixels(bufX, bufY, JJ_LENS_FLARE_MEASURE, JJ_LENS_FLARE_MEASURE, gl::kTF_DepthComponent, gl::kDT_Float, nullptr);
-        gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
-        m_curPBO = (m_curPBO + 1) % 2;
+            gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[m_curPBO]);
+            gl::readPixels(bufX, bufY, JJ_LENS_FLARE_MEASURE, JJ_LENS_FLARE_MEASURE, gl::kTF_DepthComponent, gl::kDT_Float, nullptr);
+            gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
+            m_curPBO = (m_curPBO + 1) % 2;
 
-        //La profondeur a une trame de retard, mais c'est pas trop grave...
-        gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[m_curPBO]);
-        float *ptrDepth = static_cast<float *>(gl::mapBuffer(gl::kBT_PixelPackBuffer, gl::kBA_ReadOnly));
-        int visibleCount = 0;
+            //La profondeur a une trame de retard, mais c'est pas trop grave...
+            gl::bindBuffer(gl::kBT_PixelPackBuffer, m_PBOs[m_curPBO]);
+            float *ptrDepth = static_cast<float *>(gl::mapBuffer(gl::kBT_PixelPackBuffer, gl::kBA_ReadOnly));
+            int visibleCount = 0;
 
-        for(int i = 0; i < JJ_LENS_FLARE_MEASURE * JJ_LENS_FLARE_MEASURE; i++) {
-            if(ptrDepth[i] >= 0.9999f)
-                visibleCount++;
-        }
+            for(int i = 0; i < JJ_LENS_FLARE_MEASURE * JJ_LENS_FLARE_MEASURE; i++) {
+                if(ptrDepth[i] >= 0.9999f)
+                    visibleCount++;
+            }
 
-        m_sunVisibility = static_cast<float>(visibleCount) * visMultiplier / static_cast<float>(JJ_LENS_FLARE_MEASURE * JJ_LENS_FLARE_MEASURE);
-        gl::unmapBuffer(gl::kBT_PixelPackBuffer);
-        gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
+            m_sunVisibility = static_cast<float>(visibleCount) * visMultiplier / static_cast<float>(JJ_LENS_FLARE_MEASURE * JJ_LENS_FLARE_MEASURE);
+            gl::unmapBuffer(gl::kBT_PixelPackBuffer);
+            gl::bindBuffer(gl::kBT_PixelPackBuffer, 0);
+        } else
+            m_sunVisibility = 0.0f;
     } else
         m_sunVisibility = 0.0f;
 
@@ -782,18 +797,31 @@ bool MainApp::onCheckboxValueChanged(UIElement *e)
 
 void MainApp::renderHUD()
 {
-    if(m_displayDebugString) {
-        gl::enable(gl::kC_Blend);
-        gl::blendFunc(gl::kBM_SrcAlpha, gl::kBM_OneMinusSrcAlpha);
-        uiCore.vertexStreamer().drawString(10.0f, 10.0f, m_font, m_debugString);
-        gl::disable(gl::kC_Blend);
+    UIVStreamer &vs = uiCore.vertexStreamer();
+
+    gl::enable(gl::kC_Blend);
+    gl::blendFunc(gl::kBM_SrcAlpha, gl::kBM_OneMinusSrcAlpha);
+
+    if(m_displayDebugString)
+        vs.drawString(10.0f, 10.0f, m_font, m_debugString);
+
+    if(m_skybox.isDoingAsyncOp()) {
+        m::String str("CHARGEMENT...");
+        int strY0, strY1, strW;
+        m_font->boundingBox(str, strY0, strY1, strW);
+
+        int px = (static_cast<int>(m_ww) - strW - 10) / 2;
+        int py = (static_cast<int>(m_wh) - (strY1 - strY0) - 10) / 2;
+
+        vs.begin(gl::kDM_TriangleStrip, false);
+        vs.quad(px, py, strW + 10, (strY1 - strY0) + 10);
+        vs.quadColor(0, 0, 0, 128);
+        vs.draw();
+
+        vs.drawString(static_cast<float>(px + 5), static_cast<float>(py + 5 - m_font->lineHeight() - strY0), m_font, str);
     }
 
-    /*
-    GLenum err = glGetError();
-    if(err != 0)
-        mlogger.error(M_LOG, "OpenGL error %d", err);
-     */
+    gl::disable(gl::kC_Blend);
 }
 
 typedef struct
@@ -853,6 +881,33 @@ void MainApp::renderLensFlare()
     gl::bindTexture(gl::kTT_Texture2D, 0);
 
     gl::disable(gl::kC_Blend);
+}
+
+bool MainApp::onChangeSkyboxClicked(UIElement *e)
+{
+    m::File skyboxRoot("textures");
+    int sid = m_curSkybox;
+
+    for(int i = 0; i < m_skyboxData.size() - 1; i++) {
+        sid = (sid + 1) % m_skyboxData.size();
+        m::JSONElement &jsonData = m_skyboxData[sid];
+        m::File fle(skyboxRoot, jsonData["filename"].asString());
+
+        if(fle.exists() && m_skybox.loadAsync(fle.path())) {
+            m_curSkybox = sid;
+            m_skyboxBtn->setDisabled();
+
+            if(jsonData.has("sunPos") && jsonData["sunPos"].isArray() && jsonData["sunPos"].size() == 3) {
+                m_sunPosWorldSpace = m::Vector3d(jsonData["sunPos"][0].asDouble(), jsonData["sunPos"][1].asDouble(), jsonData["sunPos"][2].asDouble()).cast<float>();
+                m_sunPosWorldSpace *= 10.0f;
+            } else
+                m_sunPosWorldSpace.set(0.0f);
+
+            break;
+        }
+    }
+
+    return false;
 }
 
 void MainApp::use3DShader(UIShader &shdr)

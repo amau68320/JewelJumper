@@ -22,5 +22,6 @@ Base(title: "Vue", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), 
         CheckBox(label: "Infos", name: "cbInfos")
     ],
 
+    PushButton(label: "Changer la skybox", name: "btnSkybox", constraints: "y"),
     Spacer()
 ]

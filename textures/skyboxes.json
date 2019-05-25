@@ -17,12 +17,13 @@
     },
     {
         "filename": "flower_road_4k.hdr",
+        "sunPos": [ -0.55, 0.8, -0.67 ],
         "exposure": 2.5,
         "bloomThreshold": 4.75
     },
     {
         "filename": "schadowplatz_4k.hdr",
-        "exposure": 2.5,
+        "exposure": 0.5,
         "bloomThreshold": 4.75
     }
 ]

@@ -1,5 +1,6 @@
 #include "Skybox.h"
 #include "RGBE.h"
+#include <mgpcl/Logger.h>
 
 class HDRImageData
 {
@@ -9,7 +10,9 @@ public:
     int imgW;
 };
 
-Skybox::Skybox() : m_tex(0), m_vbo(0), m_vao(0), m_cubemap(0)
+Skybox::Skybox() : m_tex(0), m_vbo(0), m_vao(0), m_cubemap(0), m_asyncW(0), m_asyncH(0),
+                   m_skyboxData(nullptr), m_cubemapData(nullptr), m_asyncOpInProgress(false),
+                   m_thread(nullptr)
 {
 }
 
@@ -26,6 +29,15 @@ Skybox::~Skybox()
 
     if(m_cubemap != 0)
         gl::deleteTexture(m_cubemap);
+
+    if(m_skyboxData != nullptr)
+        delete[] m_skyboxData;
+
+    if(m_cubemapData != nullptr)
+        delete[] m_cubemapData;
+
+    if(m_thread != nullptr)
+        delete m_thread;
 }
 
 void myTexImage(gl::TextureTarget target, int x, int y, HDRImageData &img)
@@ -59,63 +71,19 @@ bool Skybox::load(const m::String &fname)
 {
     FILE *fle = nullptr;
     fopen_s(&fle, fname.raw(), "rb");
-    int imgW, imgH;
 
-    if(RGBE_ReadHeader(fle, &imgW, &imgH, nullptr) != RGBE_RETURN_SUCCESS) {
+    if(fle == nullptr)
+        return false;
+
+    if(RGBE_ReadHeader(fle, &m_asyncW, &m_asyncH, nullptr) != RGBE_RETURN_SUCCESS) {
         fclose(fle);
         return false;
     }
 
-    float *data = new float[imgW * imgH * 3];
-    if(RGBE_ReadPixels(fle, data, imgW * imgH) != RGBE_RETURN_SUCCESS) {
-        delete[] data;
-        fclose(fle);
-        return false;
-    }
+    if(!loadBlocking(fle))
+        return false; //loadBlocking se charge de fermer le fichier
 
-    fclose(fle);
-    if(m_tex != 0)
-        gl::deleteTexture(m_tex);
-
-    m_tex = gl::genTexture();
-    gl::bindTexture(gl::kTT_Texture2D, m_tex);
-    gl::texImage2D(gl::kTT_Texture2D, 0, gl::kTF_RGB16F, imgW, imgH, 0, gl::kTF_RGB, gl::kDT_Float, data);
-    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Linear);
-    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_Linear);
-    gl::bindTexture(gl::kTT_Texture2D, 0);
-
-    HDRImageData img;
-    img.data = data;
-    img.tileSz = imgH / 2;
-    img.imgW = imgW;
-
-    //Flemme lvl 9999999999999 d'ecrire rotate270
-    rotate90(img, 1, 1);
-    rotate90(img, 1, 1);
-    rotate90(img, 1, 1);
-
-    rotate90(img, 2, 1);
-
-    if(m_cubemap != 0)
-        gl::deleteTexture(m_cubemap);
-
-    m_cubemap = gl::genTexture();
-    gl::bindTexture(gl::kTT_TextureCubeMap, m_cubemap);
-    gl::pixelStorei(gl::kPSP_UnpackRowLength, imgW);
-    myTexImage(gl::kTT_TextureCubeMapNZ, 0, 1, img);
-    myTexImage(gl::kTT_TextureCubeMapPZ, 1, 0, img);
-    myTexImage(gl::kTT_TextureCubeMapPX, 2, 0, img);
-    myTexImage(gl::kTT_TextureCubeMapNX, 0, 0, img);
-    myTexImage(gl::kTT_TextureCubeMapNY, 2, 1, img);
-    myTexImage(gl::kTT_TextureCubeMapPY, 1, 1, img);
-    gl::pixelStorei(gl::kPSP_UnpackSkipPixels, 0);
-    gl::pixelStorei(gl::kPSP_UnpackSkipRows, 0);
-    gl::pixelStorei(gl::kPSP_UnpackRowLength, 0);
-    gl::generateMipmap(gl::kTT_TextureCubeMap);
-    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Linear);
-    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_LinearMipmapLinear);
-    gl::bindTexture(gl::kTT_TextureCubeMap, 0);
-    delete[] data;
+    uploadTextureData();
 
     float vec[] = {
         -1.0f, -1.0f, -1.0f,    1.0f, -1.0f, -1.0f,    1.0f,  1.0f, -1.0f, //Z- => 0,1
@@ -198,4 +166,133 @@ void Skybox::draw()
     gl::drawArrays(gl::kDM_Triangles, 0, 36);
     gl::bindVertexArray(0);
     gl::bindTexture(gl::kTT_Texture2D, 0);
+}
+
+bool Skybox::loadBlocking(FILE *fp)
+{
+    const size_t numPixels = static_cast<size_t>(m_asyncW) * static_cast<size_t>(m_asyncH) * 3;
+
+    m_skyboxData = new float[numPixels];
+    if(RGBE_ReadPixels(fp, m_skyboxData, m_asyncW * m_asyncH) != RGBE_RETURN_SUCCESS) {
+        delete[] m_skyboxData;
+        m_skyboxData = nullptr;
+        fclose(fp);
+
+        return false;
+    }
+
+    fclose(fp);
+
+    m_cubemapData = new float[numPixels];
+    m::mem::copy(m_cubemapData, m_skyboxData, numPixels * sizeof(float));
+
+    HDRImageData img;
+    img.data = m_cubemapData;
+    img.tileSz = m_asyncH / 2;
+    img.imgW = m_asyncW;
+
+    //Flemme lvl 9999999999999 d'ecrire rotate270
+    rotate90(img, 1, 1);
+    rotate90(img, 1, 1);
+    rotate90(img, 1, 1);
+    rotate90(img, 2, 1);
+
+    return true;
+}
+
+void Skybox::uploadTextureData()
+{
+    if(m_tex != 0)
+        gl::deleteTexture(m_tex);
+
+    m_tex = gl::genTexture();
+    gl::bindTexture(gl::kTT_Texture2D, m_tex);
+    gl::texImage2D(gl::kTT_Texture2D, 0, gl::kTF_RGB16F, m_asyncW, m_asyncH, 0, gl::kTF_RGB, gl::kDT_Float, m_skyboxData);
+    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Linear);
+    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_Linear);
+    gl::bindTexture(gl::kTT_Texture2D, 0);
+
+    delete[] m_skyboxData;
+    m_skyboxData = nullptr;
+
+    HDRImageData img;
+    img.data = m_cubemapData;
+    img.tileSz = m_asyncH / 2;
+    img.imgW = m_asyncW;
+
+    if(m_cubemap != 0)
+        gl::deleteTexture(m_cubemap);
+
+    m_cubemap = gl::genTexture();
+    gl::bindTexture(gl::kTT_TextureCubeMap, m_cubemap);
+    gl::pixelStorei(gl::kPSP_UnpackRowLength, m_asyncW);
+    myTexImage(gl::kTT_TextureCubeMapNZ, 0, 1, img);
+    myTexImage(gl::kTT_TextureCubeMapPZ, 1, 0, img);
+    myTexImage(gl::kTT_TextureCubeMapPX, 2, 0, img);
+    myTexImage(gl::kTT_TextureCubeMapNX, 0, 0, img);
+    myTexImage(gl::kTT_TextureCubeMapNY, 2, 1, img);
+    myTexImage(gl::kTT_TextureCubeMapPY, 1, 1, img);
+    gl::pixelStorei(gl::kPSP_UnpackSkipPixels, 0);
+    gl::pixelStorei(gl::kPSP_UnpackSkipRows, 0);
+    gl::pixelStorei(gl::kPSP_UnpackRowLength, 0);
+    gl::generateMipmap(gl::kTT_TextureCubeMap);
+    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MagFilter, gl::kTF_Linear);
+    gl::texParameteri(gl::kTT_Texture2D, gl::kTP_MinFilter, gl::kTF_LinearMipmapLinear);
+    gl::bindTexture(gl::kTT_TextureCubeMap, 0);
+
+    delete[] m_cubemapData;
+    m_cubemapData = nullptr;
+}
+
+bool Skybox::loadAsync(const m::String &fname)
+{
+    mlogger.info(M_LOG, "Chargement de la skybox %s", fname.raw());
+
+    if(m_asyncOpInProgress)
+        return false;
+
+    FILE *fle = nullptr;
+    fopen_s(&fle, fname.raw(), "rb");
+
+    if(fle == nullptr)
+        return false;
+
+    if(RGBE_ReadHeader(fle, &m_asyncW, &m_asyncH, nullptr) != RGBE_RETURN_SUCCESS) {
+        fclose(fle);
+        return false;
+    }
+
+    if(m_thread != nullptr)
+        delete m_thread; //Ne devrait pas arriver
+
+    m_asyncOpInProgress = true;
+    m_thread = new m::FunctionalThread([this, fle] () {
+        loadBlocking(fle);
+        m_asyncOpFinished.set(1);
+    }, "SB-LDR");
+
+    m_thread->start();
+    return true;
+}
+
+bool Skybox::update()
+{
+    if(m_asyncOpInProgress && m_asyncOpFinished.get()) {
+        if(m_thread != nullptr) {
+            m_thread->join();
+            delete m_thread;
+            m_thread = nullptr;
+        }
+
+        if(m_skyboxData == nullptr || m_cubemapData == nullptr)
+            mlogger.error(M_LOG, "Erreur lors de la lecture asynchrone");
+        else
+            uploadTextureData();
+
+        m_asyncOpFinished.set(0);
+        m_asyncOpInProgress = false;
+        return true;
+    }
+
+    return false;
 }

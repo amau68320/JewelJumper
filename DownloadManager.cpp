@@ -3,6 +3,7 @@
 #include <mgpcl/FileIOStream.h>
 #include <mgpcl/Math.h>
 #include <mgpcl/Logger.h>
+#include <mgpcl/File.h>
 
 DownloadManager::DownloadManager() : m::Thread("DL-MGR"), m_curFile(0), m_progress(0.0f)
 {
@@ -58,6 +59,7 @@ void DownloadManager::run()
 {
     const uint32_t bufSz = 65536;
     uint8_t *buf = new uint8_t[bufSz];
+    m::File dlRoot("textures/");
 
     for(int i = 0; i < m_queue.size() && m_running.get() != 0; i++) {
         m_lock.lock();
@@ -67,8 +69,15 @@ void DownloadManager::run()
 
         mlogger.debug(M_LOG, "Telechargement de %s...", m_queue[i].raw());
 
+        m::File tmpFile(dlRoot, m_queue[i] + ".dl");
         m::FileOutputStream fos;
-        if(!fos.open(m::String("textures/") + m_queue[i], m::FileOutputStream::kOM_Truncate)) {
+
+        if(tmpFile.exists()) {
+            if(!tmpFile.deleteFileHarder())
+                mlogger.warning(M_LOG, "Impossible de supprimer l'ancien fichier temporaire %s", tmpFile.path().raw());
+        }
+
+        if(!fos.open(tmpFile.path(), m::FileOutputStream::kOM_Truncate)) {
             mlogger.error(M_LOG, "Erreur lors de l'ouverture du fichier de sortie pour telecharger %s", m_queue[i].raw());
             continue;
         }
@@ -114,6 +123,9 @@ void DownloadManager::run()
 
         fos.close();
         is->close();
+
+        if(!tmpFile.renameTo(m_queue[i]))
+            mlogger.warning(M_LOG, "Impossible de renommer le fichier %s", tmpFile.path().raw());
     }
 
     delete[] buf;

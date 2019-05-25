@@ -32,6 +32,7 @@ class UIElement;
 class UIFontFace;
 class UILabel;
 class UIProgressBar;
+class UIPushButton;
 
 /*
  * Classe principale gerant JewelJumper.
@@ -128,6 +129,7 @@ private:
     bool onSliderValueChanged(UIElement *e);
     void renderHUD();
     void renderLensFlare();
+    bool onChangeSkyboxClicked(UIElement *e);
 
     //Contenu
 	m::List<GameObject*> m_objects;
@@ -194,10 +196,12 @@ private:
     float m_sunVisibility;
     GLuint m_lensFlareSprite;
 
-    //Gestion des telechargements
+    //Gestion des telechargements de skybox
     int m_lastDownload;
     UILabel *m_dlLabel;
     UIProgressBar *m_dlProgress;
+    UIPushButton *m_skyboxBtn;
+    int m_curSkybox;
 
     static MainApp *m_instance;
 };

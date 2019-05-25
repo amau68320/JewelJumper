@@ -478,8 +478,24 @@ void MainApp::update(float dt)
             m_dlProgress->setProgress(progress);
     }
 
-    if(m_skybox.update() && m_skyboxBtn != nullptr)
-        m_skyboxBtn->setDisabled(false);
+    if(m_skybox.update()) {
+        m::JSONElement &jsonData = m_skyboxData[m_curSkybox];
+
+        if(jsonData.has("sunPos") && jsonData["sunPos"].isArray() && jsonData["sunPos"].size() == 3) {
+            m_sunPosWorldSpace = m::Vector3d(jsonData["sunPos"][0].asDouble(), jsonData["sunPos"][1].asDouble(), jsonData["sunPos"][2].asDouble()).cast<float>();
+            m_sunPosWorldSpace *= 10.0f;
+        } else
+            m_sunPosWorldSpace.set(0.0f);
+
+        if(jsonData.has("exposure") && jsonData["exposure"].isNumber())
+            m_exposure = static_cast<float>(jsonData["exposure"].asDouble()); //TODO: Mettre a jour les sliders
+
+        if(jsonData.has("bloomThreshold") && jsonData["bloomThreshold"].isNumber())
+            m_bloomThreshold = static_cast<float>(jsonData["bloomThreshold"].asDouble()); //TODO: Mettre a jour les sliders
+
+        if(m_skyboxBtn != nullptr)
+            m_skyboxBtn->setDisabled(false);
+    }
 }
 
 static const GLuint g_allDrawBuffers[] = { gl::kFBA_ColorAttachment0, gl::kFBA_ColorAttachment1 };
@@ -890,19 +906,11 @@ bool MainApp::onChangeSkyboxClicked(UIElement *e)
 
     for(int i = 0; i < m_skyboxData.size() - 1; i++) {
         sid = (sid + 1) % m_skyboxData.size();
-        m::JSONElement &jsonData = m_skyboxData[sid];
-        m::File fle(skyboxRoot, jsonData["filename"].asString());
+        m::File fle(skyboxRoot, m_skyboxData[sid]["filename"].asString());
 
         if(fle.exists() && m_skybox.loadAsync(fle.path())) {
             m_curSkybox = sid;
             m_skyboxBtn->setDisabled();
-
-            if(jsonData.has("sunPos") && jsonData["sunPos"].isArray() && jsonData["sunPos"].size() == 3) {
-                m_sunPosWorldSpace = m::Vector3d(jsonData["sunPos"][0].asDouble(), jsonData["sunPos"][1].asDouble(), jsonData["sunPos"][2].asDouble()).cast<float>();
-                m_sunPosWorldSpace *= 10.0f;
-            } else
-                m_sunPosWorldSpace.set(0.0f);
-
             break;
         }
     }

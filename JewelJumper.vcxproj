@@ -141,6 +141,7 @@
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Gem.cpp" />
+    <ClCompile Include="Histogram.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainApp.cpp" />
     <ClCompile Include="RGBE.cpp" />
@@ -153,6 +154,7 @@
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Gem.h" />
+    <ClInclude Include="Histogram.h" />
     <ClInclude Include="MainApp.h" />
     <ClInclude Include="RGBE.h" />
     <ClInclude Include="Skybox.h" />

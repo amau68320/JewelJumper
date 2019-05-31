@@ -150,8 +150,8 @@ bool MainApp::setup(int ww, int wh)
     }
 
     m_hdrFBO0.init(static_cast<uint32_t>(ww), static_cast<uint32_t>(wh));
-    m_hdrFBO0.createColorBuffer(0, gl::kTF_RGB16F);
-    m_hdrFBO0.createColorBuffer(1, gl::kTF_RGB16F);
+    m_hdrFBO0.createColorBuffer(0, gl::kTF_RGBA16F);
+    m_hdrFBO0.createColorBuffer(1, gl::kTF_RGBA16F);
     m_hdrFBO0.createDepthBuffer();
 
     if(!m_hdrFBO0.finishFramebuffer()) {
@@ -219,6 +219,10 @@ bool MainApp::setup(int ww, int wh)
 
     m_lensFlareSprite = lensFlareImg->makeGLTexture(0, gl::kTF_Linear, gl::kTF_Linear);
     delete lensFlareImg;
+
+    //Histogramme
+    if(!m_histo.setup(m_ww, m_wh))
+        return false;
 
     //Gestion des skyboxes
     m::SSharedPtr<m::FileInputStream> fis(new m::FileInputStream);
@@ -623,6 +627,10 @@ void MainApp::render3D(float ptt)
     } else
         m_sunVisibility = 0.0f;
 
+    
+    //Calcul de l'histogramme
+    m_histo.compute(m_hdrFBO0.colorAttachmentID());
+
 
     /***************************** RENDU DES EFFETS *****************************/
     gl::disable(gl::kC_DepthTest);
@@ -837,6 +845,20 @@ void MainApp::renderHUD()
         vs.drawString(static_cast<float>(px + 5), static_cast<float>(py + 5 - m_font->lineHeight() - strY0), m_font, str);
     }
 
+    vs.begin(gl::kDM_LineLoop, false);
+    vs.quad(10, 50, 128, 128).quadColor(128, 128, 128);
+    vs.draw();
+
+    vs.begin(gl::kDM_LineStrip, false);
+
+    for(int i = 0; i < HistogramSize; i++) {
+        float x = static_cast<float>(i * 2 + 10);
+        float y = static_cast<float>(50 + 128) - m_histo.value(i) * 128.0f;
+
+        vs.vertexf(x, y).color(255, 255, 255);
+    }
+
+    vs.draw();
     gl::disable(gl::kC_Blend);
 }
 

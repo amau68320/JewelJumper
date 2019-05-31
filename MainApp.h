@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "Framebuffer.h"
 #include "Skybox.h"
+#include "Histogram.h"
 
 enum JJShader
 {
@@ -202,6 +203,9 @@ private:
     UIProgressBar *m_dlProgress;
     UIPushButton *m_skyboxBtn;
     int m_curSkybox;
+
+    //Histogramme
+    Histogram m_histo;
 
     static MainApp *m_instance;
 };

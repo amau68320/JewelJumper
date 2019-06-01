@@ -53,8 +53,8 @@ static void rotate90(HDRImageData &img, int i, int j)
     for(int y = 0; y < img.tileSz; y++)
         m::mem::copy(tmp + y * img.tileSz * 3, img.data + ((j * img.tileSz + y) * img.imgW + i * img.tileSz) * 3, img.tileSz * 3 * sizeof(float));
 
-    for(int y = 0; y < 512; y++) {
-        for(int x = 0; x < 512; x++) {
+    for(int y = 0; y < img.tileSz; y++) {
+        for(int x = 0; x < img.tileSz; x++) {
             float *src = tmp + (y * img.tileSz + x) * 3;
             float *dst = img.data + ((j * img.tileSz + x) * img.imgW + i * img.tileSz + (img.tileSz - y - 1)) * 3;
 
@@ -65,6 +65,19 @@ static void rotate90(HDRImageData &img, int i, int j)
     }
 
     delete[] tmp;
+}
+
+static void fillTile(HDRImageData &img, int i, int j, float val)
+{
+    for(int y = 0; y < img.tileSz; y++) {
+        for(int x = 0; x < img.tileSz; x++) {
+            float *ptr = img.data + ((j * img.tileSz + y) * img.imgW + i * img.tileSz + x) * 3;
+
+            ptr[0] = val;
+            ptr[1] = val;
+            ptr[2] = val;
+        }
+    }
 }
 
 bool Skybox::load(const m::String &fname)
@@ -196,6 +209,14 @@ bool Skybox::loadBlocking(FILE *fp)
     rotate90(img, 1, 1);
     rotate90(img, 1, 1);
     rotate90(img, 2, 1);
+
+    /*img.data = m_skyboxData;
+    fillTile(img, 0, 0, 0.0f);
+    fillTile(img, 1, 0, 1.0f);
+    fillTile(img, 2, 0, 2.0f);
+    fillTile(img, 0, 1, 3.0f);
+    fillTile(img, 1, 1, 0.0f);
+    fillTile(img, 2, 1, 0.0f);*/
 
     return true;
 }

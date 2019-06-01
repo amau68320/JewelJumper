@@ -2,7 +2,7 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 layout(rgba16f, binding = 0) uniform readonly image2D u_Src;
-layout(r32ui, binding = 1) uniform writeonly uimage3D u_Histogram;
+layout(r32ui, binding = 1) uniform uimage3D u_Histogram;
 
 void main()
 {
@@ -10,24 +10,21 @@ void main()
     ivec2 histoSz = imageSize(u_Histogram).xy;
 
     if(iID.x < histoSz.x && iID.y < histoSz.y) {
+        for(int z = 0; z < 64; z++)
+            imageStore(u_Histogram, ivec3(iID, z), uvec4(0));
+
         ivec2 begin = iID * 4;
         ivec2 end = min(begin + ivec2(4), imageSize(u_Src));
-        uint tmpHistogram[64] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
         for(int y = begin.y; y < end.y; y++) {
             for(int x = begin.x; x < end.x; x++) {
                 vec3 color = imageLoad(u_Src, ivec2(x, y)).rgb;
-                //uint bin = uint(clamp(18.0 * log(1.0 + dot(color, vec3(0.2126, 0.7152, 0.0722))), 0.0, 63.0)); //35.16096947
-                uint bin = clamp(uint(30.0 * dot(color, vec3(0.2126, 0.7152, 0.0722))), uint(0), uint(63));
+                float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+                int bin = clamp(int(round(100.0 * log(1.0 + luma))), 0, 63);
 
-                tmpHistogram[bin]++;
+                uint orig = imageLoad(u_Histogram, ivec3(iID, bin)).r;
+                imageStore(u_Histogram, ivec3(iID, bin), uvec4(orig + 1));
             }
         }
-
-        for(int z = 0; z < 64; z++)
-            imageStore(u_Histogram, ivec3(iID, z), uvec4(tmpHistogram[z], 0, 0, 0));
     }
 }

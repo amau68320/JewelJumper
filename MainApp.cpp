@@ -763,9 +763,10 @@ bool MainApp::onSliderValueChanged(UIElement *e)
         gem->setIOR(val);
     else if(name == "sSides")
         gem->generate(static_cast<int>(val), 0.75f, 1.0f, 1.0f, 0.75f);
-    else if(name == "sExposure")
+    else if(name == "sExposure") {
         m_exposure = val;
-    else if(name == "sBloomThreshold")
+        mlogger.debug(M_LOG, "Exposure: %f", m_exposure);
+    } else if(name == "sBloomThreshold")
         m_bloomThreshold = val;
     else if(name == "sFOV") {
         m_proj = m::Matrix4f::perspective(val * static_cast<float>(M_PI) / 180.0f,
@@ -845,7 +846,7 @@ void MainApp::renderHUD()
         vs.drawString(static_cast<float>(px + 5), static_cast<float>(py + 5 - m_font->lineHeight() - strY0), m_font, str);
     }
 
-    vs.begin(gl::kDM_LineLoop, false);
+    vs.begin(gl::kDM_TriangleStrip, false);
     vs.quad(10, 50, 128, 64).quadColor(128, 128, 128);
     vs.draw();
 

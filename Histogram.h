@@ -25,6 +25,28 @@ public:
     }
 
 private:
+    class ITex
+    {
+    public:
+        ITex(GLuint _id, GLuint _w, GLuint _h) : id(_id), w(_w), h(_h)
+        {
+        }
+
+        GLuint workgroupsX() const
+        {
+            return (w + HistogramWorkgroupSize - 1) / HistogramWorkgroupSize;
+        }
+
+        GLuint workgroupsY() const
+        {
+            return (h + HistogramWorkgroupSize - 1) / HistogramWorkgroupSize;
+        }
+
+        GLuint id;
+        GLuint w;
+        GLuint h;
+    };
+
     bool loadShader(int id, const char *fname);
 
     GLuint m_shader[HistogramNumShaders];
@@ -33,11 +55,9 @@ private:
     GLuint m_ssbo[HistogramNumBuffers];
     int m_curBuf;
 
-    m::List<GLuint> m_interTexs;
+    m::List<ITex> m_interTexs;
 
     GLuint *m_histo;
     GLuint m_ww;
     GLuint m_wh;
-    GLuint m_workgroupsX;
-    GLuint m_workgroupsY;
 };

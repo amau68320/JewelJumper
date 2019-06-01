@@ -3,7 +3,7 @@
 #include <mgpcl/StringIOStream.h>
 #include <mgpcl/Logger.h>
 
-Histogram::Histogram() : m_curBuf(0), m_ww(0), m_wh(0), m_workgroupsX(0), m_workgroupsY(0)
+Histogram::Histogram() : m_curBuf(0), m_ww(0), m_wh(0)
 {
     m::mem::zero(m_shader);
     m::mem::zero(m_program);
@@ -18,8 +18,8 @@ Histogram::~Histogram()
             gl::deleteBuffer(m_ssbo[i]);
     }
 
-    for(GLuint tex : m_interTexs)
-        gl::deleteTexture(tex);
+    for(ITex &tex : m_interTexs)
+        gl::deleteTexture(tex.id);
 
     for(int i = 0; i < HistogramNumShaders; i++) {
         if(m_program[i] != 0)
@@ -61,8 +61,6 @@ bool Histogram::setup(GLuint w, GLuint h)
 {
     m_ww = w;
     m_wh = h;
-    m_workgroupsX = (w + HistogramWorkgroupSize - 1) / HistogramWorkgroupSize;
-    m_workgroupsY = (h + HistogramWorkgroupSize - 1) / HistogramWorkgroupSize;
 
     if(!loadShader(0, "shaders/histogram_1.comp"))
         return false;
@@ -77,14 +75,20 @@ bool Histogram::setup(GLuint w, GLuint h)
     for(int i = 0; i < HistogramNumBuffers; i++) {
         m_ssbo[i] = gl::genBuffer();
         gl::bindBuffer(gl::kBT_ShaderStorageBuffer, m_ssbo[i]);
-        gl::bufferData(gl::kBT_ShaderStorageBuffer, HistogramSize * sizeof(GLuint), nullptr, gl::kBU_StaticDraw);
+        gl::bufferData(gl::kBT_ShaderStorageBuffer, HistogramSize * sizeof(GLuint), nullptr, gl::kBU_DynamicCopy);
         gl::bindBuffer(gl::kBT_ShaderStorageBuffer, 0);
     }
 
-    GLuint p2w = nearestPower(w) >> 2;
-    GLuint p2h = nearestPower(h) >> 2;
+    GLuint p2w = nearestPower(w) >> 1;
+    GLuint p2h = nearestPower(h) >> 1;
 
-    while(p2w > 1 || p2h > 1) {
+    while(p2w > 2 || p2h > 2) {
+        if(p2w > 2)
+            p2w >>= 1;
+
+        if(p2h > 2)
+            p2h >>= 1;
+
         GLuint tex = gl::genTexture();
         gl::bindTexture(gl::kTT_Texture3D, tex);
         gl::texStorage3D(gl::kTT_Texture3D, 1, gl::kTF_R32UI, p2w, p2h, HistogramSize);
@@ -93,14 +97,9 @@ bool Histogram::setup(GLuint w, GLuint h)
         gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapR, gl::kTWM_ClampToEdge);
         gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapS, gl::kTWM_ClampToEdge);
         gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapT, gl::kTWM_ClampToEdge);
+
         gl::bindTexture(gl::kTT_Texture3D, 0);
-        m_interTexs << tex;
-
-        if(p2w > 1)
-            p2w >>= 1;
-
-        if(p2h > 1)
-            p2h >>= 1;
+        m_interTexs << ITex(tex, p2w, p2h);
     }
 
     GLenum err = glGetError();
@@ -122,21 +121,26 @@ void Histogram::compute(GLuint color)
 
     //Passe 1
     gl::useProgram(m_program[0]);
+    gl::memoryBarrier(gl::kMBF_ShaderImageAccess);
     gl::bindImageTexture(0, color, 0, false, 0, gl::kBA_ReadOnly, gl::kTF_RGBA16F);
-    gl::bindImageTexture(1, m_interTexs[0], 0, false, 0, gl::kBA_WriteOnly, gl::kTF_R32UI);
-    gl::dispatchCompute(m_workgroupsX, m_workgroupsY, 1);
+    gl::bindImageTexture(1, m_interTexs[0].id, 0, false, 0, gl::kBA_ReadWrite, gl::kTF_R32UI);
+    gl::dispatchCompute(m_interTexs[0].workgroupsX(), m_interTexs[0].workgroupsY(), 1);
 
     //Passe 2
     gl::useProgram(m_program[1]);
     for(int i = 1; i < ~m_interTexs; i++) {
-        gl::bindImageTexture(0, m_interTexs[i - 1], 0, false, 0, gl::kBA_ReadOnly , gl::kTF_R32UI);
-        gl::bindImageTexture(1, m_interTexs[i    ], 0, false, 0, gl::kBA_WriteOnly, gl::kTF_R32UI);
-        gl::dispatchCompute(m_workgroupsX, m_workgroupsY, 1);
+        const ITex &dst = m_interTexs[i];
+
+        gl::memoryBarrier(gl::kMBF_ShaderImageAccess);
+        gl::bindImageTexture(0, m_interTexs[i - 1].id, 0, false, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
+        gl::bindImageTexture(1, dst.id, 0, false, 0, gl::kBA_WriteOnly, gl::kTF_R32UI);
+        gl::dispatchCompute(dst.workgroupsX(), dst.workgroupsY(), 1);
     }
 
     //Passe 3
     gl::useProgram(m_program[2]);
-    gl::bindImageTexture(0, m_interTexs.last(), 0, false, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
+    gl::memoryBarrier(gl::kMBF_ShaderImageAccess);
+    gl::bindImageTexture(0, m_interTexs.last().id, 0, false, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
     gl::bindBufferBase(gl::kBT_ShaderStorageBuffer, 1, m_ssbo[m_curBuf]);
     gl::dispatchCompute(1, 1, 1);
     gl::useProgram(0);
@@ -146,11 +150,11 @@ void Histogram::compute(GLuint color)
     if(err != GL_NO_ERROR)
         mlogger.error(M_LOG, "Histogram::compute(): OpenGL error %x", err);
 
-    GLuint histoSum = 0;
+    /*GLuint histoSum = 0;
     for(int i = 0; i < HistogramSize; i++)
         histoSum += m_histo[i];
 
-    /*int diff = static_cast<int>(histoSum) - static_cast<int>(m_ww * m_wh);
+    int diff = static_cast<int>(histoSum) - static_cast<int>(m_ww * m_wh);
     if(diff != 0)
         mlogger.error(M_LOG, "Not good: %d", diff);*/
 }

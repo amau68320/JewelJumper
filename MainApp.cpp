@@ -846,14 +846,14 @@ void MainApp::renderHUD()
     }
 
     vs.begin(gl::kDM_LineLoop, false);
-    vs.quad(10, 50, 128, 128).quadColor(128, 128, 128);
+    vs.quad(10, 50, 128, 64).quadColor(128, 128, 128);
     vs.draw();
 
     vs.begin(gl::kDM_LineStrip, false);
 
     for(int i = 0; i < HistogramSize; i++) {
         float x = static_cast<float>(i * 2 + 10);
-        float y = static_cast<float>(50 + 128) - m_histo.value(i) * 128.0f;
+        float y = static_cast<float>(50 + 64) - m_histo.value(i) * 64.0f;
 
         vs.vertexf(x, y).color(255, 255, 255);
     }

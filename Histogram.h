@@ -1,11 +1,13 @@
 #pragma once
 #include <aiso/GL.h>
+#include <mgpcl/List.h>
 
 enum
 {
     HistogramSize = 64,
-    HistogramNumBuffers = 4,
-    HistogramWorkgroupSize = 16
+    HistogramNumBuffers = 2,
+    HistogramWorkgroupSize = 16,
+    HistogramNumShaders = 3
 };
 
 class Histogram
@@ -19,15 +21,23 @@ public:
 
     float value(int idx) const
     {
-        return static_cast<float>(m_histo[idx]) / static_cast<float>(m_ww * m_wh * HistogramWorkgroupSize * HistogramWorkgroupSize);
+        return static_cast<float>(m_histo[idx]) / static_cast<float>(m_ww * m_wh);
     }
 
 private:
-    GLuint m_shader;
-    GLuint m_program;
+    bool loadShader(int id, const char *fname);
+
+    GLuint m_shader[HistogramNumShaders];
+    GLuint m_program[HistogramNumShaders];
+
     GLuint m_ssbo[HistogramNumBuffers];
     int m_curBuf;
+
+    m::List<GLuint> m_interTexs;
+
     GLuint *m_histo;
     GLuint m_ww;
     GLuint m_wh;
+    GLuint m_workgroupsX;
+    GLuint m_workgroupsY;
 };

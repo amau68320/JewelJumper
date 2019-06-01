@@ -42,6 +42,7 @@
 /x64
 /.vs
 /jewel_jumper.ini
+/gem_studio.ini
 /VSUserSettings.props
 /JewelJumper.vcxproj.user
 /textures/_origSkybox

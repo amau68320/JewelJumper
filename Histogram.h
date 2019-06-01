@@ -81,4 +81,8 @@ private:
     float m_temporalL;
     float m_tau;
     double m_lastTime;
+
+    int m_dispatchPos;
+    int m_dispatchMarks[4];
+    int m_dispatchCount;
 };

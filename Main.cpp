@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     m::inet::initSSL();
 
     //Lecture de la config INI
-    m::SimpleConfig cfg("jewel_jumper.ini");
+    m::SimpleConfig cfg("gem_studio.ini");
     if(cfg.load() != m::kCLE_None && cfg.lastError() != m::kCLE_FileNotFound) {
         m::String err(cfg.errorString());
         mlogger.error(M_LOG, "Impossible de lire jewel_jumper.ini: %s", err.raw());

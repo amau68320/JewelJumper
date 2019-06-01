@@ -126,7 +126,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)deps/include;$(MGPCL_INCLUDE_DIR);$(AISO_INCLUDE_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)deps/lib/$(Configuration);$(MGPCL_LIB_DIR);$(OPENSSL_LIB_DIR);$(AISO_LIB_DIR);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -156,8 +156,15 @@
     <ClInclude Include="Gem.h" />
     <ClInclude Include="Histogram.h" />
     <ClInclude Include="MainApp.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="RGBE.h" />
     <ClInclude Include="Skybox.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

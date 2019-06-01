@@ -26,7 +26,8 @@ public:
 
     float computedExposure() const
     {
-        return m_autoExposure;
+        float t = static_cast<float>(m_dispatchPos) / static_cast<float>(m_dispatchCount);
+        return (1.0f - t) * m_oldAutoExposure + t * m_autoExposure;
     }
 
     float temporalAdaptationFactor() const
@@ -77,6 +78,7 @@ private:
     GLuint m_ww;
     GLuint m_wh;
 
+    float m_oldAutoExposure;
     float m_autoExposure;
     float m_temporalL;
     float m_tau;

@@ -841,7 +841,7 @@ void MainApp::renderHUD()
         vs.drawString(10.0f, 10.0f, m_font, m_debugString);
 
         vs.begin(gl::kDM_TriangleStrip, false);
-        vs.quad(10, 70, 128, 64).quadColor(128, 128, 128);
+        vs.quad(10, 70, 128, 64).quadColor(0, 0, 0, 200);
         vs.draw();
 
         vs.begin(gl::kDM_LineStrip, false);

@@ -6,6 +6,12 @@
 #include <GLFW/glfw3.h>
 #include "MainApp.h"
 
+#ifdef MGPCL_WIN
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include "resource.h"
+#endif
+
 int main(int argc, char *argv[])
 {
     //Init MGPCL
@@ -29,7 +35,15 @@ int main(int argc, char *argv[])
     const bool useNetLogger = cfg["logging"]["useNetLogger"].asBool();
     const bool autoStartNL = cfg["logging"]["autoStartNetLogger"].asBool();
     const m::String &nlAddr = cfg["logging"]["netLoggerAddress"].value("127.0.0.1");
+    const bool allocConsole = cfg["misc"]["allocConsole"].asBool();
     cfg.save();
+
+#if defined(MGPCL_WIN) && !defined(_DEBUG)
+    if(allocConsole) {
+        AllocConsole();
+        delete m::Logger::setLoggerInstance(new m::BasicLogger);
+    }
+#endif
 
     //Prise en charge du NetLogger
     if(useNetLogger) {
@@ -101,6 +115,13 @@ int main(int argc, char *argv[])
         return 3;
     }
 
+#ifdef MGPCL_WIN
+    HWND hWnd = glfwGetWin32Window(wnd);
+    HICON hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1));
+    SendMessage(hWnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hIcon));
+    SendMessage(hWnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hIcon));
+#endif
+
     glfwSetWindowPos(wnd, monX + (monW - ww) / 2, monY + (monH - wh) / 2);
     glfwMakeContextCurrent(wnd);
     glfwSwapInterval(1);
@@ -145,3 +166,12 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+#if defined(MGPCL_WIN) && !defined(_DEBUG)
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine, int nShowCmd)
+{
+    return main(__argc, __argv);
+}
+
+#endif

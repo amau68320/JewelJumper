@@ -5,8 +5,8 @@
 #include <mgpcl/Math.h>
 #include <mgpcl/Time.h>
 
-Histogram::Histogram() : m_curBuf(0), m_ww(0), m_wh(0), m_autoExposure(1.0f), m_temporalL(0.0f), m_tau(4.0f),
-                         m_dispatchPos(0), m_dispatchMarks{ 1, 2, 3, 4 }, m_dispatchCount(4)
+Histogram::Histogram() : m_curBuf(0), m_ww(0), m_wh(0), m_oldAutoExposure(1.0f), m_autoExposure(1.0f), m_temporalL(0.0f),
+                         m_tau(4.0f), m_dispatchPos(0), m_dispatchMarks{ 1, 2, 3, 4 }, m_dispatchCount(4)
 {
     m::mem::zero(m_shader);
     m::mem::zero(m_program);
@@ -215,7 +215,7 @@ void Histogram::compute(GLuint color)
         GLuint count = 0;
 
         for(int i = calcStart; i <= calcEnd; i++) {
-            const float ev100 = static_cast<float>(i) / 1.96875f - 16.0f; //old:  / 3.9375f - 8.0f
+            const float ev100 = static_cast<float>(i) / 1.96875f - 16.0f;
             const float L = std::exp2(ev100) * 0.125f;
 
             avgL += L * static_cast<float>(m_histo2[i]);
@@ -225,7 +225,7 @@ void Histogram::compute(GLuint color)
         avgL /= static_cast<float>(count);
 
         if(std::isnan(avgL) || avgL < -1000.0f || avgL > 10000.0f)
-            return;
+            return; //Cas rares au debut
 
         const double t = m::time::getTimeMs();
         const float dt = static_cast<float>((t - m_lastTime) / 1000.0);
@@ -234,6 +234,7 @@ void Histogram::compute(GLuint color)
         m_temporalL = m_temporalL + (avgL - m_temporalL) * (1.0f - std::exp(-dt * m_tau));
 
         const float keyValue = 1.2f - 2.0f / (std::log10(m_temporalL + 1.0f) + 2.0f);
+        m_oldAutoExposure = m_autoExposure;
         m_autoExposure = keyValue / m::math::clamp(m_temporalL, 0.001f, 10.0f);
     }
 }

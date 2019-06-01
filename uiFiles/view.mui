@@ -1,8 +1,8 @@
 Base(title: "Vue", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), icon: "eye") [
     Label(text: "Champ de vision", constraints: "y"),
     Slider(name: "sFOV", constraints: "y"),
-    Label(text: "Exposition", constraints: "y"),
-    Slider(name: "sExposure", constraints: "y"),
+    Label(text: "Vitesse d'apatation de l'exposition", constraints: "y"),
+    Slider(name: "sTemporalAdaptation", constraints: "y"),
     Label(text: "Seuil de bloom", constraints: "y"),
     Slider(name: "sBloomThreshold", constraints: "y"),
     Label(text: "Vitesse de la caméra", constraints: "y"),

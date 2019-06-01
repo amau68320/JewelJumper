@@ -2,13 +2,18 @@
 #include <mgpcl/FileIOStream.h>
 #include <mgpcl/StringIOStream.h>
 #include <mgpcl/Logger.h>
+#include <mgpcl/Math.h>
+#include <mgpcl/Time.h>
 
-Histogram::Histogram() : m_curBuf(0), m_ww(0), m_wh(0)
+Histogram::Histogram() : m_curBuf(0), m_ww(0), m_wh(0), m_autoExposure(1.0f), m_temporalL(0.0f), m_tau(4.0f)
 {
     m::mem::zero(m_shader);
     m::mem::zero(m_program);
     m::mem::zero(m_ssbo);
-    m_histo = new GLuint[HistogramSize];
+
+    m_histo1 = new GLuint[HistogramSize];
+    m_histo2 = new GLuint[HistogramSize];
+    m_lastTime = m::time::getTimeMs();
 }
 
 Histogram::~Histogram()
@@ -29,7 +34,8 @@ Histogram::~Histogram()
             gl::deleteShader(m_shader[i]);
     }
 
-    delete[] m_histo;
+    delete[] m_histo1;
+    delete[] m_histo2;
 }
 
 static bool readFile(const char *path, m::String &dst)
@@ -114,7 +120,7 @@ void Histogram::compute(GLuint color)
     //Effacer l'ancien buffer
     gl::bindBuffer(gl::kBT_ShaderStorageBuffer, m_ssbo[m_curBuf]);
     void *ptr = gl::mapBuffer(gl::kBT_ShaderStorageBuffer, gl::kBA_ReadOnly);
-    m::mem::copy(m_histo, ptr, HistogramSize * sizeof(GLuint));
+    m::mem::copy(m_histo1, ptr, HistogramSize * sizeof(GLuint));
     gl::unmapBuffer(gl::kBT_ShaderStorageBuffer);
     gl::bindBuffer(gl::kBT_ShaderStorageBuffer, 0);
     m_curBuf = (m_curBuf + 1) % HistogramNumBuffers;
@@ -150,13 +156,59 @@ void Histogram::compute(GLuint color)
     if(err != GL_NO_ERROR)
         mlogger.error(M_LOG, "Histogram::compute(): OpenGL error %x", err);
 
-    /*GLuint histoSum = 0;
-    for(int i = 0; i < HistogramSize; i++)
-        histoSum += m_histo[i];
+    //Calcul expo. auto
+    m::mem::copy(m_histo2, m_histo1, HistogramSize * sizeof(GLuint));
+    GLuint amntDark = (m_ww * m_wh * 10) / 100;
+    GLuint amntBright = (m_ww * m_wh * 20) / 100;
+    int calcStart = 0;
+    int calcEnd = HistogramSize - 1;
 
-    int diff = static_cast<int>(histoSum) - static_cast<int>(m_ww * m_wh);
-    if(diff != 0)
-        mlogger.error(M_LOG, "Not good: %d", diff);*/
+    for(int i = 0; i < HistogramSize; i++) {
+        if(amntDark > m_histo2[i]) {
+            amntDark -= m_histo2[i];
+            m_histo2[i] = 0;
+        } else {
+            m_histo2[i] -= amntDark;
+            calcStart = i;
+            break;
+        }
+    }
+
+    for(int i = HistogramSize - 1; i >= calcStart; i--) {
+        if(amntBright > m_histo2[i]) {
+            amntBright -= m_histo2[i];
+            m_histo2[i] = 0;
+        } else {
+            m_histo2[i] -= amntBright;
+            calcEnd = i;
+            break;
+        }
+    }
+
+    float avgL = 0.0f;
+    GLuint count = 0;
+
+    for(int i = calcStart; i <= calcEnd; i++) {
+        const float ev100 = static_cast<float>(i) / 1.96875f - 16.0f; //old:  / 3.9375f - 8.0f
+        const float L = std::exp2(ev100) * 0.125f;
+
+        avgL += L * static_cast<float>(m_histo2[i]);
+        count += m_histo2[i];
+    }
+
+    avgL /= static_cast<float>(count);
+
+    if(std::isnan(avgL) || avgL < -1000.0f || avgL > 10000.0f)
+        return;
+
+    const double t = m::time::getTimeMs();
+    const float dt = static_cast<float>((t - m_lastTime) / 1000.0);
+
+    m_lastTime = t;
+    m_temporalL = m_temporalL + (avgL - m_temporalL) * (1.0f - std::exp(-dt * m_tau));
+
+    const float keyValue = 1.2f - 2.0f / (std::log10(m_temporalL + 1.0f) + 2.0f);
+    m_autoExposure = keyValue / m::math::clamp(m_temporalL, 0.001f, 10.0f);
 }
 
 bool Histogram::loadShader(int id, const char *fname)

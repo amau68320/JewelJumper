@@ -21,7 +21,22 @@ public:
 
     float value(int idx) const
     {
-        return static_cast<float>(m_histo[idx]) / static_cast<float>(m_ww * m_wh);
+        return static_cast<float>(m_histo1[idx]) / static_cast<float>(m_ww * m_wh);
+    }
+
+    float computedExposure() const
+    {
+        return m_autoExposure;
+    }
+
+    float temporalAdaptationFactor() const
+    {
+        return m_tau;
+    }
+
+    void setTemporalAdaptationFactor(float tau)
+    {
+        m_tau = tau;
     }
 
 private:
@@ -57,7 +72,13 @@ private:
 
     m::List<ITex> m_interTexs;
 
-    GLuint *m_histo;
+    GLuint *m_histo1;
+    GLuint *m_histo2;
     GLuint m_ww;
     GLuint m_wh;
+
+    float m_autoExposure;
+    float m_temporalL;
+    float m_tau;
+    double m_lastTime;
 };

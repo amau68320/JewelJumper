@@ -34,6 +34,7 @@ class UIFontFace;
 class UILabel;
 class UIProgressBar;
 class UIPushButton;
+class UISlider;
 
 /*
  * Classe principale gerant JewelJumper.
@@ -206,6 +207,7 @@ private:
 
     //Histogramme
     Histogram m_histo;
+    UISlider *m_bloomThresholdSlider;
 
     static MainApp *m_instance;
 };

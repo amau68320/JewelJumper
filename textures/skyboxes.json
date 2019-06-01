@@ -2,28 +2,23 @@
     {
         "filename": "skybox.hdr",
         "sunPos": [ 0.23, 0.72, -1.0 ],
-        "exposure": 2.5,
         "bloomThreshold": 4.75
     },
     {
         "filename": "blue_grotto_4k.hdr",
-        "exposure": 2.5,
-        "bloomThreshold": 4.75
+        "bloomThreshold": 20.0
     },
     {
         "filename": "cayley_interior_4k.hdr",
-        "exposure": 2.5,
-        "bloomThreshold": 4.75
+        "bloomThreshold": 20.0
     },
     {
         "filename": "flower_road_4k.hdr",
         "sunPos": [ -0.55, 0.8, -0.67 ],
-        "exposure": 2.5,
-        "bloomThreshold": 4.75
+        "bloomThreshold": 10.0
     },
     {
         "filename": "schadowplatz_4k.hdr",
-        "exposure": 0.5,
-        "bloomThreshold": 4.75
+        "bloomThreshold": 20.0
     }
 ]

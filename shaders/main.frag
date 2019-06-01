@@ -99,7 +99,7 @@ void main()
 	float fresnel = computeFresnel(u_IOR, dot(L, H));	
 	vec3 diffuse  = texture(u_CubeMap, R2).rgb * f_Color.rgb;
 	vec3 specular = texture(u_CubeMap, R).rgb;
-    vec3 final    = mix(diffuse, specular, fresnel) * u_Exposure;
+    vec3 final    = mix(diffuse, specular, fresnel) * pow(2.0, u_Exposure);
     float luma    = dot(final, vec3(0.2126, 0.7152, 0.0722));
     
     out_Color = vec4(final, 1.0);

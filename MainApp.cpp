@@ -28,7 +28,7 @@ MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCur
                                     m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr),
                                     m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0),
                                     m_lastDownload(-1), m_dlLabel(nullptr), m_dlProgress(nullptr), m_skyboxBtn(nullptr),
-                                    m_curSkybox(0)
+                                    m_curSkybox(0), m_bloomThresholdSlider(nullptr)
 {
     m_instance = this;
 
@@ -50,6 +50,9 @@ MainApp::~MainApp()
 
     if(m_skyboxBtn != nullptr)
         m_skyboxBtn->removeRef();
+
+    if(m_bloomThresholdSlider != nullptr)
+        m_bloomThresholdSlider->removeRef();
 
     uiCore.destroy();
 
@@ -307,9 +310,12 @@ bool MainApp::setup(int ww, int wh)
         ui::load("view", wnd);
 
         wnd->byName<UISlider>("sFOV")->setRange(60.0f, 150.0f)->setValue(80.0f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
-        wnd->byName<UISlider>("sExposure")->setRange(0.25f, 4.0f)->setValue(m_exposure)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+        wnd->byName<UISlider>("sTemporalAdaptation")->setRange(0.5f, 6.0f)->setValue(m_histo.temporalAdaptationFactor())->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
         wnd->byName<UISlider>("sCamSpeed")->setRange(0.1f, 2.0f)->setValue(0.5f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
-        wnd->byName<UISlider>("sBloomThreshold")->setMax(32.0f)->setValue(m_bloomThreshold)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+
+        m_bloomThresholdSlider = wnd->byName<UISlider>("sBloomThreshold");
+        m_bloomThresholdSlider->addRef();
+        m_bloomThresholdSlider->setMax(32.0f)->setValue(m_bloomThreshold)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
 
         wnd->byName<UICheckBox>("cbRefraction")->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
         wnd->byName<UICheckBox>("cbBloom"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
@@ -455,6 +461,8 @@ void MainApp::update(float dt)
         m_debugString += m::String::fromDouble(1000.0 / m_renderDelta, 2);
         m_debugString.append("\nDrawcalls: ", 12);
         m_debugString += m::String::fromUInteger(m_numDrawcalls);
+        m_debugString.append("\nExposition: ", 13);
+        m_debugString += m::String::fromDouble(static_cast<double>(m_exposure), 4);
     }
 
     if(m_dlLabel != nullptr && m_dlProgress != nullptr) {
@@ -491,11 +499,12 @@ void MainApp::update(float dt)
         } else
             m_sunPosWorldSpace.set(0.0f);
 
-        if(jsonData.has("exposure") && jsonData["exposure"].isNumber())
-            m_exposure = static_cast<float>(jsonData["exposure"].asDouble()); //TODO: Mettre a jour les sliders
-
-        if(jsonData.has("bloomThreshold") && jsonData["bloomThreshold"].isNumber())
-            m_bloomThreshold = static_cast<float>(jsonData["bloomThreshold"].asDouble()); //TODO: Mettre a jour les sliders
+        if(jsonData.has("bloomThreshold") && jsonData["bloomThreshold"].isNumber()) {
+            m_bloomThreshold = static_cast<float>(jsonData["bloomThreshold"].asDouble());
+            
+            if(m_bloomThresholdSlider != nullptr)
+                m_bloomThresholdSlider->setValue(m_bloomThreshold);
+        }
 
         if(m_skyboxBtn != nullptr)
             m_skyboxBtn->setDisabled(false);
@@ -506,6 +515,8 @@ static const GLuint g_allDrawBuffers[] = { gl::kFBA_ColorAttachment0, gl::kFBA_C
 
 void MainApp::render3D(float ptt)
 {
+    m_exposure = m_histo.computedExposure();
+
     //Matrice de vue
     m::Vector3f camPos;
     m_camera->getTransform(m_view, camPos, ptt);
@@ -763,10 +774,9 @@ bool MainApp::onSliderValueChanged(UIElement *e)
         gem->setIOR(val);
     else if(name == "sSides")
         gem->generate(static_cast<int>(val), 0.75f, 1.0f, 1.0f, 0.75f);
-    else if(name == "sExposure") {
-        m_exposure = val;
-        mlogger.debug(M_LOG, "Exposure: %f", m_exposure);
-    } else if(name == "sBloomThreshold")
+    else if(name == "sTemporalAdaptation")
+        m_histo.setTemporalAdaptationFactor(val);
+    else if(name == "sBloomThreshold")
         m_bloomThreshold = val;
     else if(name == "sFOV") {
         m_proj = m::Matrix4f::perspective(val * static_cast<float>(M_PI) / 180.0f,
@@ -827,8 +837,24 @@ void MainApp::renderHUD()
     gl::enable(gl::kC_Blend);
     gl::blendFunc(gl::kBM_SrcAlpha, gl::kBM_OneMinusSrcAlpha);
 
-    if(m_displayDebugString)
+    if(m_displayDebugString) {
         vs.drawString(10.0f, 10.0f, m_font, m_debugString);
+
+        vs.begin(gl::kDM_TriangleStrip, false);
+        vs.quad(10, 70, 128, 64).quadColor(128, 128, 128);
+        vs.draw();
+
+        vs.begin(gl::kDM_LineStrip, false);
+
+        for(int i = 0; i < HistogramSize; i++) {
+            float x = static_cast<float>(i * 2 + 10);
+            float y = static_cast<float>(70 + 64) - m_histo.value(i) * 64.0f;
+
+            vs.vertexf(x, y).color(255, 255, 255);
+        }
+
+        vs.draw();
+    }
 
     if(m_skybox.isDoingAsyncOp()) {
         m::String str("CHARGEMENT...");
@@ -846,20 +872,6 @@ void MainApp::renderHUD()
         vs.drawString(static_cast<float>(px + 5), static_cast<float>(py + 5 - m_font->lineHeight() - strY0), m_font, str);
     }
 
-    vs.begin(gl::kDM_TriangleStrip, false);
-    vs.quad(10, 50, 128, 64).quadColor(128, 128, 128);
-    vs.draw();
-
-    vs.begin(gl::kDM_LineStrip, false);
-
-    for(int i = 0; i < HistogramSize; i++) {
-        float x = static_cast<float>(i * 2 + 10);
-        float y = static_cast<float>(50 + 64) - m_histo.value(i) * 64.0f;
-
-        vs.vertexf(x, y).color(255, 255, 255);
-    }
-
-    vs.draw();
     gl::disable(gl::kC_Blend);
 }
 

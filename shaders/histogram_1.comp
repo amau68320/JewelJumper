@@ -18,9 +18,11 @@ void main()
 
         for(int y = begin.y; y < end.y; y++) {
             for(int x = begin.x; x < end.x; x++) {
-                vec3 color = imageLoad(u_Src, ivec2(x, y)).rgb;
-                float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
-                int bin = clamp(int(round(100.0 * log(1.0 + luma))), 0, 63);
+                vec3 color  = imageLoad(u_Src, ivec2(x, y)).rgb;
+                float luma  = dot(color, vec3(0.2126, 0.7152, 0.0722));
+                float ev100 = log2(8.0 * luma);
+                
+                int bin = clamp(int(round((ev100 + 16.0) * 1.96875)), 0, 63);
 
                 uint orig = imageLoad(u_Histogram, ivec3(iID, bin)).r;
                 imageStore(u_Histogram, ivec3(iID, bin), uvec4(orig + 1));

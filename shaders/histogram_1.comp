@@ -10,8 +10,10 @@ void main()
     ivec2 histoSz = imageSize(u_Histogram).xy;
 
     if(iID.x < histoSz.x && iID.y < histoSz.y) {
-        for(int z = 0; z < 64; z++)
-            imageStore(u_Histogram, ivec3(iID, z), uvec4(0));
+        uint tmp[64] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
         ivec2 begin = iID * 4;
         ivec2 end = min(begin + ivec2(4), imageSize(u_Src));
@@ -23,10 +25,11 @@ void main()
                 float ev100 = log2(8.0 * luma);
                 
                 int bin = clamp(int(round((ev100 + 16.0) * 1.96875)), 0, 63);
-
-                uint orig = imageLoad(u_Histogram, ivec3(iID, bin)).r;
-                imageStore(u_Histogram, ivec3(iID, bin), uvec4(orig + 1));
+                tmp[bin]++;
             }
         }
+
+        for(int z = 0; z < 64; z++)
+            imageStore(u_Histogram, ivec3(iID, z), uvec4(tmp[z]));
     }
 }

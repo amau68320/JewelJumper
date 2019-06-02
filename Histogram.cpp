@@ -111,11 +111,14 @@ bool Histogram::setup(GLuint w, GLuint h)
 
     m_dispatchCount = 4;
     m_dispatchMarks[0] = 1;
-    m_dispatchMarks[1] = (m_interTexs.size() * 2) / 10;
-    m_dispatchMarks[2] = m_interTexs.size() / 2;
+    m_dispatchMarks[1] = (m_interTexs.size() * 4) / 10;
+    m_dispatchMarks[2] = (m_interTexs.size() * 7) / 10;
     m_dispatchMarks[3] = m_interTexs.size();
 
-    if(m_dispatchMarks[1] == 0 || m_dispatchMarks[2] == m_dispatchMarks[1] || m_dispatchMarks[3] == m_dispatchMarks[2]) {
+    for(int i = 0; i < 4; i++)
+        mlogger.debug(M_LOG, "m_dispatchMarks[%d] = %d", i, m_dispatchMarks[i]);
+
+    if(m_dispatchMarks[1] == 1 || m_dispatchMarks[2] == m_dispatchMarks[1] || m_dispatchMarks[3] == m_dispatchMarks[2]) {
         m_dispatchCount = 2;
         m_dispatchMarks[1] = m_interTexs.size();
     }
@@ -144,7 +147,7 @@ void Histogram::compute(GLuint color)
         gl::useProgram(m_program[0]);
         gl::memoryBarrier(gl::kMBF_ShaderImageAccess);
         gl::bindImageTexture(0, color, 0, false, 0, gl::kBA_ReadOnly, gl::kTF_RGBA16F);
-        gl::bindImageTexture(1, m_interTexs[0].id, 0, false, 0, gl::kBA_ReadWrite, gl::kTF_R32UI);
+        gl::bindImageTexture(1, m_interTexs[0].id, 0, true, 0, gl::kBA_ReadWrite, gl::kTF_R32UI);
         gl::dispatchCompute(m_interTexs[0].workgroupsX(), m_interTexs[0].workgroupsY(), 1);
         gl::useProgram(0);
 
@@ -157,8 +160,8 @@ void Histogram::compute(GLuint color)
             const ITex &dst = m_interTexs[i];
 
             gl::memoryBarrier(gl::kMBF_ShaderImageAccess);
-            gl::bindImageTexture(0, m_interTexs[i - 1].id, 0, false, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
-            gl::bindImageTexture(1, dst.id, 0, false, 0, gl::kBA_WriteOnly, gl::kTF_R32UI);
+            gl::bindImageTexture(0, m_interTexs[i - 1].id, 0, true, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
+            gl::bindImageTexture(1, dst.id, 0, true, 0, gl::kBA_WriteOnly, gl::kTF_R32UI);
             gl::dispatchCompute(dst.workgroupsX(), dst.workgroupsY(), 1);
         }
 
@@ -166,7 +169,7 @@ void Histogram::compute(GLuint color)
             //Passe 3
             gl::useProgram(m_program[2]);
             gl::memoryBarrier(gl::kMBF_ShaderImageAccess);
-            gl::bindImageTexture(0, m_interTexs.last().id, 0, false, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
+            gl::bindImageTexture(0, m_interTexs.last().id, 0, true, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
             gl::bindBufferBase(gl::kBT_ShaderStorageBuffer, 1, m_ssbo[m_curBuf]);
             gl::dispatchCompute(1, 1, 1);
 

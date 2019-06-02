@@ -147,7 +147,7 @@ void Histogram::compute(GLuint color)
         gl::useProgram(m_program[0]);
         gl::memoryBarrier(gl::kMBF_ShaderImageAccess);
         gl::bindImageTexture(0, color, 0, false, 0, gl::kBA_ReadOnly, gl::kTF_RGBA16F);
-        gl::bindImageTexture(1, m_interTexs[0].id, 0, true, 0, gl::kBA_ReadWrite, gl::kTF_R32UI);
+        gl::bindImageTexture(1, m_interTexs[0].id, 0, true, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
         gl::dispatchCompute(m_interTexs[0].workgroupsX(), m_interTexs[0].workgroupsY(), 1);
         gl::useProgram(0);
 

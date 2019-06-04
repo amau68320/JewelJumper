@@ -1,14 +1,12 @@
-#version 430
-
-layout(local_size_x = 16, local_size_y = 16, local_size_z = 2) in;
+layout(local_size_x = 16, local_size_y = 16) in;
 layout(r32ui, binding = 0) uniform readonly  uimage3D u_Src;
 layout(r32ui, binding = 1) uniform writeonly uimage3D u_Dst;
+layout(location = 2) uniform ivec2 u_SrcSz;
+layout(location = 3) uniform ivec2 u_DstSz;
 
 uint fetchMeTheGoat(in ivec3 coord)
 {
-    ivec2 sz = imageSize(u_Src).xy;
-
-    if(coord.x >= sz.x || coord.y >= sz.y)
+    if(coord.x >= u_SrcSz.x || coord.y >= u_SrcSz.y)
         return 0;
     else
         return imageLoad(u_Src, coord).r;
@@ -17,13 +15,9 @@ uint fetchMeTheGoat(in ivec3 coord)
 void main()
 {
     ivec2 iID = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 histoSz = imageSize(u_Dst).xy;
 
-    if(iID.x < histoSz.x && iID.y < histoSz.y) {
-        int sz = int(gl_GlobalInvocationID.z) * 32;
-        int ez = sz + 32;
-
-        for(int z = sz; z < ez; z++) {
+    if(iID.x < u_DstSz.x && iID.y < u_DstSz.y) {
+        for(int z = 0; z < 64; z++) {
             ivec3 pos = ivec3(iID * 2, z);
             uint val = 0;
 

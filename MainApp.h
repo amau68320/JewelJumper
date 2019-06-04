@@ -11,6 +11,7 @@
 #include "Framebuffer.h"
 #include "Skybox.h"
 #include "Histogram.h"
+#include "RoundRobin.h"
 
 enum JJShader
 {
@@ -53,7 +54,7 @@ public:
      * Retourne true si tout c'est bien passe, et false en cas
      * d'erreur.
      */
-    bool setup(int ww, int wh);
+    bool setup(int ww, int wh, GLuint histoDiv0);
 
     /*
      * run() lance la boucle principale du jeu. Cette fonction
@@ -116,6 +117,8 @@ public:
     {
         return *m_instance;
     }
+
+    void cleanup();
 
 private:
     void loadShader(JJShader sdr, const char *name, bool hasGeom = false);
@@ -206,8 +209,15 @@ private:
     int m_curSkybox;
 
     //Histogramme
-    Histogram m_histo;
+    Histogram *m_histo;
     UISlider *m_bloomThresholdSlider;
+
+    //Stats
+    RoundRobin<int> m_frameTimeGraph;
+    RoundRobin<int> m_frameNumGraph;
+    int m_ftMins[4];
+    int m_ftMaxs[4];
+    bool m_displayStats;
 
     static MainApp *m_instance;
 };

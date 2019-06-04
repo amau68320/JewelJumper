@@ -6,14 +6,15 @@
 #include <mgpcl/Time.h>
 
 Histogram::Histogram() : m_curBuf(0), m_ww(0), m_wh(0), m_oldAutoExposure(1.0f), m_autoExposure(1.0f), m_temporalL(0.0f),
-                         m_tau(4.0f), m_dispatchPos(0), m_dispatchMarks{ 1, 2, 3, 4 }, m_dispatchCount(4)
+                         m_tau(0.5f), m_dispatchPos(0), m_dispatchMarks{ 1, 2, 3, 4 }, m_dispatchCount(4)
 {
     m::mem::zero(m_shader);
     m::mem::zero(m_program);
     m::mem::zero(m_ssbo);
+    m::mem::zero(m_texs);
+    m::mem::zero(m_histo1);
+    m::mem::zero(m_histo2);
 
-    m_histo1 = new GLuint[HistogramSize];
-    m_histo2 = new GLuint[HistogramSize];
     m_lastTime = m::time::getTimeMs();
 }
 
@@ -24,8 +25,8 @@ Histogram::~Histogram()
             gl::deleteBuffer(m_ssbo[i]);
     }
 
-    for(ITex &tex : m_interTexs)
-        gl::deleteTexture(tex.id);
+    for(int i = 0; i < HistogramNumITexs; i++)
+        gl::deleteTexture(m_texs[i]);
 
     for(int i = 0; i < HistogramNumShaders; i++) {
         if(m_program[i] != 0)
@@ -34,9 +35,6 @@ Histogram::~Histogram()
         if(m_shader[i] != 0)
             gl::deleteShader(m_shader[i]);
     }
-
-    delete[] m_histo1;
-    delete[] m_histo2;
 }
 
 static bool readFile(const char *path, m::String &dst)
@@ -51,7 +49,7 @@ static bool readFile(const char *path, m::String &dst)
         return false;
 
     fis.close();
-    dst = sos.data();
+    dst += sos.data();
     return true;
 }
 
@@ -64,18 +62,19 @@ static GLuint nearestPower(GLuint x)
     return ret;
 }
 
-bool Histogram::setup(GLuint w, GLuint h)
+bool Histogram::setup(GLuint w, GLuint h, GLuint histoDiv0)
 {
     m_ww = w;
     m_wh = h;
 
-    if(!loadShader(0, "shaders/histogram_1.comp"))
+    const GLuint disptach0Mult = 1U << (histoDiv0 + 1U);
+    if(!loadShader(0, "shaders/histogram_1.comp", disptach0Mult))
         return false;
 
-    if(!loadShader(1, "shaders/histogram_2.comp"))
+    if(!loadShader(1, "shaders/histogram_2.comp", disptach0Mult))
         return false;
 
-    if(!loadShader(2, "shaders/histogram_3.comp"))
+    if(!loadShader(2, "shaders/histogram_3.comp", disptach0Mult))
         return false;
     
     //Buffers de sortie
@@ -86,8 +85,8 @@ bool Histogram::setup(GLuint w, GLuint h)
         gl::bindBuffer(gl::kBT_ShaderStorageBuffer, 0);
     }
 
-    GLuint p2w = nearestPower(w) >> 1;
-    GLuint p2h = nearestPower(h) >> 1;
+    GLuint p2w = nearestPower(w) >> histoDiv0;
+    GLuint p2h = nearestPower(h) >> histoDiv0;
 
     while(p2w > 2 || p2h > 2) {
         if(p2w > 2)
@@ -96,14 +95,21 @@ bool Histogram::setup(GLuint w, GLuint h)
         if(p2h > 2)
             p2h >>= 1;
 
-        GLuint tex = gl::genTexture();
-        gl::bindTexture(gl::kTT_Texture3D, tex);
-        gl::texStorage3D(gl::kTT_Texture3D, 1, gl::kTF_R32UI, p2w, p2h, HistogramSize);
-        gl::texParameteri(gl::kTT_Texture3D, gl::kTP_MagFilter, gl::kTF_Nearest);
-        gl::texParameteri(gl::kTT_Texture3D, gl::kTP_MinFilter, gl::kTF_Nearest);
-        gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapR, gl::kTWM_ClampToEdge);
-        gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapS, gl::kTWM_ClampToEdge);
-        gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapT, gl::kTWM_ClampToEdge);
+        GLuint tex;
+        
+        if(~m_interTexs < HistogramNumITexs) {
+            tex = gl::genTexture();
+            gl::bindTexture(gl::kTT_Texture3D, tex);
+            gl::texStorage3D(gl::kTT_Texture3D, 1, gl::kTF_R32UI, p2w, p2h, HistogramSize);
+            gl::texParameteri(gl::kTT_Texture3D, gl::kTP_MagFilter, gl::kTF_Nearest);
+            gl::texParameteri(gl::kTT_Texture3D, gl::kTP_MinFilter, gl::kTF_Nearest);
+            gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapR, gl::kTWM_ClampToEdge);
+            gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapS, gl::kTWM_ClampToEdge);
+            gl::texParameteri(gl::kTT_Texture3D, gl::kTP_WrapT, gl::kTWM_ClampToEdge);
+
+            m_texs[~m_interTexs] = tex;
+        } else
+            tex = m_texs[~m_interTexs % HistogramNumITexs];
 
         gl::bindTexture(gl::kTT_Texture3D, 0);
         m_interTexs << ITex(tex, p2w, p2h);
@@ -111,8 +117,8 @@ bool Histogram::setup(GLuint w, GLuint h)
 
     m_dispatchCount = 4;
     m_dispatchMarks[0] = 1;
-    m_dispatchMarks[1] = (m_interTexs.size() * 4) / 10;
-    m_dispatchMarks[2] = (m_interTexs.size() * 7) / 10;
+    m_dispatchMarks[1] = (m_interTexs.size() * 3) / 10;
+    m_dispatchMarks[2] = (m_interTexs.size() * 5) / 10;
     m_dispatchMarks[3] = m_interTexs.size();
 
     for(int i = 0; i < 4; i++)
@@ -157,11 +163,14 @@ void Histogram::compute(GLuint color)
         gl::useProgram(m_program[1]);
 
         for(int i = m_dispatchMarks[m_dispatchPos - 1]; i < m_dispatchMarks[m_dispatchPos]; i++) {
-            const ITex &dst = m_interTexs[i];
+            const ITex &src = m_interTexs[i - 1];
+            const ITex &dst = m_interTexs[i    ];
 
             gl::memoryBarrier(gl::kMBF_ShaderImageAccess);
-            gl::bindImageTexture(0, m_interTexs[i - 1].id, 0, true, 0, gl::kBA_ReadOnly, gl::kTF_R32UI);
+            gl::bindImageTexture(0, src.id, 0, true, 0, gl::kBA_ReadOnly , gl::kTF_R32UI);
             gl::bindImageTexture(1, dst.id, 0, true, 0, gl::kBA_WriteOnly, gl::kTF_R32UI);
+            gl::uniform2i(2, static_cast<GLint>(src.w), static_cast<GLint>(src.h));
+            gl::uniform2i(3, static_cast<GLint>(dst.w), static_cast<GLint>(dst.h));
             gl::dispatchCompute(dst.workgroupsX(), dst.workgroupsY(), 1);
         }
 
@@ -185,6 +194,15 @@ void Histogram::compute(GLuint color)
         mlogger.error(M_LOG, "Histogram::compute(): Erreur OpenGL %x", err);
 
     if(m_dispatchPos == 0) {
+#ifdef HISTO_CHECK_SUM
+        GLuint checkSum = 0;
+        for(int i = 0; i < HistogramSize; i++)
+            checkSum += m_histo1[i];
+
+        if(checkSum != m_ww * m_wh)
+            mlogger.error(M_LOG, "On a perdu des pixels");
+#endif
+
         //Calcul expo. auto
         m::mem::copy(m_histo2, m_histo1, HistogramSize * sizeof(GLuint));
         GLuint amntDark = (m_ww * m_wh * 10) / 100;
@@ -242,10 +260,14 @@ void Histogram::compute(GLuint color)
     }
 }
 
-bool Histogram::loadShader(int id, const char *fname)
+bool Histogram::loadShader(int id, const char *fname, GLuint dispatch0Mult)
 {
     //On compile le shader
     m::String src;
+    src += "#version 430" M_OS_LINEEND "#define DISPATCH0_MULTIPLIER ";
+    src += m::String::fromUInteger(dispatch0Mult);
+    src += M_OS_LINEEND "#line 1" M_OS_LINEEND;
+
     if(!readFile(fname, src)) {
         mlogger.error(M_LOG, "Erreur lors du chargement du shader de calcul d'histogramme %d...", id + 1);
         return false;

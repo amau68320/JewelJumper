@@ -1,5 +1,3 @@
-#version 430
-
 layout(local_size_x = 16, local_size_y = 16) in;
 layout(rgba16f, binding = 0) uniform readonly image2D u_Src;
 layout(r32ui, binding = 1) uniform uimage3D u_Histogram;
@@ -15,8 +13,8 @@ void main()
                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        ivec2 begin = iID * 4;
-        ivec2 end = min(begin + ivec2(4), imageSize(u_Src));
+        ivec2 begin = iID * DISPATCH0_MULTIPLIER;
+        ivec2 end = min(begin + ivec2(DISPATCH0_MULTIPLIER), imageSize(u_Src));
 
         for(int y = begin.y; y < end.y; y++) {
             for(int x = begin.x; x < end.x; x++) {

@@ -28,7 +28,8 @@ MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCur
                                     m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr),
                                     m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0),
                                     m_lastDownload(-1), m_dlLabel(nullptr), m_dlProgress(nullptr), m_skyboxBtn(nullptr),
-                                    m_curSkybox(0), m_bloomThresholdSlider(nullptr)
+                                    m_curSkybox(0), m_bloomThresholdSlider(nullptr), m_frameTimeGraph(32), m_frameNumGraph(32),
+                                    m_ftMins{ 0, 0, 0, 0 }, m_ftMaxs{ 0, 0, 0, 0 }, m_displayStats(false)
 {
     m_instance = this;
 
@@ -36,6 +37,7 @@ MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCur
     m_renderDelta = 1000.0 / 60.0;
 
     m_camera = new RotatingCamera;
+    m_histo = new Histogram;
     DownloadManager::create();
 }
 
@@ -55,6 +57,7 @@ MainApp::~MainApp()
         m_bloomThresholdSlider->removeRef();
 
     uiCore.destroy();
+    delete m_histo;
 
     //VBO+VAO post-effets
     if(m_peVAO != 0)
@@ -80,7 +83,22 @@ MainApp::~MainApp()
     DownloadManager::destroy();
 }
 
-bool MainApp::setup(int ww, int wh)
+void MainApp::cleanup()
+{
+    if(m_displayStats) {
+        mlogger.info(M_LOG, "=========== PERFS FINALES ===========");
+        for(int i = 0; i < 4; i++)
+            mlogger.info(M_LOG, "meilleur[%d] = %d", i, m_ftMins[i]);
+
+        mlogger.info(M_LOG, "");
+        for(int i = 0; i < 4; i++)
+            mlogger.info(M_LOG, "pire[%d] = %d", i, m_ftMaxs[i]);
+
+        mlogger.info(M_LOG, "");
+    }
+}
+
+bool MainApp::setup(int ww, int wh, GLuint histoDiv0)
 {
     m_ww = static_cast<uint32_t>(ww);
     m_wh = static_cast<uint32_t>(wh);
@@ -224,7 +242,7 @@ bool MainApp::setup(int ww, int wh)
     delete lensFlareImg;
 
     //Histogramme
-    if(!m_histo.setup(m_ww, m_wh))
+    if(!m_histo->setup(m_ww, m_wh, histoDiv0))
         return false;
 
     //Gestion des skyboxes
@@ -310,7 +328,7 @@ bool MainApp::setup(int ww, int wh)
         ui::load("view", wnd);
 
         wnd->byName<UISlider>("sFOV")->setRange(60.0f, 150.0f)->setValue(80.0f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
-        wnd->byName<UISlider>("sTemporalAdaptation")->setRange(0.5f, 6.0f)->setValue(m_histo.temporalAdaptationFactor())->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+        wnd->byName<UISlider>("sTemporalAdaptation")->setRange(-2.3f, 0.7f)->setValue(std::log(m_histo->temporalAdaptationFactor()))->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
         wnd->byName<UISlider>("sCamSpeed")->setRange(0.1f, 2.0f)->setValue(0.5f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
 
         m_bloomThresholdSlider = wnd->byName<UISlider>("sBloomThreshold");
@@ -402,6 +420,7 @@ void MainApp::run()
             else
                 ptt = 1.0f - ptt;
 
+            const int frameNum = m_histo->dispatchPos();
             render3D(ptt);
             gl::depthMask(true);
             gl::clear(gl::kCF_DepthBuffer);
@@ -410,9 +429,13 @@ void MainApp::run()
 
             m_numDrawcalls = gl::numDrawcalls;
             gl::numDrawcalls = 0;
-
             glfwSwapBuffers(m_wnd);
+
+            double prevT = t;
             t = m::time::getTimeMs();
+
+            m_frameTimeGraph.push(static_cast<int>((t - prevT) * 1000.0));
+            m_frameNumGraph.push(frameNum);
         }
 
         //Mettre en pause le programme, eventuellement...
@@ -444,6 +467,8 @@ void MainApp::loadShader(JJShader sdr, const char *name, bool hasGeom)
         throw name; //Parce-qu'il faut bien balancer quelque-chose...
     }
 }
+
+static double g_lastTime = 0.0;
 
 void MainApp::update(float dt)
 {
@@ -509,13 +534,58 @@ void MainApp::update(float dt)
         if(m_skyboxBtn != nullptr)
             m_skyboxBtn->setDisabled(false);
     }
+
+    if(m_displayStats) {
+        double ct = m::time::getTimeMs();
+        if(ct - g_lastTime >= 250.0) {
+            g_lastTime = ct;
+
+            double sums[4] = { 0.0, 0.0, 0.0, 0.0 };
+            int count[4] = { 0, 0, 0, 0 };
+
+            for(int i = 0; i < ~m_frameTimeGraph; i++) {
+                const int t = m_frameTimeGraph[i];
+                const int n = m_frameNumGraph[i];
+
+                sums[n] += static_cast<double>(t);
+                count[n]++;
+            }
+
+            int maxPerf = 0;
+            int maxPerfId = -1;
+            int minPerf = 0x7FFFFFFF;
+            int minPerfId = -1;
+
+            mlogger.info(M_LOG, "=========== PERFS ===========");
+            for(int i = 0; i < 4; i++) {
+                const int perf = static_cast<int>(sums[i] / static_cast<double>(count[i]));
+                mlogger.info(M_LOG, "perfs[%d] = %d us", i, perf);
+
+                if(perf > maxPerf) {
+                    maxPerf = perf;
+                    maxPerfId = i;
+                }
+
+                if(perf < minPerf) {
+                    minPerf = perf;
+                    minPerfId = i;
+                }
+            }
+
+            mlogger.info(M_LOG, "Pire perf trame %d", maxPerfId);
+            mlogger.info(M_LOG, "Meilleure perf trame %d", minPerfId);
+            mlogger.info(M_LOG, "");
+            m_ftMaxs[maxPerfId]++;
+            m_ftMins[minPerfId]++;
+        }
+    }
 }
 
 static const GLuint g_allDrawBuffers[] = { gl::kFBA_ColorAttachment0, gl::kFBA_ColorAttachment1 };
 
 void MainApp::render3D(float ptt)
 {
-    m_exposure = m_histo.computedExposure();
+    m_exposure = m_histo->computedExposure();
 
     //Matrice de vue
     m::Vector3f camPos;
@@ -640,7 +710,7 @@ void MainApp::render3D(float ptt)
 
     
     //Calcul de l'histogramme
-    m_histo.compute(m_hdrFBO0.colorAttachmentID());
+    m_histo->compute(m_hdrFBO0.colorAttachmentID());
 
 
     /***************************** RENDU DES EFFETS *****************************/
@@ -775,7 +845,7 @@ bool MainApp::onSliderValueChanged(UIElement *e)
     else if(name == "sSides")
         gem->generate(static_cast<int>(val), 0.75f, 1.0f, 1.0f, 0.75f);
     else if(name == "sTemporalAdaptation")
-        m_histo.setTemporalAdaptationFactor(val);
+        m_histo->setTemporalAdaptationFactor(std::exp(val));
     else if(name == "sBloomThreshold")
         m_bloomThreshold = val;
     else if(name == "sFOV") {
@@ -838,17 +908,70 @@ void MainApp::renderHUD()
     gl::blendFunc(gl::kBM_SrcAlpha, gl::kBM_OneMinusSrcAlpha);
 
     if(m_displayDebugString) {
+        //Infos de debug
         vs.drawString(10.0f, 10.0f, m_font, m_debugString);
 
-        vs.begin(gl::kDM_TriangleStrip, false);
+        //Fond des deux graphiques
+        vs.begin(gl::kDM_Triangles, false);
         vs.quad(10, 70, 128, 64).quadColor(0, 0, 0, 200);
+        vs.quad(10, 144, 128, 64).quadColor(0, 0, 0, 200);
         vs.draw();
 
+
+        //Histogramme
         vs.begin(gl::kDM_LineStrip, false);
 
         for(int i = 0; i < HistogramSize; i++) {
             float x = static_cast<float>(i * 2 + 10);
-            float y = static_cast<float>(70 + 64) - m_histo.value(i) * 64.0f;
+            float y = static_cast<float>(70 + 64) - m_histo->value(i) * 64.0f;
+
+            vs.vertexf(x, y).color(255, 255, 255);
+        }
+
+        vs.draw();
+
+
+        //Graphique de numero de frame
+        int curFrame = m_histo->dispatchPos() - 2; //-1 car Histogram::compute() a deja ete appele ET -1 car le temps de rendu a une frame de retard
+        while(curFrame < 0)
+            curFrame = m_histo->dispatchCount() + curFrame;
+
+        vs.begin(gl::kDM_LineStrip, false);
+        vs.vertexf(63 * 2 + 10, static_cast<float>(144 + 64 - curFrame * 4)).color(0, 255, 50);
+
+        for(int i = 32 - 2; i >= 0; i--) {
+            float x = static_cast<float>(i * 4 + 10);
+            vs.vertexf(x, static_cast<float>(144 + 64 - curFrame * 4)).color(0, 255, 50);
+
+            if(--curFrame < 0)
+                curFrame = m_histo->dispatchCount() + curFrame;
+
+            vs.vertexf(x, static_cast<float>(144 + 64 - curFrame * 4)).color(0, 255, 50);
+        }
+
+        vs.draw();
+
+
+        //Graphique de temps de rendu
+        int ftMin = 0x7FFFFFFF;
+        int ftMax = 0;
+
+        for(int i = 0; i < ~m_frameTimeGraph; i++) {
+            const int ft = m_frameTimeGraph[i];
+
+            if(ft < ftMin)
+                ftMin = ft;
+
+            if(ft > ftMax)
+                ftMax = ft;
+        }
+        
+        const float ftMul = 48.0f / static_cast<float>(ftMax - ftMin);
+        vs.begin(gl::kDM_LineStrip, false);
+
+        for(int i = 0; i < ~m_frameTimeGraph; i++) {
+            float x = static_cast<float>(i * 4 + 10);
+            float y = static_cast<float>(144 + 48) - static_cast<float>(m_frameTimeGraph[~m_frameTimeGraph - i - 1] - ftMin) * ftMul;
 
             vs.vertexf(x, y).color(255, 255, 255);
         }
@@ -982,7 +1105,9 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
         } else if(key == GLFW_KEY_ENTER) {
             m_doDebugDraw = !m_doDebugDraw;
             mlogger.info(M_LOG, "Buffers internes: %s", m_doDebugDraw ? "AFFICHES" : "CACHES");
-        } else if(key == GLFW_KEY_C) {
+        } else if(key == GLFW_KEY_P)
+            m_displayStats = !m_displayStats;
+        else if(key == GLFW_KEY_C) {
             Camera *oldCam = m_camera;
 
             if(dynamic_cast<RotatingCamera*>(m_camera) == nullptr) {

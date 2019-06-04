@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
     const bool autoStartNL = cfg["logging"]["autoStartNetLogger"].asBool();
     const m::String &nlAddr = cfg["logging"]["netLoggerAddress"].value("127.0.0.1");
     const bool allocConsole = cfg["misc"]["allocConsole"].asBool();
+    const int histoFirstDivider = m::math::maximum(0, cfg["misc"]["histogramFirstDivider"].asInt(3));
     cfg.save();
 
 #if defined(MGPCL_WIN) && !defined(_DEBUG)
@@ -93,20 +94,15 @@ int main(int argc, char *argv[])
     else if(wh <= 0)
         wh = ww * 9 / 16;
 
-    int maj = 4;
     int min = 6;
     GLFWwindow *wnd = nullptr;
 
-    while(wnd == nullptr && (maj > 3 || min >= 3)) {
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, maj);
+    while(wnd == nullptr && min >= 3) {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, min);
 
         wnd = glfwCreateWindow(ww, wh, "GemStudio - Copyright (C) 2019 A. Einholtz & N. Barbotin - IN55 P2019", nullptr, nullptr);
-
-        if(--min <= 0) {
-            maj = 3;
-            min = 3;
-        }
+        min--;
     }
 
     if(wnd == nullptr) {
@@ -127,7 +123,7 @@ int main(int argc, char *argv[])
     glfwSwapInterval(1);
 
     //On verifie que la version est bien celle demandee
-    maj = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MAJOR);
+    int maj = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MAJOR);
     min = glfwGetWindowAttrib(wnd, GLFW_CONTEXT_VERSION_MINOR);
     const int profile = glfwGetWindowAttrib(wnd, GLFW_OPENGL_PROFILE);
 
@@ -150,9 +146,10 @@ int main(int argc, char *argv[])
     //Boucle principale de Jewel Jumper
 	MainApp app(wnd);
 
-    if(app.setup(fbw, fbh))
+    if(app.setup(fbw, fbh, static_cast<GLuint>(histoFirstDivider))) {
         app.run();
-    else
+        app.cleanup();
+    } else
         mlogger.error(M_LOG, "Erreur lors de l'initialisation de MainApp ! Impossible de continuer...");
 
     //Fin
@@ -162,7 +159,7 @@ int main(int argc, char *argv[])
     glfwTerminate();
     delete m::Logger::instance();
 	m::inet::release();
-    //system("pause");
+    system("pause");
 
     return 0;
 }

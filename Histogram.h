@@ -7,7 +7,8 @@ enum
     HistogramSize = 64,
     HistogramNumBuffers = 2,
     HistogramWorkgroupSize = 16,
-    HistogramNumShaders = 3
+    HistogramNumShaders = 3,
+    HistogramNumITexs = 3
 };
 
 class Histogram
@@ -16,7 +17,7 @@ public:
     Histogram();
     ~Histogram();
 
-    bool setup(GLuint w, GLuint h);
+    bool setup(GLuint w, GLuint h, GLuint histoDiv0);
     void compute(GLuint color);
 
     float value(int idx) const
@@ -38,6 +39,16 @@ public:
     void setTemporalAdaptationFactor(float tau)
     {
         m_tau = tau;
+    }
+
+    int dispatchPos() const
+    {
+        return m_dispatchPos;
+    }
+
+    int dispatchCount() const
+    {
+        return m_dispatchCount;
     }
 
 private:
@@ -63,7 +74,7 @@ private:
         GLuint h;
     };
 
-    bool loadShader(int id, const char *fname);
+    bool loadShader(int id, const char *fname, GLuint dispatch0Mult);
 
     GLuint m_shader[HistogramNumShaders];
     GLuint m_program[HistogramNumShaders];
@@ -72,9 +83,10 @@ private:
     int m_curBuf;
 
     m::List<ITex> m_interTexs;
+    GLuint m_texs[HistogramNumITexs];
 
-    GLuint *m_histo1;
-    GLuint *m_histo2;
+    GLuint m_histo1[HistogramSize];
+    GLuint m_histo2[HistogramSize];
     GLuint m_ww;
     GLuint m_wh;
 

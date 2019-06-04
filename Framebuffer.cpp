@@ -44,7 +44,7 @@ void Framebuffer::init(uint32_t w, uint32_t h)
 
 void Framebuffer::createColorBuffer(int idx, gl::TextureFormat tf)
 {
-    mAssert(m_w != 0 && m_h != 0, "createColorBuffer() called before init()");
+    mAssert(m_w != 0 && m_h != 0, "createColorBuffer() appele avant init()");
     if(m_color[idx] != 0)
         gl::deleteTexture(m_color[idx]);
 
@@ -60,7 +60,7 @@ void Framebuffer::createColorBuffer(int idx, gl::TextureFormat tf)
 
 void Framebuffer::createDepthBuffer(FramebufferDepthMode mode)
 {
-    mAssert(m_w != 0 && m_h != 0, "createDepthBuffer() called before init()");
+    mAssert(m_w != 0 && m_h != 0, "createDepthBuffer() appele avant init()");
     if(m_depth != 0) {
         if(m_depthMode == kFDM_DepthTexture)
             gl::deleteTexture(m_depth);

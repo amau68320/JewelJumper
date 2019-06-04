@@ -1,14 +1,21 @@
-Base(title: "Customisation", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), icon: "ruby") [
-    Label(text: "Côtés", constraints: "y"),
-    Slider(name: "sSides", constraints: "y"),
-    Label(text: "Indice de réfraction", constraints: "y"),
-    Slider(name: "sIOR", constraints: "y"),
-    
+Base(title: "Customisation (F2)", x: 10, y: 10, width: 400, height: 430, layout: HBoxLayout(), icon: "ruby") [
     Label(text: "Couleur", constraints: "y"),
     Container(layout: FormLayout(), constraints: "y") [
         Label(text: "R", xAlign: "center"), Slider(name: "sCR"),
         Label(text: "V", xAlign: "center"), Slider(name: "sCG"),
         Label(text: "B", xAlign: "center"), Slider(name: "sCB")
+    ],
+
+    Label(text: "Indice de réfraction", constraints: "y"),
+    Slider(name: "sIOR", constraints: "y"),
+
+    Label(text: "Forme", constraints: "y"),
+    Container(layout: FormLayout(), constraints: "y") [
+        Label(text: "N",  xAlign: "center"), Slider(name: "sN"),
+        Label(text: "H",  xAlign: "center"), Slider(name: "sH"),
+        Label(text: "R",  xAlign: "center"), Slider(name: "sR"),
+        Label(text: "dH", xAlign: "center"), Slider(name: "sDH"),
+        Label(text: "dR", xAlign: "center"), Slider(name: "sDR")
     ],
     
     Spacer()

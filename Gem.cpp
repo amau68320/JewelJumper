@@ -157,13 +157,11 @@ void Gem::generate(int numSides, float y0, float r0, float y1, float r1)
     gl::bindBuffer(gl::kBT_ArrayBuffer, m_vbo);
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, m_ebo);
     gl::enableVertexAttribArray(0); //Position
-    gl::enableVertexAttribArray(1); //Color
-    gl::enableVertexAttribArray(2); //Normal
-    gl::enableVertexAttribArray(3); //Tangent
+    gl::enableVertexAttribArray(1); //Couleur
+    gl::enableVertexAttribArray(2); //Normale
     gl::vertexAttribPointer(0, 3, gl::kDT_Float, false, sizeof(GemVertex), reinterpret_cast<void*>(offsetof(GemVertex, pos)));
     gl::vertexAttribPointer(1, 4, gl::kDT_Float, false, sizeof(GemVertex), reinterpret_cast<void*>(offsetof(GemVertex, color)));
     gl::vertexAttribPointer(2, 3, gl::kDT_Float, false, sizeof(GemVertex), reinterpret_cast<void*>(offsetof(GemVertex, normal)));
-    gl::vertexAttribPointer(3, 3, gl::kDT_Float, false, sizeof(GemVertex), reinterpret_cast<void*>(offsetof(GemVertex, tangent)));
     gl::bindBuffer(gl::kBT_ElementArrayBuffer, 0);
     gl::bindBuffer(gl::kBT_ArrayBuffer, 0);
     gl::bindVertexArray(0);

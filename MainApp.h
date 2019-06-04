@@ -36,6 +36,7 @@ class UILabel;
 class UIProgressBar;
 class UIPushButton;
 class UISlider;
+class UIWindow;
 
 /*
  * Classe principale gerant JewelJumper.
@@ -118,6 +119,10 @@ public:
         return *m_instance;
     }
 
+    /*
+     * Appele a la fin de la boucle principale.
+     * Cette methode est surtout utilisee pour du debogage.
+     */
     void cleanup();
 
 private:
@@ -131,6 +136,7 @@ private:
     void debugDrawTexture(GLuint tex);
     void grabMouse(bool grabbed);
     bool changeColor(UIElement *e);
+    bool changeShape(UIElement *e);
     bool onCheckboxValueChanged(UIElement *e);
     bool onSliderValueChanged(UIElement *e);
     void renderHUD();
@@ -186,6 +192,7 @@ private:
     bool m_internalRefraction;
     bool m_bloomEnable;
     bool m_displayDebugString;
+    bool m_lensFlareEnable;
 
     //Divers
     GLuint m_peVBO;
@@ -213,12 +220,20 @@ private:
     Histogram *m_histo;
     UISlider *m_bloomThresholdSlider;
 
-    //Stats
+    //Stats (debogage, profilage)
     RoundRobin<int> m_frameTimeGraph;
     RoundRobin<int> m_frameNumGraph;
     int m_ftMins[4];
     int m_ftMaxs[4];
     bool m_displayStats;
+
+    //Cameras disponibles
+    FreeCamera *m_freeCam;
+    RotatingCamera *m_orbitalCam;
+
+    //Ref vers les fenetres
+    UIWindow *m_viewWindow;
+    UIWindow *m_customizeWindow;
 
     static MainApp *m_instance;
 };

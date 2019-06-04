@@ -1,7 +1,7 @@
-Base(title: "Vue", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), icon: "eye") [
+Base(title: "Vue (F1)", x: 10, y: 10, width: 400, height: 430, layout: HBoxLayout(), icon: "eye") [
     Label(text: "Champ de vision", constraints: "y"),
     Slider(name: "sFOV", constraints: "y"),
-    Label(text: "Vitesse d'apatation de l'exposition", constraints: "y"),
+    Label(text: "Vitesse d'adaptation de l'exposition", constraints: "y"),
     Slider(name: "sTemporalAdaptation", constraints: "y"),
     Label(text: "Seuil de bloom", constraints: "y"),
     Slider(name: "sBloomThreshold", constraints: "y"),
@@ -9,19 +9,25 @@ Base(title: "Vue", x: 10, y: 10, width: 400, height: 400, layout: HBoxLayout(), 
     Slider(name: "sCamSpeed", constraints: "y"),
 
     Label(text: "Effets", constraints: "y"),
-        Container(layout: VBoxLayout(), constraints: "y") [
+    Container(layout: VBoxLayout(), constraints: "y") [
         CheckBox(label: "Réfraction", name: "cbRefraction"),
         CheckBox(label: "Bloom", name: "cbBloom"),
         CheckBox(label: "FXAA", name: "cbFXAA")
     ],
+    CheckBox(label: "Lens flare", name: "cbLensFlare", constraints: "y"),
 
     Label(text: "Affichage", constraints: "y"),
-        Container(layout: VBoxLayout(), constraints: "y") [
+    Container(layout: VBoxLayout(), constraints: "y") [
         CheckBox(label: "Limiter IPS", name: "cbLimitFPS"),
         CheckBox(label: "Synchro v.", name: "cbVSync"),
         CheckBox(label: "Infos", name: "cbInfos")
     ],
+    Container(layout: VBoxLayout(), constraints: "y") [
+        CheckBox(label: "Fil de fer", name: "cbWireframe"),
+        CheckBox(label: "Buffers int.", name: "cbDebugDraw"),
+        Spacer()
+    ],
 
-    PushButton(label: "Changer la skybox", name: "btnSkybox", constraints: "y"),
-    Spacer()
+    Spacer(),
+    PushButton(label: "Changer la skybox", name: "btnSkybox", constraints: "y")
 ]

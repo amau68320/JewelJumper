@@ -137,8 +137,9 @@ int main(int argc, char *argv[])
     delete m::Logger::instance();
 	m::inet::release();
 
-#if defined(MGPCL_WIN) && defined(_DEBUG)
-    //system("pause");
+#if defined(MGPCL_WIN)
+    if(allocConsole)
+        system("pause");
 #endif
 
     return 0;

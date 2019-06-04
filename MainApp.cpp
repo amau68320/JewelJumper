@@ -31,19 +31,23 @@ MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(false), m_lastCu
                                     m_ww(0), m_wh(0), m_curModelMat(0), m_override(nullptr), m_exposure(2.5f),
                                     m_bloomThreshold(4.75f), m_fxaaEnable(true), m_useWireframe(false), m_doDebugDraw(false),
                                     m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(JJ_DEBUGSTR_DEFAULT),
-                                    m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr),
-                                    m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0),
+                                    m_lensFlareEnable(true), m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6),
+                                    m_font(nullptr), m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0),
                                     m_lastDownload(-1), m_dlLabel(nullptr), m_dlProgress(nullptr), m_skyboxBtn(nullptr),
                                     m_curSkybox(0), m_bloomThresholdSlider(nullptr), m_frameTimeGraph(32), m_frameNumGraph(32),
-                                    m_ftMins{ 0, 0, 0, 0 }, m_ftMaxs{ 0, 0, 0, 0 }, m_displayStats(false)
+                                    m_ftMins{ 0, 0, 0, 0 }, m_ftMaxs{ 0, 0, 0, 0 }, m_displayStats(false), m_viewWindow(nullptr),
+                                    m_customizeWindow(nullptr)
 {
     m_instance = this;
 
     m_renderPeriod = 0.0; //IPS illimite par defaut
     m_renderDelta = 1000.0 / 60.0;
 
-    m_camera = new RotatingCamera;
     m_histo = new Histogram;
+    m_freeCam = new FreeCamera;
+    m_orbitalCam = new RotatingCamera;
+    m_camera = m_orbitalCam;
+
     DownloadManager::create();
 }
 
@@ -61,6 +65,12 @@ MainApp::~MainApp()
 
     if(m_bloomThresholdSlider != nullptr)
         m_bloomThresholdSlider->removeRef();
+
+    if(m_viewWindow != nullptr)
+        m_viewWindow->removeRef();
+
+    if(m_customizeWindow != nullptr)
+        m_customizeWindow->removeRef();
 
     uiCore.destroy();
     delete m_histo;
@@ -81,8 +91,9 @@ MainApp::~MainApp()
     for(GameObject *gob : m_objects)
         delete gob;
 
-    //Camera
-    delete m_camera;
+    //Cameras
+    delete m_freeCam;
+    delete m_orbitalCam;
 
     //Gestionnaire de telechargement
     dlMgr.onQuit();
@@ -319,12 +330,17 @@ bool MainApp::setup(int ww, int wh, GLuint histoDiv0)
         wnd->byName<UISlider>("sCB")->setValue(0.0f)->onValueChanged.connect(this, &MainApp::changeColor);
 
         wnd->byName<UISlider>("sIOR")->setRange(1.0f, 2.0f)->setValue(1.45f)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
-        wnd->byName<UISlider>("sSides")->setRange(3.0f, 10.0f, true)->setValue(6)->onValueChanged.connect(this, &MainApp::onSliderValueChanged);
+
+        wnd->byName<UISlider>("sN")->setRange(3.0f, 10.0f, true)->setValue(6)->onValueChanged.connect(this, &MainApp::changeShape);
+        wnd->byName<UISlider>("sH" )->setRange(0.1f, 2.0f)->setValue(0.75f)->onValueChanged.connect(this, &MainApp::changeShape);
+        wnd->byName<UISlider>("sR" )->setRange(0.1f, 2.0f)->setValue(1.0f )->onValueChanged.connect(this, &MainApp::changeShape);
+        wnd->byName<UISlider>("sDH")->setRange(0.0f, 0.5f)->setValue(0.25f)->onValueChanged.connect(this, &MainApp::changeShape);
+        wnd->byName<UISlider>("sDR")->setRange(0.0f, 1.0f)->setValue(0.25f)->onValueChanged.connect(this, &MainApp::changeShape);
 
         wnd->pack(false, true);
         wnd->setPos(ww - wnd->rect().width() - 10, wh - wnd->rect().height() - 10);
         uiCore.addWindow(wnd);
-        wnd->removeRef();
+        m_customizeWindow = wnd;
     } catch(UILoadException &ex) {
         mlogger.error(M_LOG, "Erreur lors de la lecture du fichier d'interface graphique (ruby): %s", ex.what());
         return false;
@@ -349,8 +365,11 @@ bool MainApp::setup(int ww, int wh, GLuint histoDiv0)
         wnd->byName<UICheckBox>("cbBloom"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
         wnd->byName<UICheckBox>("cbFXAA"      )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
         wnd->byName<UICheckBox>("cbVSync"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
-        wnd->byName<UICheckBox>("cbInfos"     )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbLensFlare" )->setChecked()->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbInfos"     )->setChecked(JJ_DEBUGSTR_DEFAULT)->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
         wnd->byName<UICheckBox>("cbLimitFPS"  )->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbWireframe" )->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
+        wnd->byName<UICheckBox>("cbDebugDraw" )->onChanged.connect(this, &MainApp::onCheckboxValueChanged);
 
         m_skyboxBtn = wnd->byName<UIPushButton>("btnSkybox");
         m_skyboxBtn->onClicked.connect(this, &MainApp::onChangeSkyboxClicked);
@@ -359,7 +378,7 @@ bool MainApp::setup(int ww, int wh, GLuint histoDiv0)
         wnd->pack(false, true);
         wnd->setPos(10, wh - wnd->rect().height() - 10);
         uiCore.addWindow(wnd);
-        wnd->removeRef();
+        m_viewWindow = wnd;
     } catch(UILoadException &ex) {
         mlogger.error(M_LOG, "Erreur lors de la lecture du fichier d'interface graphique (view): %s", ex.what());
         return false;
@@ -482,14 +501,17 @@ static double g_lastTime = 0.0;
 
 void MainApp::update(float dt)
 {
+    //MAJ de la camera et de l'IHM
     m_camera->update(dt);
     uiCore.update(dt);
 
+    //MAJ des objets du jeu
     for(GameObject *object : m_objects)
     {
         object->update(dt);
     }
 
+    //MAJ des infos de debug
     if(m_displayDebugString) {
         m_debugString.cleanup();
         m_debugString.append("IPS: ", 5);
@@ -500,6 +522,7 @@ void MainApp::update(float dt)
         m_debugString += m::String::fromDouble(static_cast<double>(m_exposure), 4);
     }
 
+    //MAJ de l'avancement des telechargements des skyboxes
     if(m_dlLabel != nullptr && m_dlProgress != nullptr) {
         int curFile = dlMgr.currentFile();
         float progress = dlMgr.progress();
@@ -525,7 +548,9 @@ void MainApp::update(float dt)
             m_dlProgress->setProgress(progress);
     }
 
+    //MAJ du chargemenet asynchrone de la skybox
     if(m_skybox.update()) {
+        //On entre ici que si une nouvelle skybox vient de finir d'etre chargee
         m::JSONElement &jsonData = m_skyboxData[m_curSkybox];
 
         if(jsonData.has("sunPos") && jsonData["sunPos"].isArray() && jsonData["sunPos"].size() == 3) {
@@ -545,6 +570,7 @@ void MainApp::update(float dt)
             m_skyboxBtn->setDisabled(false);
     }
 
+    //Calcul de statistiques pour le profilage
     if(m_displayStats) {
         double ct = m::time::getTimeMs();
         if(ct - g_lastTime >= 250.0) {
@@ -670,7 +696,7 @@ void MainApp::render3D(float ptt)
     gl::activeTexture(0);
     gl::drawBuffer(gl::kFBA_ColorAttachment0);
 
-    if(m_sunPosWorldSpace.length2() > 0.0f) {
+    if(m_lensFlareEnable && m_sunPosWorldSpace.length2() > 0.0f) {
         //Position et visibilite du soleil pour le lens flare
         float w = 1.0f;
         m::Vector3f sunPosScreenSpace((m_proj * m_view).multiplyEx(m_sunPosWorldSpace, w));
@@ -793,9 +819,11 @@ void MainApp::render3D(float ptt)
         UIShader::unbind();
     }
 
+    //Lens flare
     if(m_sunVisibility > 0.0f)
         renderLensFlare();
 
+    //Affichage des buffers internes
     if(m_doDebugDraw) {
         m_2Dmat.loadIdentity();
         m_2Dmat.scale(0.25f);
@@ -852,8 +880,6 @@ bool MainApp::onSliderValueChanged(UIElement *e)
 
     if(name == "sIOR")
         gem->setIOR(val);
-    else if(name == "sSides")
-        gem->generate(static_cast<int>(val), 0.75f, 1.0f, 1.0f, 0.75f);
     else if(name == "sTemporalAdaptation")
         m_histo->setTemporalAdaptationFactor(std::exp(val));
     else if(name == "sBloomThreshold")
@@ -862,19 +888,15 @@ bool MainApp::onSliderValueChanged(UIElement *e)
         m_proj = m::Matrix4f::perspective(val * static_cast<float>(M_PI) / 180.0f,
                                           static_cast<float>(m_ww) / static_cast<float>(m_wh),
                                           0.1f, 10.0f);
-    } else if(name == "sCamSpeed") {
-        RotatingCamera *cam = dynamic_cast<RotatingCamera *>(m_camera);
-
-        if(cam != nullptr)
-            cam->setSpeed(val);
-    }
+    } else if(name == "sCamSpeed")
+        m_orbitalCam->setSpeed(val);
 
     return false;
 }
 
 bool MainApp::changeColor(UIElement *e)
 {
-    UIContainer *c = static_cast<UIContainer *>(e->parent());
+    UIContainer *c = static_cast<UIContainer*>(e->parent());
     float r, g, b;
 
     try {
@@ -885,7 +907,30 @@ bool MainApp::changeColor(UIElement *e)
         return false;
     }
 
-    static_cast<Gem *>(m_objects[0])->changeColor(r, g, b);
+    static_cast<Gem*>(m_objects[0])->changeColor(r, g, b);
+    return false;
+}
+
+bool MainApp::changeShape(UIElement *e)
+{
+    UIContainer *c = static_cast<UIContainer *>(e->parent());
+    int n;
+    float h, r, dh, dr;
+
+    try {
+        n  = c->byName<UISlider>("sN" )->intValue();
+        h  = c->byName<UISlider>("sH" )->value();
+        r  = c->byName<UISlider>("sR" )->value();
+        dh = c->byName<UISlider>("sDH")->value();
+        dr = c->byName<UISlider>("sDR")->value();
+    } catch(UIUnknownElementException &ex) {
+        return false;
+    }
+
+    const float y1 = h + dh;
+    const float r1 = r - r * dr;
+
+    static_cast<Gem*>(m_objects[0])->generate(n, h, r, y1, r1);
     return false;
 }
 
@@ -906,6 +951,12 @@ bool MainApp::onCheckboxValueChanged(UIElement *e)
         glfwSwapInterval(val ? 1 : 0);
     else if(name == "cbInfos")
         m_displayDebugString = val;
+    else if(name == "cbDebugDraw")
+        m_doDebugDraw = val;
+    else if(name == "cbWireframe")
+        m_useWireframe = val;
+    else if(name == "cbLensFlare")
+        m_lensFlareEnable = val;
 
     return false;
 }
@@ -1017,12 +1068,13 @@ void MainApp::renderHUD()
 
 typedef struct
 {
-    float l;
-    float size;
-    uint8_t color[4];
-    float v;
+    float l;          //Position sur l'axe
+    float size;       //Taille du sprite
+    uint8_t color[4]; //Couleur du sprite
+    float v;          //Numero du sprite (position verticale dans la texture)
 } LensFlareEntry;
 
+/* Tableau de rendu de lens flare */
 static LensFlareEntry g_lfEntries[] = {
     { 0.7f, 56.2f , { 170, 255, 0  , 65 }, 1.0f },
     { 3.1f, 198.6f, { 255, 203, 0  , 70 }, 0.0f },
@@ -1095,6 +1147,7 @@ bool MainApp::onChangeSkyboxClicked(UIElement *e)
 
 void MainApp::use3DShader(UIShader &shdr)
 {
+    //Envoi des matrices au shader
     shdr.bind();
     gl::uniformMatrix4fv(shdr.getUniformLocation("u_Projection"), 1, false, m_proj.data());
     gl::uniformMatrix4fv(shdr.getUniformLocation("u_View"), 1, false, m_view.data());
@@ -1124,23 +1177,19 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
     if(action == GLFW_PRESS) {
         if(key == GLFW_KEY_ESCAPE)
             glfwSetWindowShouldClose(m_wnd, GLFW_TRUE);
-        else if(key == GLFW_KEY_Z) {
-            m_useWireframe = !m_useWireframe;
-            mlogger.info(M_LOG, "Fil de fer: %s", m_useWireframe ? "ACTIF" : "DESACTIVE");
-        } else if(key == GLFW_KEY_ENTER) {
-            m_doDebugDraw = !m_doDebugDraw;
-            mlogger.info(M_LOG, "Buffers internes: %s", m_doDebugDraw ? "AFFICHES" : "CACHES");
-        } else if(key == GLFW_KEY_P)
+        else if(key == GLFW_KEY_P)
             m_displayStats = !m_displayStats;
+        else if(key == GLFW_KEY_F1 && m_viewWindow != nullptr)
+            uiCore.addWindow(m_viewWindow);
+        else if(key == GLFW_KEY_F2 && m_customizeWindow != nullptr)
+            uiCore.addWindow(m_customizeWindow);
         else if(key == GLFW_KEY_C) {
-            Camera *oldCam = m_camera;
+            //Changement de camera
 
-            if(dynamic_cast<RotatingCamera*>(m_camera) == nullptr)
-                m_camera = new RotatingCamera;
+            if(m_camera == m_freeCam)
+                m_camera = m_orbitalCam;
             else
-                m_camera = new FreeCamera;
-
-            delete oldCam;
+                m_camera = m_freeCam;
         } else
             m_camera->onKeyDown(scancode);
 

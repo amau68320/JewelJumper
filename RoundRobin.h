@@ -2,6 +2,9 @@
 #include <mgpcl/Mem.h>
 #include <mgpcl/Assert.h>
 
+/*
+ * Classe de tourniquet. Surtout utilise pour des graphiques.
+ */
 template<typename T> class RoundRobin
 {
 public:
@@ -46,6 +49,12 @@ public:
     void push(const T &data)
     {
         m_data[m_pos] = data;
+        m_pos = (m_pos + 1) % m_size;
+    }
+
+    void push(T &&data)
+    {
+        m_data[m_pos] = std::move(data);
         m_pos = (m_pos + 1) % m_size;
     }
 

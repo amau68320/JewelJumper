@@ -32,6 +32,10 @@ void Camera::deactivate()
 {
 }
 
+void Camera::onScroll(float amnt)
+{
+}
+
 FreeCamera::FreeCamera() : m_pos(1.0f, 1.5f, -3.0f), m_keyStates(0)
 {
     m_keyBindings[kCK_Up   ] = glfwGetKeyScancode(GLFW_KEY_W);
@@ -58,7 +62,7 @@ void FreeCamera::update(float dt)
 {
     float fw = 0.0f;
     float strafe = 0.0f;
-    float speed = dt * 10.0f;
+    float speed = dt * 4.0f;
 
     if(isKeyDown(kCK_Up))
         fw += 1.0f;
@@ -136,24 +140,41 @@ void FreeCamera::deactivate()
     m_keyStates = 0U;
 }
 
-RotatingCamera::RotatingCamera() : m_speed(0.5f)
+RotatingCamera::RotatingCamera() : m_speed(0.5f), m_theta(0.0f), m_phi(0.0f), m_auto(true), m_transitioning(false),
+                                   m_transitionTime(0.0), m_oldPhi(0.0f), m_oldR(2.5f), m_newR(2.5f), m_rTime(0.0),
+                                   m_changingR(false)
 {
     m_timeOffset = m::time::getTimeMs();
 }
 
 void RotatingCamera::getTransform(m::Matrix4f &mat, m::Vector3f &camPos, float ptt)
 {
-    float theta = std::fmod(static_cast<float>((m::time::getTimeMs() - m_timeOffset) / 1000.0) * m_speed, 4.0f * PIF);
-    float phi = (std::sin(theta * 0.5f) + 1.0f) * 0.5f;
-    
-    phi *= 4.0f * PIF / 6.0f;
-    phi += PIF / 6.0f;
+    double t = m::time::getTimeMs();
 
-    const float sinPhi = std::sin(phi);
-    camPos.setX(sinPhi * std::sin(theta));
-    camPos.setY(std::cos(phi));
-    camPos.setZ(sinPhi * std::cos(theta));
-    camPos *= 2.5f;
+    if(m_auto) {
+        m_theta = std::fmod(static_cast<float>((t - m_timeOffset) / 1000.0) * m_speed, 4.0f * PIF);
+        m_phi = (std::sin(m_theta * 0.5f) + 1.0f) * 0.5f;
+
+        m_phi *= 4.0f * PIF / 6.0f;
+        m_phi += PIF / 6.0f;
+
+        if(m_transitioning) {
+            float lerp = static_cast<float>((t - m_transitionTime) / 1000.0);
+            if(lerp >= 1.0f) {
+                m_transitioning = false;
+                lerp = 1.0f;
+            }
+
+            lerp = ((-2.0f * lerp + 3.0f) * lerp) * lerp;
+            m_phi = (1.0f - lerp) * m_oldPhi + lerp * m_phi;
+        }
+    }
+
+    const float sinPhi = std::sin(m_phi);
+    camPos.setX(sinPhi * std::sin(m_theta));
+    camPos.setY(std::cos(m_phi));
+    camPos.setZ(sinPhi * std::cos(m_theta));
+    camPos *= computedR(t);
 
     mat.loadIdentity();
     mat.lookAt(camPos, m::Vector3f(0.0f, 0.0f, 0.0f), m::Vector3f(0.0f, 1.0f, 0.0f));
@@ -164,4 +185,56 @@ void RotatingCamera::setSpeed(float spd)
     double r = static_cast<double>(m_speed / spd);
     m_speed = spd;
     m_timeOffset = m::time::getTimeMs() * (1.0 - r) + m_timeOffset * r;
+}
+
+void RotatingCamera::activate()
+{
+    m_auto = false;
+}
+
+void RotatingCamera::onMouseMove(float dx, float dy)
+{
+    m_theta += dx * -0.01f;
+    m_phi += dy * -0.01f;
+
+    if(m_phi <= 0.0f)
+        m_phi = 0.01f;
+    else if(m_phi >= PIF)
+        m_phi = PIF - 0.01f;
+}
+
+void RotatingCamera::onScroll(float amnt)
+{
+    double t = m::time::getTimeMs();
+
+    m_oldR = computedR(t);
+    m_newR = m::math::clamp(m_newR + amnt * -0.5f, 2.0f, 5.0f);
+    m_changingR = true;
+    m_rTime = t;
+}
+
+void RotatingCamera::deactivate()
+{
+    const double t = m::time::getTimeMs();
+
+    m_auto = true;
+    m_transitioning = true;
+    m_transitionTime = t;
+    m_oldPhi = m_phi;
+    m_timeOffset = t - m_theta * 1000.0 / m_speed;
+}
+
+float RotatingCamera::computedR(double t)
+{
+    if(!m_changingR)
+        return m_newR;
+
+    float lerp = static_cast<float>((t - m_rTime) / 250.0);
+    if(lerp >= 1.0f) {
+        m_changingR = false;
+        lerp = 1.0f;
+    }
+
+    lerp = ((-2.0f * lerp + 3.0f) * lerp) * lerp;
+    return (1.0f - lerp) * m_oldR + lerp * m_newR;
 }

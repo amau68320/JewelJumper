@@ -12,6 +12,7 @@ public:
     virtual void onKeyUp(int scancode);
     virtual void activate();
     virtual void deactivate();
+    virtual void onScroll(float amnt);
 };
 
 class FreeCamera : public Camera
@@ -63,7 +64,25 @@ public:
     void getTransform(m::Matrix4f &mat, m::Vector3f &camPos, float ptt) override;
     void setSpeed(float spd);
 
+    void activate() override;
+    void onMouseMove(float dx, float dy);
+    void onScroll(float amnt);
+    void deactivate() override;
+
 private:
+    float computedR(double t);
+
     double m_timeOffset;
     float m_speed;
+    float m_theta;
+    float m_phi;
+    bool m_auto;
+    bool m_transitioning;
+    double m_transitionTime;
+    float m_oldPhi;
+
+    float m_oldR;
+    float m_newR;
+    double m_rTime;
+    bool m_changingR;
 };

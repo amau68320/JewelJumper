@@ -27,7 +27,7 @@
 
 MainApp *MainApp::m_instance = nullptr;
 
-MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
+MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(false), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
                                     m_ww(0), m_wh(0), m_curModelMat(0), m_override(nullptr), m_exposure(2.5f),
                                     m_bloomThreshold(4.75f), m_fxaaEnable(true), m_useWireframe(false), m_doDebugDraw(false),
                                     m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(JJ_DEBUGSTR_DEFAULT),
@@ -128,6 +128,10 @@ bool MainApp::setup(int ww, int wh, GLuint histoDiv0)
 
     glfwSetKeyCallback(m_wnd, [] (GLFWwindow *, int key, int scancode, int action, int mods) {
         m_instance->handleKeyboardEvent(key, scancode, action, mods);
+    });
+
+    glfwSetScrollCallback(m_wnd, [] (GLFWwindow *, double ax, double ay) {
+        m_instance->handleMouseScrollEvent(static_cast<float>(ax), static_cast<float>(ay));
     });
 
     //Creation de la matrice de projection, qui ne devrait pas changer avec le temps...
@@ -390,7 +394,7 @@ bool MainApp::setup(int ww, int wh, GLuint histoDiv0)
     }
 
     m_font = uiFontLib.get("Roboto-Regular", 12);
-    grabMouse(false);
+    glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     return true;
 }
 
@@ -819,18 +823,18 @@ void MainApp::debugDrawTexture(GLuint tex)
 
 void MainApp::grabMouse(bool grabbed)
 {
-    if(grabbed) {
+    if(grabbed && !m_relativeMouse) {
         m_relativeMouse = true;
         m_lastCursorPosX = static_cast<double>(m_ww) * 0.5;
         m_lastCursorPosY = static_cast<double>(m_wh) * 0.5;
 
-        glfwSetCursorPos(m_wnd, m_lastCursorPosX, m_lastCursorPosY);
+        glfwGetCursorPos(m_wnd, &m_lastCursorPosX, &m_lastCursorPosY);
         glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         uiCore.setCursorShown(false);
 
         if(m_camera != nullptr)
             m_camera->activate();
-    } else {
+    } else if(m_relativeMouse) {
         m_relativeMouse = false;
         glfwSetInputMode(m_wnd, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
         uiCore.setCursorShown(true);
@@ -1099,12 +1103,20 @@ void MainApp::use3DShader(UIShader &shdr)
 
 void MainApp::handleMouseButtonEvent(int button, int action, int mods)
 {
-    uiCore.handleMouseButtonEvent(button, action, mods);
+    bool hitUI = uiCore.handleMouseButtonEvent(button, action, mods);
+
+    if(button == GLFW_MOUSE_BUTTON_LEFT) {
+        if(action == GLFW_PRESS && !hitUI)
+            grabMouse(true);
+        else if(action == GLFW_RELEASE)
+            grabMouse(false);
+    }
 }
 
 void MainApp::handleMouseMotionEvent(float dx, float dy)
 {
-    m_camera->onMouseMove(dx, dy);
+    if(m_camera != nullptr && m_relativeMouse)
+        m_camera->onMouseMove(dx, dy);
 }
 
 void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
@@ -1123,13 +1135,10 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
         else if(key == GLFW_KEY_C) {
             Camera *oldCam = m_camera;
 
-            if(dynamic_cast<RotatingCamera*>(m_camera) == nullptr) {
+            if(dynamic_cast<RotatingCamera*>(m_camera) == nullptr)
                 m_camera = new RotatingCamera;
-                grabMouse(false);
-            } else {
+            else
                 m_camera = new FreeCamera;
-                grabMouse(true);
-            }
 
             delete oldCam;
         } else
@@ -1140,4 +1149,10 @@ void MainApp::handleKeyboardEvent(int key, int scancode, int action, int mods)
         m_camera->onKeyUp(scancode);
         uiCore.handleKeyUpEvent(key, scancode, mods);
     }
+}
+
+void MainApp::handleMouseScrollEvent(float amntX, float amntY)
+{
+    if(m_camera != nullptr)
+        m_camera->onScroll(amntY);
 }

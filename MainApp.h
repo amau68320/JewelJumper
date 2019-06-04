@@ -127,6 +127,7 @@ private:
     void handleMouseButtonEvent(int button, int action, int mods);
     void handleMouseMotionEvent(float dx, float dy);
     void handleKeyboardEvent(int key, int scancode, int action, int mods);
+    void handleMouseScrollEvent(float amntX, float amntY);
     void debugDrawTexture(GLuint tex);
     void grabMouse(bool grabbed);
     bool changeColor(UIElement *e);

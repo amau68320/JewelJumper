@@ -19,12 +19,18 @@
 #define JJ_SLEEP_THRESHOLD 10.0
 #define JJ_LENS_FLARE_MEASURE 32
 
+#ifdef _DEBUG
+#define JJ_DEBUGSTR_DEFAULT true
+#else
+#define JJ_DEBUGSTR_DEFAULT false
+#endif
+
 MainApp *MainApp::m_instance = nullptr;
 
 MainApp::MainApp(GLFWwindow* wnd) : m_wnd(wnd), m_relativeMouse(true), m_lastCursorPosX(0.0), m_lastCursorPosY(0.0),
                                     m_ww(0), m_wh(0), m_curModelMat(0), m_override(nullptr), m_exposure(2.5f),
                                     m_bloomThreshold(4.75f), m_fxaaEnable(true), m_useWireframe(false), m_doDebugDraw(false),
-                                    m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(true),
+                                    m_internalRefraction(true), m_bloomEnable(true), m_displayDebugString(JJ_DEBUGSTR_DEFAULT),
                                     m_peVBO(0), m_peVAO(0), m_numDrawcalls(0), m_oldSides(6), m_font(nullptr),
                                     m_PBOs{ 0, 0 }, m_curPBO(0), m_sunVisibility(0.0f), m_lensFlareSprite(0),
                                     m_lastDownload(-1), m_dlLabel(nullptr), m_dlProgress(nullptr), m_skyboxBtn(nullptr),
@@ -88,7 +94,7 @@ void MainApp::cleanup()
     if(m_displayStats) {
         mlogger.info(M_LOG, "=========== PERFS FINALES ===========");
         for(int i = 0; i < 4; i++)
-            mlogger.info(M_LOG, "meilleur[%d] = %d", i, m_ftMins[i]);
+            mlogger.info(M_LOG, "meilleure[%d] = %d", i, m_ftMins[i]);
 
         mlogger.info(M_LOG, "");
         for(int i = 0; i < 4; i++)
@@ -919,11 +925,18 @@ void MainApp::renderHUD()
 
 
         //Histogramme
+        float histoMax = 0.0f;
+        for(int i = 0; i < HistogramSize; i++) {
+            if(m_histo->value(i) > histoMax)
+                histoMax = m_histo->value(i);
+        }
+
+        histoMax = 64.0f / histoMax;
         vs.begin(gl::kDM_LineStrip, false);
 
         for(int i = 0; i < HistogramSize; i++) {
             float x = static_cast<float>(i * 2 + 10);
-            float y = static_cast<float>(70 + 64) - m_histo->value(i) * 64.0f;
+            float y = static_cast<float>(70 + 64) - m_histo->value(i) * histoMax;
 
             vs.vertexf(x, y).color(255, 255, 255);
         }

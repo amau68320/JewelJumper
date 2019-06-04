@@ -115,21 +115,31 @@ bool Histogram::setup(GLuint w, GLuint h, GLuint histoDiv0)
         m_interTexs << ITex(tex, p2w, p2h);
     }
 
-    m_dispatchCount = 4;
-    m_dispatchMarks[0] = 1;
-    m_dispatchMarks[1] = (m_interTexs.size() * 3) / 10;
-    m_dispatchMarks[2] = (m_interTexs.size() * 5) / 10;
-    m_dispatchMarks[3] = m_interTexs.size();
+    if(~m_interTexs <= 5) {
+        //Cas rare
+        m_dispatchCount = ~m_interTexs - 1;
 
-    for(int i = 0; i < 4; i++)
-        mlogger.debug(M_LOG, "m_dispatchMarks[%d] = %d", i, m_dispatchMarks[i]);
+        for(int i = 0; i < m_dispatchCount; i++)
+            m_dispatchMarks[i] = i + 1;
+    } else {
+        m_dispatchCount = 4;
+        m_dispatchMarks[0] = 1; //Le premier toujours seul
+        m_dispatchMarks[1] = (~m_interTexs * 3) / 10;
+        m_dispatchMarks[2] = (~m_interTexs * 5) / 10;
+        m_dispatchMarks[3] = ~m_interTexs;
 
-    if(m_dispatchMarks[1] == 1 || m_dispatchMarks[2] == m_dispatchMarks[1] || m_dispatchMarks[3] == m_dispatchMarks[2]) {
-        m_dispatchCount = 2;
-        m_dispatchMarks[1] = m_interTexs.size();
+        int prev = m_dispatchMarks[0];
+        for(int i = 1; i < m_dispatchCount; i++) {
+            if(m_dispatchMarks[i] == prev)
+                m_dispatchMarks[i]++;
+
+            prev = m_dispatchMarks[i];
+        }
     }
 
     mlogger.debug(M_LOG, "Nombre de dispatch: %d", m_dispatchCount);
+    for(int i = 0; i < m_dispatchCount; i++)
+        mlogger.debug(M_LOG, "m_dispatchMarks[%d] = %d", i, m_dispatchMarks[i]);
 
     GLenum err = glGetError();
     if(err != GL_NO_ERROR)

@@ -1,7 +1,7 @@
 #include <mgpcl/SimpleConfig.h>
 #include <mgpcl/BasicLogger.h>
-#include <mgpcl/NetLogger.h>
 #include <mgpcl/Time.h>
+#include <mgpcl/INet.h>
 #include <gl/glew.h>
 #include <GLFW/glfw3.h>
 #include "MainApp.h"
@@ -32,9 +32,6 @@ int main(int argc, char *argv[])
 
     int ww = cfg["window"]["width"].asInt(0);
     int wh = cfg["window"]["height"].asInt(0);
-    const bool useNetLogger = cfg["logging"]["useNetLogger"].asBool();
-    const bool autoStartNL = cfg["logging"]["autoStartNetLogger"].asBool();
-    const m::String &nlAddr = cfg["logging"]["netLoggerAddress"].value("127.0.0.1");
     const bool allocConsole = cfg["misc"]["allocConsole"].asBool();
     const int histoFirstDivider = m::math::maximum(0, cfg["misc"]["histogramFirstDivider"].asInt(3));
     cfg.save();
@@ -45,26 +42,6 @@ int main(int argc, char *argv[])
         delete m::Logger::setLoggerInstance(new m::BasicLogger);
     }
 #endif
-
-    //Prise en charge du NetLogger
-    if(useNetLogger) {
-        m::NetLogger *nl = new m::NetLogger;
-        if(autoStartNL) {
-            if(nl->tryAutoStartSubprocess(true))
-                m::time::sleepMs(1000);
-            else
-                mlogger.warning(M_LOG, "Impossible de demarrer le NetLogger !");
-        }
-
-        if(nl->connect(nlAddr)) {
-            delete m::Logger::setLoggerInstance(nl);
-
-
-        } else {
-            mlogger.warning(M_LOG, "Impossible de se connecter au NetLogger; reprise avec le logger basique...");
-            delete nl;
-        }
-    }
 
     //Init de GLFW
     if(glfwInit() == GLFW_FALSE) {
@@ -159,7 +136,10 @@ int main(int argc, char *argv[])
     glfwTerminate();
     delete m::Logger::instance();
 	m::inet::release();
-    system("pause");
+
+#if defined(MGPCL_WIN) && defined(_DEBUG)
+    //system("pause");
+#endif
 
     return 0;
 }

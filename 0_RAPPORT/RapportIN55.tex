@@ -76,6 +76,7 @@
 }
 
 \newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 
 %% Language styles
 \lstset{language=GLSL,
@@ -174,12 +175,72 @@ else
 La \emph{skybox} est un simple cube texturé avec l'\emph{environment map} décrite plus haut. Normalement, les faces
 de la skybox doivent être placées à une distance infinie de la caméra. Comme nous ne pouvons pas vraiment faire cela,
 nous simulons cet effet en placant le centre du cube à la position de la caméra, et en désactivant l'écriture dans le buffer
-de profondeur (\emph{glDepthMask}). Ainsi, tout objet déssiné après la skybox, qu'il soit devant ou derrière
+de profondeur (\texttt{glDepthMask}). Ainsi, tout objet déssiné après la skybox, qu'il soit devant ou derrière
 celle-ci, sera tout de même déssiné à l'écran. Puisque c'est elle qui émet la lumière de toute la scène, le dessin de
 ce cube est fait sans aucun calcul d'illumination.
 
-La gemme, en revanche, subit quelques calculs d'illumination. Les deux effets à prendre en compte sont (comme dit
-précédemment) la réflexion et la réfraction:
+La gemme, en revanche, subit quelques calculs d'illumination. Les deux effets à prendre en compte sont (comme dit précédemment)
+la réflexion et la réfraction:
 \svg[8cm]{refraction}
+
+On part du vectur de vue $\overrightarrow{V}$ (vecteur partant du centre de la caméra et pointant vers le fragment), du vecteur
+normale $\overrightarrow{N}$ et de l'indice de réfraction $\eta_{gemme}$. On en déduit le vecteur réfléchi $\overrightarrow{R}$
+et réfracté $\overrightarrow{R_2}$, avec lesquels on lit la cubemap pour trouver les couleurs correspondantes. Les deux couleurs
+sont ensuite mixées ensemble selon le coefficient de fresnel. Celui-ci dépends de l'indice de réfraction et du produit scalaire
+$\overrightarrow{L}\cdot\overrightarrow{H}$. Or, on constate dans notre cas que le vecteur de direction de la lumière $\overrightarrow{L}$
+est égal à $-\overrightarrow{R}$ (puisque la lumière vient de l'environment map). On constate aussi que:
+\[
+    \overrightarrow{H} = \frac{\overrightarrow{V} + \overrightarrow{L}}{\norm{\overrightarrow{V} + \overrightarrow{L}}}
+    = \frac{\overrightarrow{V} - \overrightarrow{R}}{\norm{\overrightarrow{V} - \overrightarrow{R}}}
+    = \ldots = -\overrightarrow{N}
+\]
+Ce qui au final nous donne:
+\[
+    \overrightarrow{L}\cdot\overrightarrow{H} = (-\overrightarrow{R})\cdot(-\overrightarrow{N}) = \overrightarrow{R}\cdot\overrightarrow{N}
+\]
+Tout cela se traduit par le shader suivant:
+\begin{lstlisting}
+vec3 N  = normalize(f_Normal);
+vec3 V  = normalize(f_WorldPos - u_CamPos);
+vec3 R  = normalize(reflect(V, N));
+vec3 R2 = normalize(refract(V, N, 1.0 / u_IOR));
+
+float fresnel = computeFresnel(u_IOR, max(0.0, dot(R, N)));
+vec3 diffuse  = texture(u_CubeMap, R2).rgb * f_Color.rgb;
+vec3 specular = texture(u_CubeMap, R).rgb;
+vec3 final    = mix(diffuse, specular, fresnel) * pow(2.0, u_Exposure);
+
+out_Color = vec4(final, 1.0);
+\end{lstlisting}
+
+\section{Réfraction interne et passe de face arrière}
+Le \emph{shading} présenté dans la section précédente est correct, mais présente un défaut important: la réfraction ne se
+produit que sur la face avant. En réalité, le rayon réfracté $\overrightarrow{R_2}$ devrait continuer à l'intérieur de l'objet
+avant de se \og heurter \fg\ à la face arrière, sur laquelle il est à nouveau réfléchi et réfracté. Le nouveau rayon réfléchi
+risque de \og rebondir \fg\ encore quelques fois dans la pierre, et simuler cet effet serait difficile. Le nouveau rayon réfracté
+en revanche sort de l'objet, et il suffit alors d'utiliser la cubemap pour trouver la bonne couleur à afficher.
+\svg[6cm]{refr_int}
+
+On cherche donc à calculer $\overrightarrow{R_2'}$. Pour cela, on réalise au préalable le rendu d'une texture de profondeur ainsi
+que d'une texture de normale constitué des faces arrières (\texttt{glCullFace(GL\_FRONT)}) de la gemme. Ceci nous permettra d'obtenir
+la profondeur (en espace écran) ainsi que la normale (en espace monde) de tout point sur l'écran. Le rendu de la gemme décrit précédemment
+est ensuite modifié:
+\begin{itemize}
+    \item Passer $\overrightarrow{R_2}$ en espace écran
+    \item Partir des coordonnées $\overrightarrow{P}$ du fragment en cours de calcul
+    \item Ajouter $\overrightarrow{R_{2,ecran}}\times pas$ à $\overrightarrow{P}$
+    \item Faire de même jusqu'à ce que $P_z \geq \mathcal{D}(P_x, P_y)$ ($\mathcal{D}$ étant la profondeur de face arrière, retrouvée à partir de la texture générée tout à l'heure)
+    \item A cette étape, on dispose des coordonnées espace écran de l'intersection entre $\overrightarrow{R_2}$ et la face arrière
+    \item Retrouver $\overrightarrow{N'} = -\overrightarrow{\mathcal{N}}(P_x, P_y)$ avec $\mathcal{N}$ la normale de face arrière
+    \item Calculer $\overrightarrow{R_2'}$ avec $\overrightarrow{R_2}, \overrightarrow{N'}$ et l'indice de réfraction
+\end{itemize}
+
+\ \\
+Reste à déterminer un pas convenable de manière à ne pas sauter trop de pixels (et perdre de la précision) et ne pas être
+trop gourmand en ressources, mais le résultat est convaiquant:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=14cm]{intref_cmp.jpg}
+\end{figure}
 
 \end{document}

@@ -1,0 +1,166 @@
+%% Creator: Inkscape inkscape 0.92.3, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'UML.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{578.65356445bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,1.2280664)%
+    \lineheight{1}%
+    \scriptsize
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{UML.pdf}}%
+    \put(0.46141819,0.64222364){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{MainApp}\end{tabular}}}}%
+	\put(0,0){\includegraphics[width=\unitlength,page=2]{UML.pdf}}%
+    \put(0.37004006,0.61241306){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_objects: List<GameObject*>\end{tabular}}}}%
+	\put(0,0){\includegraphics[width=\unitlength,page=3]{UML.pdf}}%
+    \put(0.37004006,0.59297138){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_camera: Camera*\end{tabular}}}}%
+	\put(0,0){\includegraphics[width=\unitlength,page=4]{UML.pdf}}%
+    \put(0.37004006,0.57352969){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_model: Mat4f[16]\end{tabular}}}}%
+	\put(0,0){\includegraphics[width=\unitlength,page=5]{UML.pdf}}%
+    \put(0.37004006,0.55408801){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_view: Mat4f\end{tabular}}}}%
+	\put(0,0){\includegraphics[width=\unitlength,page=6]{UML.pdf}}%
+    \put(0.37004006,0.53464632){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_projection: Mat4f\end{tabular}}}}%
+	\put(0,0){\includegraphics[width=\unitlength,page=7]{UML.pdf}}%
+    \put(0.37004006,0.51520464){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_normalPass: Framebuffer\end{tabular}}}}%
+	\put(0,0){\includegraphics[width=\unitlength,page=8]{UML.pdf}}%
+    \put(0.37004006,0.49576295){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_hdrFBO0: Framebuffer\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{UML.pdf}}%
+    \put(0.37004006,0.47632127){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_bloomFBO: Framebuffer[2]\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{UML.pdf}}%
+    \put(0.37004006,0.45687958){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_sdrFBO: Framebuffer\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=11]{UML.pdf}}%
+    \put(0.37004006,0.4374379){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_histo: Histogram*\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=12]{UML.pdf}}%
+    \put(0.37004006,0.40762732){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+setup()\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=13]{UML.pdf}}%
+    \put(0.37004006,0.38818563){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+render()\end{tabular}}}}%
+    \put(0.37004006,0.36874395){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+pushMatrix(): Mat4f\&\end{tabular}}}}%
+    \put(0.37004006,0.34930226){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+popMatrix(): Mat4f\&\end{tabular}}}}%
+    \put(0.37004006,0.32986058){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+use3DShader(shdr: Shader\&)\end{tabular}}}}%
+    \put(0.12098778,0.69406813){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Histogram}\end{tabular}}}}%
+    \put(0.00712862,0.65129643){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+setup(w: GLuint, h: GLuint): bool\end{tabular}}}}%
+    \put(0.00712862,0.63185474){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+compute(color: GLuint)\end{tabular}}}}%
+    \put(0.00712862,0.61241306){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+value(idx: int): float\end{tabular}}}}%
+    \put(0.00712862,0.59297138){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+computedExposure(): float\end{tabular}}}}%
+    \put(0.00712862,0.57352969){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+temporalAdaptationFactor(): float\end{tabular}}}}%
+    \put(0.00712862,0.55408801){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+setTAF(tau: float)\end{tabular}}}}%
+    \put(0.00712862,0.53464632){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+dispatchPos(): int\end{tabular}}}}%
+    \put(0.00712862,0.51520464){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+dispatchCount(): int\end{tabular}}}}%
+    \put(0.83515926,0.96365949){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Skybox}\end{tabular}}}}%
+    \put(0.7433204,0.93384891){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_tex: GLuint\end{tabular}}}}%
+    \put(0.7433204,0.91440722){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_vbo: GLuint\end{tabular}}}}%
+    \put(0.7433204,0.89496554){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_vao: GLuint\end{tabular}}}}%
+    \put(0.7433204,0.87552386){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_cubemap: GLuint\end{tabular}}}}%
+    \put(0.7433204,0.84571327){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+load(fname: String): bool\end{tabular}}}}%
+    \put(0.7433204,0.82627159){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+draw()\end{tabular}}}}%
+    \put(0.7433204,0.8068299){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+loadAsync(fle: String): bool\end{tabular}}}}%
+    \put(0.7433204,0.78738822){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+update(): bool\end{tabular}}}}%
+    \put(0.7433204,0.76794654){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+bindCubeMap()\end{tabular}}}}%
+    \put(0.7433204,0.74850485){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+unbindCubeMap()\end{tabular}}}}%
+    \put(0.7433204,0.72906317){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+isDoingAsyncOp(): bool\end{tabular}}}}%
+    \put(0.769804,0.56964135){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{DownloadManager}\end{tabular}}}}%
+    \put(0.70184481,0.52686965){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+queueDownload(String: fname)\end{tabular}}}}%
+    \put(0.70184481,0.50742796){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+startDownloadManager()\end{tabular}}}}%
+    \put(0.70184481,0.48798628){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onQuit()\end{tabular}}}}%
+    \put(0.70184481,0.46854459){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+currentFile(): int\end{tabular}}}}%
+    \put(0.70184481,0.44910291){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+progress(): float\end{tabular}}}}%
+    \put(0.70184481,0.42966123){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+fileName(idx: int): String\end{tabular}}}}%
+    \put(0.2110024,0.9429217){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Camera}\end{tabular}}}}%
+    \put(0.00712862,0.90014999){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+getTransform(matrix: Mat4f\&, camPos: Vec3f\&, ptt: float)\end{tabular}}}}%
+    \put(0.00712862,0.88070831){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+update(dt: float)\end{tabular}}}}%
+    \put(0.00712862,0.86126662){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onMouseMove(dx: float, dy: float)\end{tabular}}}}%
+    \put(0.00712862,0.84182494){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onKeyDown(scancode: int)\end{tabular}}}}%
+    \put(0.00712862,0.82238325){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onKeyUp(scancode: int)\end{tabular}}}}%
+    \put(0.00712862,0.80294157){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+activate()\end{tabular}}}}%
+    \put(0.00712862,0.78349988){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+deactivate()\end{tabular}}}}%
+    \put(0.00712862,0.7640582){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onScroll(amount: float)\end{tabular}}}}%
+    \put(0.19367987,1.20214415){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{FreeCamera}\end{tabular}}}}%
+    \put(0.00712862,1.15937245){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+getTransform(matrix: Mat4f\&, camPos: Vec3f\&, ptt: float)\end{tabular}}}}%
+    \put(0.00712862,1.13993076){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+update(dt: float)\end{tabular}}}}%
+    \put(0.00712862,1.12048908){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onMouseMove(dx: float, dy: float)\end{tabular}}}}%
+    \put(0.00712862,1.1010474){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onKeyDown(scancode: int)\end{tabular}}}}%
+    \put(0.00712862,1.08160571){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onKeyUp(scancode: int)\end{tabular}}}}%
+    \put(0.00712862,1.06216403){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+deactivate()\end{tabular}}}}%
+    \put(0.68769959,1.20214415){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{RotatingCamera}\end{tabular}}}}%
+    \put(0.51520464,1.15937245){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+getTransform(matrix: Mat4f\&, camPos: Vec3f\&, ptt: float)\end{tabular}}}}%
+    \put(0.51520464,1.13993076){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+activate()\end{tabular}}}}%
+    \put(0.51520464,1.12048908){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onMouseMove(dx: float, dy: float)\end{tabular}}}}%
+    \put(0.51520464,1.1010474){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+onScroll(amount: float)\end{tabular}}}}%
+    \put(0.51520464,1.08160571){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+deactivate()\end{tabular}}}}%
+    \put(0.51520464,1.06216403){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+setSpeed(speed: float)\end{tabular}}}}%
+    \put(0.51520464,1.04272234){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+getSpeed(): float\end{tabular}}}}%
+    \put(0.04149331,0.44521457){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{GameObject}\end{tabular}}}}%
+    \put(0.00712862,0.40244287){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+update(dt: float)\end{tabular}}}}%
+    \put(0.00712862,0.38300118){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+render(ptt: float)\end{tabular}}}}%
+    \put(0.21697951,0.2689433){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Gem}\end{tabular}}}}%
+    \put(0.00712862,0.23913272){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_vbo: GLuint\end{tabular}}}}%
+    \put(0.00712862,0.21969103){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_ebo: GLuint\end{tabular}}}}%
+    \put(0.00712862,0.20024935){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_vao: GLuint\end{tabular}}}}%
+    \put(0.00712862,0.18080767){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_numIndices: GLsizei\end{tabular}}}}%
+    \put(0.00712862,0.16136598){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_ior: float\end{tabular}}}}%
+    \put(0.00712862,0.1419243){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_numVertices: int\end{tabular}}}}%
+    \put(0.00712862,0.12248261){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}-m\_color: float[4]\end{tabular}}}}%
+    \put(0.00712862,0.09267203){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+render(ptt: float)\end{tabular}}}}%
+    \put(0.00712862,0.07323034){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+generate(n: int, y0: float, r0: float, y1: float, r1: float)\end{tabular}}}}%
+    \put(0.00712862,0.05378866){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+changeColor(r: float, g: float, b: float, a: float = 1.0)\end{tabular}}}}%
+    \put(0.00712862,0.03434698){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+setIOR(float: ior)\end{tabular}}}}%
+    \put(0.00712862,0.01490529){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+ior(): float\end{tabular}}}}%
+    \put(0.74556993,0.2482055){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Framebuffer}\end{tabular}}}}%
+    \put(0.59815582,0.2054338){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+init(w: uint32\_t, h: uint32\_t)\end{tabular}}}}%
+    \put(0.59815582,0.18599211){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+createColorBuffer(idx: int, tf: TextureFormat)\end{tabular}}}}%
+    \put(0.59815582,0.16655043){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+createDepthBuffer(mode: FBODepthMode)\end{tabular}}}}%
+    \put(0.59815582,0.14710875){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+finishFramebuffer(): bool\end{tabular}}}}%
+    \put(0.59815582,0.12766706){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+bindForRender()\end{tabular}}}}%
+    \put(0.59815582,0.10822538){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+unbindFromRender(w: uint32\_t, h: uint32\_t)\end{tabular}}}}%
+    \put(0.59815582,0.08878369){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+colorAttachmentID(idx: int)\end{tabular}}}}%
+    \put(0.59815582,0.06934201){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+depthAttachmentID()\end{tabular}}}}%
+    \put(0.59815582,0.04990032){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+width(): uint32\_t\end{tabular}}}}%
+    \put(0.59815582,0.03045864){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+height(): uint32\_t\end{tabular}}}}%
+  \end{picture}%
+\endgroup%

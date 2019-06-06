@@ -51,8 +51,7 @@
 /Resource.aps
 
 # Latex
-/0_RAPPORT/*.pdf
-/0_RAPPORT/*.pdf_tex
+/0_RAPPORT/RapportIN55.pdf
 /0_RAPPORT/*.pdf_tex.bak
 /0_RAPPORT/*.aux
 /0_RAPPORT/*.log

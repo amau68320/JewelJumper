@@ -93,10 +93,8 @@ void main()
     vec3 V  = normalize(f_WorldPos - u_CamPos);
     vec3 R  = normalize(reflect(V, N));
     vec3 R2 = raytraceRefraction(V, N);
-    vec3 L  = -R;
-    vec3 H  = normalize(L + V);
     
-	float fresnel = computeFresnel(u_IOR, dot(L, H));
+	float fresnel = computeFresnel(u_IOR, dot(R, N));
 	vec3 diffuse  = texture(u_CubeMap, R2).rgb * f_Color.rgb;
 	vec3 specular = texture(u_CubeMap, R).rgb;
     vec3 final    = mix(diffuse, specular, fresnel) * pow(2.0, u_Exposure);

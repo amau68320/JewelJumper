@@ -1,0 +1,130 @@
+%% Creator: Inkscape inkscape 0.92.3, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'PipelineDeRendu.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{1067.46785214bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,1.43261456)%
+    \scriptsize
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{PipelineDeRendu.pdf}}%
+    \put(0.55390836,1.40842318){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Passe de face arrière\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{PipelineDeRendu.pdf}}%
+    \put(0.45956873,1.35704178){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Normale arr.\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{PipelineDeRendu.pdf}}%
+    \put(0.64824798,1.35704178){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Profondeur arr.\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{PipelineDeRendu.pdf}}%
+    \put(0.80997305,1.08497303){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Réduction de résolution\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{PipelineDeRendu.pdf}}%
+    \put(0.80997305,1.03359163){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Bloom réduit\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{PipelineDeRendu.pdf}}%
+    \put(0.80997305,0.84238543){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Flou X 12 prises\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{PipelineDeRendu.pdf}}%
+    \put(0.80997305,0.79100403){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Bloom flouté en X\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{PipelineDeRendu.pdf}}%
+    \put(0.80997305,0.59979783){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Flou Y 12 prises\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{PipelineDeRendu.pdf}}%
+    \put(0.80997305,0.54841643){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Bloom flouté\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{PipelineDeRendu.pdf}}%
+    \put(0.56738544,1.24669812){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Passe de rendu principale\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=11]{PipelineDeRendu.pdf}}%
+    \put(0.3787062,1.19531672){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Profondeur\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=12]{PipelineDeRendu.pdf}}%
+    \put(0.56738544,1.19531672){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Couleur HDR\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=13]{PipelineDeRendu.pdf}}%
+    \put(0.75606469,1.19531672){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Bloom HDR\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=14]{PipelineDeRendu.pdf}}%
+    \put(0.56738544,0.43807276){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Tone mapping\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=15]{PipelineDeRendu.pdf}}%
+    \put(0.56738544,0.38669136){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Couleur LDR\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=16]{PipelineDeRendu.pdf}}%
+    \put(0.56738544,0.27634769){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Anti-aliasing (FXAA)\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=17]{PipelineDeRendu.pdf}}%
+    \put(0.56738544,0.22496629){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Ecran\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=18]{PipelineDeRendu.pdf}}%
+    \put(0.32479784,1.08497303){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Calcul d'histogramme\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=19]{PipelineDeRendu.pdf}}%
+    \put(0.32479784,1.03359163){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Texture\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=20]{PipelineDeRendu.pdf}}%
+    \put(0.32479784,0.81543125){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Réduction de résolution \\ et somme\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=21]{PipelineDeRendu.pdf}}%
+    \put(0.32479784,0.75057276){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Texture\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=22]{PipelineDeRendu.pdf}}%
+    \put(0.32479784,0.59979783){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Réduction de résolution \\ et somme\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=23]{PipelineDeRendu.pdf}}%
+    \put(0.32479784,0.53493934){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}SSBO\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=24]{PipelineDeRendu.pdf}}%
+    \put(0.05525606,0.92884099){\color[rgb]{0.49803922,0.49803922,0.49803922}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\ \ \textsl{Répété jusqu'à ce qu'on obtienne}\\ \ \ \textsl{une texture de 2x2}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=25]{PipelineDeRendu.pdf}}%
+    \put(0.19002695,1.11994609){\color[rgb]{0.49803922,0.49803922,0.49803922}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}si $N_{trame} \equiv 0\ [mod\ 4]$\end{tabular}}}}%
+    \put(0.05525606,0.95687332){\color[rgb]{0.49803922,0.49803922,0.49803922}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}si $N_{trame} \not\equiv 0\ [mod\ 4]$\end{tabular}}}}%
+    \put(0.19002695,0.6361186){\color[rgb]{0.49803922,0.49803922,0.49803922}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}si $N_{trame} \equiv 3\ [mod\ 4]$\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=26]{PipelineDeRendu.pdf}}%
+    \put(0.24393531,0.4256846){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Calcul \\ d'exposition\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=27]{PipelineDeRendu.pdf}}%
+    \put(0.82345013,0.0610243){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Opération CPU\end{tabular}}}}%
+    \large
+    \put(0.99865229,0.1339623){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}Légende\ \ \end{tabular}}}}%
+    \scriptsize
+    \put(0,0){\includegraphics[width=\unitlength,page=28]{PipelineDeRendu.pdf}}%
+    \put(0.51347709,0.11462263){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Passe de calcul\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=29]{PipelineDeRendu.pdf}}%
+    \put(0.44609164,0.06324805){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}SSBO\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=30]{PipelineDeRendu.pdf}}%
+    \put(0.56738544,0.06324805){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Texture\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=31]{PipelineDeRendu.pdf}}%
+    \put(0.19002695,0.11462263){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Passe de rendu\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=32]{PipelineDeRendu.pdf}}%
+    \put(0.12264151,0.06324805){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Renderbuffer\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=33]{PipelineDeRendu.pdf}}%
+    \put(0.27088949,0.06324805){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Texture\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=34]{PipelineDeRendu.pdf}}%
+  \end{picture}%
+\endgroup%

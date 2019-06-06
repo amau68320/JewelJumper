@@ -168,7 +168,7 @@ float luma = dot(final, vec3(0.2126, 0.7152, 0.0722));
 if(luma > u_BloomThreshold)
     out_Bloom = vec4(final, 1.0);
 else
-    out_Bloom = vec4(vec3(0.0), 1.0);
+    out_Bloom = vec4(0.0, 0.0, 0.0, 1.0);
 \end{lstlisting}
 
 La \emph{skybox} est un simple cube texturé avec l'\emph{environment map} décrite plus haut. Normalement, les faces
@@ -179,6 +179,7 @@ celle-ci, sera tout de même déssiné à l'écran. Puisque c'est elle qui émet
 ce cube est fait sans aucun calcul d'illumination.
 
 La gemme, en revanche, subit quelques calculs d'illumination. Les deux effets à prendre en compte sont (comme dit
-précédemment) la réflexion et la réfraction.
+précédemment) la réflexion et la réfraction:
+\svg[8cm]{refraction}
 
 \end{document}

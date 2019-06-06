@@ -49,3 +49,13 @@
 /CodeStats.jar
 /0_RENDERDOC.cap
 /Resource.aps
+
+# Latex
+/0_RAPPORT/*.pdf
+/0_RAPPORT/*.pdf_tex
+/0_RAPPORT/*.pdf_tex.bak
+/0_RAPPORT/*.aux
+/0_RAPPORT/*.log
+/0_RAPPORT/*.out
+/0_RAPPORT/*.toc
+/0_RAPPORT/*.synctex.gz

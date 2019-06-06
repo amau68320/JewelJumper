@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="38cm" height="54cm" viewBox="58 18 743 1064" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-dasharray: 4; stroke: #000000" x="60" y="960" width="740" height="121"/>
+  <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #7f7f7f" x="100" y="380" width="320" height="200"/>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="320" y="20" width="300" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #000000" x="320" y="20" width="300" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="470" y="36.95">
+      <tspan x="470" y="36.95">Passe de face arrière</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="340" y="60" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="340" y="60" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="400" y="75.075">
+      <tspan x="400" y="75.075">Normale arr.</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="480" y="60" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="480" y="60" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="540" y="75.075">
+      <tspan x="540" y="75.075">Profondeur arr.</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="400" y1="80" x2="441.262" y2="131.577"/>
+    <polygon style="fill: #000000" points="445.947,137.434 435.796,132.748 441.262,131.577 443.604,126.501 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="445.947,137.434 435.796,132.748 441.262,131.577 443.604,126.501 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="540" y1="80" x2="509.501" y2="130.831"/>
+    <polygon style="fill: #000000" points="505.643,137.262 506.5,126.115 509.501,130.831 515.075,131.26 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="505.643,137.262 506.5,126.115 509.501,130.831 515.075,131.26 "/>
+  </g>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="560" y="260" width="200" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #000000" x="560" y="260" width="200" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="660" y="276.95">
+      <tspan x="660" y="276.95">Réduction de résolution</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="600" y="300" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="600" y="300" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="660" y="315.075">
+      <tspan x="660" y="315.075">Bloom réduit</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="560" y="440" width="200" height="80" rx="10" ry="10"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #000000" x="560" y="440" width="200" height="80" rx="10" ry="10"/>
+  </g>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="660" y="456.95">
+    <tspan x="660" y="456.95">Flou X 12 prises</tspan>
+  </text>
+  <g>
+    <rect style="fill: #ffffff" x="580" y="480" width="160" height="20"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="580" y="480" width="160" height="20"/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="660" y="495.075">
+    <tspan x="660" y="495.075">Bloom flouté en X</tspan>
+  </text>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="560" y="620" width="200" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #000000" x="560" y="620" width="200" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="660" y="636.95">
+      <tspan x="660" y="636.95">Flou Y 12 prises</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="600" y="660" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="600" y="660" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="660" y="675.075">
+      <tspan x="660" y="675.075">Bloom flouté</tspan>
+    </text>
+  </g>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="260" y="140" width="440" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #000000" x="260" y="140" width="440" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="480" y="156.95">
+      <tspan x="480" y="156.95">Passe de rendu principale</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="280" y="180" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-dasharray: 10; stroke: #000000" x="280" y="180" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="340" y="195.075">
+      <tspan x="340" y="195.075">Profondeur</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="420" y="180" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="420" y="180" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="480" y="195.075">
+      <tspan x="480" y="195.075">Couleur HDR</tspan>
+    </text>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="480" y="160">
+      <tspan x="480" y="160"></tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="560" y="180" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="560" y="180" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="620" y="195.075">
+      <tspan x="620" y="195.075">Bloom HDR</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="660" y1="680" x2="561.987" y2="734.452"/>
+    <polygon style="fill: #000000" points="555.431,738.094 561.744,728.867 561.987,734.452 566.6,737.608 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="555.431,738.094 561.744,728.867 561.987,734.452 566.6,737.608 "/>
+  </g>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="380" y="740" width="200" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #000000" x="380" y="740" width="200" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="480" y="756.95">
+      <tspan x="480" y="756.95">Tone mapping</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="420" y="780" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="420" y="780" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="480" y="795.075">
+      <tspan x="480" y="795.075">Couleur LDR</tspan>
+    </text>
+  </g>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="380" y="860" width="200" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #000000" x="380" y="860" width="200" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="480" y="876.95">
+      <tspan x="480" y="876.95">Anti-aliasing (FXAA)</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="420" y="900" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="420" y="900" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="480" y="915.075">
+      <tspan x="480" y="915.075">Ecran</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="200" y="260" width="200" height="80" rx="10" ry="10"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #1e90ff" x="200" y="260" width="200" height="80" rx="10" ry="10"/>
+  </g>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="300" y="276.95">
+    <tspan x="300" y="276.95">Calcul d'histogramme</tspan>
+  </text>
+  <g>
+    <rect style="fill: #ffffff" x="240" y="300" width="120" height="20"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="240" y="300" width="120" height="20"/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="300" y="315.075">
+    <tspan x="300" y="315.075">Texture</tspan>
+  </text>
+  <g>
+    <rect style="fill: #ffffff" x="200" y="460" width="200" height="80" rx="10" ry="10"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #1e90ff" x="200" y="460" width="200" height="80" rx="10" ry="10"/>
+  </g>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="300" y="476.95">
+    <tspan x="300" y="476.95">Réduction de résolution</tspan>
+    <tspan x="300" y="498.117">et somme</tspan>
+  </text>
+  <g>
+    <rect style="fill: #ffffff" x="240" y="510" width="120" height="20"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="240" y="510" width="120" height="20"/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="300" y="525.075">
+    <tspan x="300" y="525.075">Texture</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="300" y="260">
+    <tspan x="300" y="260"></tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="480" y1="200" x2="480" y2="730.264"/>
+    <polygon style="fill: #000000" points="480,737.764 475,727.764 480,730.264 485,727.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="480,737.764 475,727.764 480,730.264 485,727.764 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="480" y1="200" x2="309.236" y2="256.921"/>
+    <polygon style="fill: #000000" points="302.121,259.293 310.027,251.387 309.236,256.921 313.189,260.874 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="302.121,259.293 310.027,251.387 309.236,256.921 313.189,260.874 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="660" y1="320" x2="660" y2="430.264"/>
+    <polygon style="fill: #000000" points="660,437.764 655,427.764 660,430.264 665,427.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="660,437.764 655,427.764 660,430.264 665,427.764 "/>
+  </g>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="200" y="620" width="200" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #1e90ff" x="200" y="620" width="200" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="300" y="636.95">
+      <tspan x="300" y="636.95">Réduction de résolution</tspan>
+      <tspan x="300" y="658.117">et somme</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="240" y="670" width="120" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-dasharray: 10; stroke: #000000" x="240" y="670" width="120" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="300" y="685.075">
+      <tspan x="300" y="685.075">SSBO</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="300" y1="320" x2="287.605" y2="369.578"/>
+    <polygon style="fill: #000000" points="285.786,376.854 283.361,365.94 287.605,369.578 293.063,368.365 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="285.786,376.854 283.361,365.94 287.605,369.578 293.063,368.365 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="260" y1="580" x2="293.116" y2="613.116"/>
+    <polygon style="fill: #000000" points="298.419,618.419 287.812,614.883 293.116,613.116 294.883,607.812 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="298.419,618.419 287.812,614.883 293.116,613.116 294.883,607.812 "/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="260" y="500">
+    <tspan x="260" y="500"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="260" y="500">
+    <tspan x="260" y="500"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #7f7f7f;text-anchor:start;font-family:sans-serif;font-style:oblique;font-weight:normal" x="100" y="392.8">
+    <tspan x="100" y="392.8"> Répété jusqu'à ce qu'on obtienne</tspan>
+    <tspan x="100" y="408.8"> une texture de 2x2</tspan>
+  </text>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="300,530 300,561 160,561 160,439 300,439 300,450.264 "/>
+    <polygon style="fill: #000000" points="300,457.764 295,447.764 300,450.264 305,447.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="300,457.764 295,447.764 300,450.264 305,447.764 "/>
+  </g>
+  <text font-size="12.8" style="fill: #7f7f7f;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="200" y="251">
+    <tspan x="200" y="251">si nTrame = 0 [mod 4]</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #7f7f7f;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="100" y="372">
+    <tspan x="100" y="372">si nTrame /= 0 [mod 4]</tspan>
+  </text>
+  <text font-size="12.8" style="fill: #7f7f7f;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="200" y="610">
+    <tspan x="200" y="610">si nTrame = 3 [mod 4]</tspan>
+  </text>
+  <g>
+    <polygon style="fill: #ffffff" points="190,740 290,740 340,800 140,800 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="190,740 290,740 340,800 140,800 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="190,740 290,740 340,800 140,800 "/>
+  </g>
+  <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="240" y="766.142">
+    <tspan x="240" y="766.142">Calcul</tspan>
+    <tspan x="240" y="787.308">d'exposition</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="300" y1="690" x2="247.479" y2="733.767"/>
+    <polygon style="fill: #000000" points="241.718,738.569 246.199,728.326 247.479,733.767 252.601,736.008 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="241.718,738.569 246.199,728.326 247.479,733.767 252.601,736.008 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="240,800 240,821 80,821 80,180 250.264,180 "/>
+    <polygon style="fill: #000000" points="257.764,180 247.764,185 250.264,180 247.764,175 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="257.764,180 247.764,185 250.264,180 247.764,175 "/>
+  </g>
+  <g>
+    <g>
+      <polygon style="fill: #ffffff" points="615,1000 725,1000 780,1060 560,1060 "/>
+      <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="615,1000 725,1000 780,1060 560,1060 "/>
+      <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="615,1000 725,1000 780,1060 560,1060 "/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="670" y="1036.72">
+      <tspan x="670" y="1036.72">Opération CPU</tspan>
+    </text>
+  </g>
+  <text font-size="22.5778" style="fill: #000000;text-anchor:end;font-family:sans-serif;font-style:normal;font-weight:normal" x="800" y="982.6">
+    <tspan x="800" y="982.6">Légende </tspan>
+  </text>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="340" y="980" width="200" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #1e90ff" x="340" y="980" width="200" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="440" y="996.95">
+      <tspan x="440" y="996.95">Passe de calcul</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="360" y="1020" width="60" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-dasharray: 10; stroke: #000000" x="360" y="1020" width="60" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="390" y="1035.07">
+      <tspan x="390" y="1035.07">SSBO</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="440" y="1020" width="80" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="440" y="1020" width="80" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="480" y="1035.07">
+      <tspan x="480" y="1035.07">Texture</tspan>
+    </text>
+  </g>
+  <g>
+    <g>
+      <rect style="fill: #ffffff" x="80" y="980" width="240" height="80" rx="10" ry="10"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-linejoin: round; stroke: #000000" x="80" y="980" width="240" height="80" rx="10" ry="10"/>
+    </g>
+    <text font-size="16.9333" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="200" y="996.95">
+      <tspan x="200" y="996.95">Passe de rendu</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="100" y="1020" width="100" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke-dasharray: 10; stroke: #000000" x="100" y="1020" width="100" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="150" y="1035.07">
+      <tspan x="150" y="1035.07">Renderbuffer</tspan>
+    </text>
+    <g>
+      <rect style="fill: #ffffff" x="220" y="1020" width="80" height="20"/>
+      <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="220" y="1020" width="80" height="20"/>
+    </g>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="260" y="1035.07">
+      <tspan x="260" y="1035.07">Texture</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="480" y1="800" x2="480" y2="850.264"/>
+    <polygon style="fill: #000000" points="480,857.764 475,847.764 480,850.264 485,847.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="480,857.764 475,847.764 480,850.264 485,847.764 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="660" y1="500" x2="660" y2="610.264"/>
+    <polygon style="fill: #000000" points="660,617.764 655,607.764 660,610.264 665,607.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="660,617.764 655,607.764 660,610.264 665,607.764 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="620" y1="200" x2="654.599" y2="251.899"/>
+    <polygon style="fill: #000000" points="658.76,258.139 649.052,252.592 654.599,251.899 657.373,247.045 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="658.76,258.139 649.052,252.592 654.599,251.899 657.373,247.045 "/>
+  </g>
+</svg>

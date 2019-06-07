@@ -370,4 +370,28 @@ cela requiert un peu de calcul. Voici la manière dont nous procédons:
     \item Pour éviter les changements brusques, et pour simuler le changement progressif de l'œuil, on fait varier en exponentielle inverse l'exposition
 \end{itemize}
 
+\section{Conclusion}
+A travers ce projet nous avons pu répondre à la problématique de génération et rendu d'une
+pierre précieuse en temps réel, et ce en utilisant OpenGL. Ce projet nous aura permis bien
+évidemment de s'accomoder avec cette bibliothèque graphique, mais aussi d'en apprendre beacoup
+sur la synthèse d'image photoréaliste de par les différents effets que nous avons pu implémenter.
+
+\subsection{Limites et améliorations possibles}
+Notre projet pourrait cependant être amélioré, notamment sur les points suivants:
+\begin{itemize}
+    \item Implémenter "real time rendering of refraction of nearby objects" pour pouvoir dessiner plusieurs objets
+    \item Accélérer la recherche de profondeur dans le shader de la gemme en utilisant un algorithme de recherche dichotomique
+    \item Utiliser des couleurs sRGB
+    \item Implémenter un meilleur anti-aliasing (par exemple Temporal Anti-Aliasing, très efficace et très à la mode en ce moment)
+    \item Plusieurs rebonds dans le shader de la gemme
+\end{itemize}
+
+\subsection{Bibliographie}
+(A compléter avec les bons liens et les ISBN)
+\begin{itemize}
+    \item \emph{Mathematics for 3D Game Programming and Computer Graphics, Third Edition}
+    \item ACES Filmic Tone Mapping
+    \item Automatic Exposure
+\end{itemize}
+
 \end{document}

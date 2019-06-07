@@ -79,7 +79,7 @@
     \put(0,0){\includegraphics[width=\unitlength,page=12]{UML.pdf}}%
     \put(0.37004006,0.40762732){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+setup()\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=13]{UML.pdf}}%
-    \put(0.37004006,0.38818563){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+render()\end{tabular}}}}%
+    \put(0.37004006,0.38818563){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+run()\end{tabular}}}}%
     \put(0.37004006,0.36874395){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+pushMatrix(): Mat4f\&\end{tabular}}}}%
     \put(0.37004006,0.34930226){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+popMatrix(): Mat4f\&\end{tabular}}}}%
     \put(0.37004006,0.32986058){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+use3DShader(shdr: Shader\&)\end{tabular}}}}%

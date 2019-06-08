@@ -164,7 +164,7 @@ Cette fenêtre permet d'ajuster l'apparence de la gemme:
 
 \subsubsection{Scène}
 En plus de pouvoir changer la vitesse de la caméra, l'utilisateur peut contrôler celle-ci. En effet,
-il peut utiliser (en dehors des fenêtres) la molette de sa souris pour changer l'altitude la caméra
+il peut utiliser (en dehors des fenêtres) la molette de sa souris pour changer l'altitude de la caméra
 (la distance à laquelle celle-ci orbite autour de la gemme), ainsi que la longitude et la latitude
 en bougeant la souris tout en gardant le clic gauche enfoncé. Il peut aussi utiliser la touche C pour
 passer de la caméra orbitale à la caméra libre, et vice-versa. Cette dernière se contrôle avec les
@@ -178,9 +178,9 @@ exposition automatique, etc\ldots
 
 \subsection{Choix techniques}
 Deux effets principaux interviennent dans le visuel des pierres précieuses: la réflection et la réfraction.
-Ces effets étant difficile à mettre en œuvre en temps réel (c'est-à-dire, sans raytracing), nous avons décidé
+Ces effets étant difficiles à mettre en œuvre en temps réel (c'est-à-dire, sans raytracing), nous avons décidé
 de se limiter à un seul et unique objet dans toute la scène: la pierre précieuse. Celle-ci est placée dans un
-décor reposant sur une \emph{environment map}; il s'agît d'une texture qui considérée comme \og à l'infini \fg
+décor reposant sur une \emph{environment map}; il s'agît d'une texture qui est considérée comme \og à l'infini \fg
 \ par rapport à la caméra. Cela permet d'accélérer de manière importante le rendu et permet d'atteindre une
 centaine d'images par seconde sur une Intel HD Graphics 620, toute en gardant une qualité décente.
 
@@ -199,27 +199,27 @@ Le projet est séparé en 10 classes principales:
 
 \subsubsection{MainApp}
 C'est elle qui gère la fenêtre, les évènements (position de la souris, entrée clavier, etc\ldots), tout le
-rendu de la scène (skybox, objets du jeu, etc\ldots), et la pile de matrice modèle.
+rendu de la scène (skybox, objets du jeu, etc\ldots), et la pile de matrices modèles.
 Pour ce faire, elle fait appel à l'entièreté des classes décrites dans cette section. Elle gère aussi l'IHM,
 mais nous avons choisi de ne pas détailler cette partie dans ce rapport.
 
 \subsubsection{Camera, FreeCamera et RotatingCamera}
 La classe Camera est une interface utilisée pour décrire une caméra; c'est-à-dire un objet capable de déterminer
 la matrice de vue. En plus de cette matrice, l'interface Camera se doit de retourner un vecteur contenant la
-position de la dîte caméra, et ce afin de pouvoir toujour placer le centre de la skybox en cette position.
+position de ladite caméra, et ce afin de pouvoir toujour placer le centre de la skybox en cette position.
 
-Le projet propose deux types de caméra:
+Le projet propose deux types de caméras:
 \begin{itemize}
     \item FreeCamera: la caméra libre habituelle, que l'on peut contrôler avec la souris et les touches ZQSD
     \item RotatingCamera: une caméra orbitale qui tourne toute seule autour de l'origine. L'utilisateur peut en prendre le contrôle afin d'ajuster l'alititude, la longitude et la latitude à sa guise
 \end{itemize}
 
 \subsubsection{GameObject et Gem}
-GameObject est une interface représentant un objet du jeu; elle avait été crée dans l'optique de pouvoir supporter
+GameObject est une interface représentant un objet du jeu; elle avait été créée dans l'optique de pouvoir supporter
 différents objets dans une même scène, mais au final nous n'avons fait qu'un seul objet: la gemme.
 
-La classe Gem implémente GameObject et est chargé de générer, selon quelques paramètres, les vertices et les indices
-nécéssaire au rendu d'une gemme. 5 paramètres sont supportés lors de la génération:
+La classe Gem implémente GameObject et est chargée de générer, selon quelques paramètres, les vertices et les indices
+nécéssaires au rendu d'une gemme. 5 paramètres sont supportés lors de la génération:
 \begin{itemize}
     \item Le nombre de côtés
     \item La hauteur de la partie inférieure
@@ -228,7 +228,7 @@ nécéssaire au rendu d'une gemme. 5 paramètres sont supportés lors de la gén
     \item Le rayon de la face du haut
 \end{itemize}
 
-La couleur peut, quand à elle, être changée via la méthode \texttt{changeColor}.
+La couleur peut, quant à elle, être changée via la méthode \texttt{changeColor}.
 
 \subsubsection{Skybox}
 Cette classe gère 4 choses:
@@ -249,7 +249,7 @@ pour limiter le gel de l'écran.
 Les classes restantes sont les suivantes:
 \begin{itemize}
     \item Framebuffer: une classe utilitaire pour gérer la création de Framebuffer OpenGL
-    \item DownloadManager: sert à gérer le téléchargement des environment map. Celles-ci étant très lourdes (24 Mo chacunes), nous avons choisi de n'en fournir de base qu'une seule de basse qualité. Lors du premier lancement de l'application, cette classe s'occupe justement de télécharger les autres
+    \item DownloadManager: sert à gérer le téléchargement des environment map. Celles-ci étant très lourdes (24 Mo chacune), nous avons choisi de n'en fournir de base qu'une seule de basse qualité. Lors du premier lancement de l'application, cette classe s'occupe justement de télécharger les autres
     \item Histogram: gère tout ce qui concerne l'exposition automatique: le calcul de l'histogramme avec des \emph{compute shaders}, puis le calcul de l'exposition de la prochaine trame
 \end{itemize}
 
@@ -263,7 +263,7 @@ Le rendu de la scène est réalisé avec la pipeline suivante:
 
 \subsubsection{Passe de rendu principale}
 La passe de rendu principale est celle durant laquelle les éléments visuels principaux sont dessinés; c'est-à-dire
-la \emph{skybox} et la gemme. Comme il s'agît d'une passe de rendu HDR, cette passe de rendu prends en compte
+la \emph{skybox} et la gemme. Comme il s'agît d'une passe de rendu HDR, cette passe de rendu prend en compte
 l'exposition déterminée par le système d'exposition automatique, décrit plus bas. Enfin, cette passe de rendu
 génère en plus du color buffer habituel, un second buffer HDR qui sera plus tard utilisé pour le \emph{bloom}
 (l'effet d'éblouissement). Ce buffer est princialement noir, sauf aux endroits où la couleur dépasse un
@@ -291,9 +291,9 @@ la réflexion et la réfraction:
 \svg[8cm]{refraction}
 
 On part du vectur de vue $\overrightarrow{V}$ (vecteur partant du centre de la caméra et pointant vers le fragment), du vecteur
-normale $\overrightarrow{N}$ et de l'indice de réfraction $\eta_{gemme}$. On en déduit le vecteur réfléchi $\overrightarrow{R}$
+normal $\overrightarrow{N}$ et de l'indice de réfraction $\eta_{gemme}$. On en déduit le vecteur réfléchi $\overrightarrow{R}$
 et réfracté $\overrightarrow{R_2}$, avec lesquels on lit la cubemap pour trouver les couleurs correspondantes. Les deux couleurs
-sont ensuite mixées ensemble selon le coefficient de fresnel. Celui-ci dépends de l'indice de réfraction et du produit scalaire
+sont ensuite mixées ensemble selon le coefficient de fresnel. Celui-ci dépend de l'indice de réfraction et du produit scalaire
 $\overrightarrow{L}\cdot\overrightarrow{H}$. Or, on constate dans notre cas que le vecteur de direction de la lumière $\overrightarrow{L}$
 est égal à $-\overrightarrow{R}$ (puisque la lumière vient de l'environment map). On constate aussi que:
 \[
@@ -329,7 +329,7 @@ en revanche sort de l'objet, et il suffit alors d'utiliser la cubemap pour trouv
 \svg[6cm]{refr_int}
 
 On cherche donc à calculer $\overrightarrow{R_2'}$. Pour cela, on réalise au préalable le rendu d'une texture de profondeur ainsi
-que d'une texture de normale constituées des faces arrières (\texttt{glCullFace(GL\_FRONT)}) de la gemme. Ceci nous permettra d'obtenir
+que d'une texture de normales constituées des faces arrières (\texttt{glCullFace(GL\_FRONT)}) de la gemme. Ceci nous permettra d'obtenir
 la profondeur (en espace écran) ainsi que la normale (en espace monde) de tout point sur l'écran. Les étapes ci-dessous sont alors ajoutées
 au shader utilisé pour le rendu de la gemme:
 \begin{itemize}
@@ -338,7 +338,7 @@ au shader utilisé pour le rendu de la gemme:
     \item Ajouter $\overrightarrow{R_{2,ecran}}\times pas$ à $\overrightarrow{P}$
     \item Faire de même jusqu'à ce que $P_z \geq \mathcal{D}(P_x, P_y)$ ($\mathcal{D}$ étant la profondeur de face arrière, retrouvée à partir de la texture générée tout à l'heure)
     \item A cette étape, on dispose des coordonnées espace écran de l'intersection entre $\overrightarrow{R_2}$ et la face arrière
-    \item Retrouver $\overrightarrow{N'} = -\overrightarrow{\mathcal{N}}(P_x, P_y)$ avec $\mathcal{N}$ la normale de face arrière
+    \item Retrouver $\overrightarrow{N'} = -\overrightarrow{\mathcal{N}}(P_x, P_y)$ avec $\mathcal{N}$ la normale de la face arrière
     \item Calculer $\overrightarrow{R_2'}$ avec $\overrightarrow{R_2}, \overrightarrow{N'}$ et $\eta_{gemme}$
 \end{itemize}
 
@@ -351,7 +351,7 @@ trop gourmand en ressources, mais le résultat est convaincant:
 \end{figure}
 
 \subsubsection{Bloom}
-Le bloom se calcule avec 3 passes de rendu. La première prends en entrée la texture de bloom HDR générée par la passe de rendu principale,
+Le bloom se calcule avec 3 passes de rendu. La première prend en entrée la texture de bloom HDR générée par la passe de rendu principale,
 et en génère une version basse résolution. La seconde réalise un flou gaussien 12 prises horizontal, et la dernière un même flou mais cette
 fois sur l'axe vertical. Le résultat sera ensuite combiné à la couleur HDR lors de la passe de tone mapping.
 
@@ -359,7 +359,7 @@ fois sur l'axe vertical. Le résultat sera ensuite combiné à la couleur HDR lo
 Il s'agît maintenant de convertir les couleurs HDR en couleurs LDR ($\mathbb{R}_+^3 \to [0; 1]^3$), affichables à l'écran.
 Pour cela, on utilise un \emph{tone mapping}. Il existe une multitude de tone mapping, chacun adapté à une scène différente.
 Le meilleur tone mapping est celui ajusté par un artiste spécifiquement pour la scène; mais comme aucun de nous n'a fait les
-beaux-arts, nous avons juste implémenté un tone mapping sous le nom de \emph{ACES Filmic Tone Mapping}, trouvée sur le blog de
+beaux-arts, nous avons juste implémenté un tone mapping sous le nom de \emph{ACES Filmic Tone Mapping}, trouvé sur le blog de
 Krzysztof Narkowicz.
 
 La dernière étape de rendu est une passe d'anti-aliasing. En l'occurrence il s'agît de FXAA, \emph{Fast Approximative Anti-Aliasing}.
@@ -383,7 +383,7 @@ cela requiert un peu de calcul. Voici la manière dont nous procédons:
 \section{Conclusion}
 A travers ce projet nous avons pu répondre à la problématique de génération et rendu d'une
 pierre précieuse en temps réel, et ce en utilisant OpenGL. Ce projet nous aura permis bien
-évidemment de s'accomoder avec cette bibliothèque graphique, mais aussi d'en apprendre beacoup
+évidemment de s'accommoder avec cette bibliothèque graphique, mais aussi d'en apprendre beacoup
 sur la synthèse d'image photoréaliste de par les différents effets que nous avons pu implémenter.
 
 \subsection{Améliorations possibles}
@@ -402,6 +402,5 @@ Notre projet pourrait cependant être amélioré, notamment sur les points suiva
     \item \emph{ACES Filmic Tone Mapping Curve}, Krzysztof Narkowicz, \url{https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/}
     \item \emph{Automatic Exposure}, Krzysztof Narkowicz, \url{https://knarkowicz.wordpress.com/2016/01/09/automatic-exposure/}
 \end{itemize}
-
 
 \end{document}

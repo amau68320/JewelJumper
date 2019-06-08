@@ -19,6 +19,7 @@
 \usepackage[compact]{titlesec}
 \usepackage{graphicx} %\usepackage{subfig} %%Subfigures inside a figure
 %\usepackage{setspace}
+\usepackage{enumitem}
 
 %% Math Packages
 \usepackage{amsmath}
@@ -27,13 +28,19 @@
 \usepackage{stmaryrd}
 
 %% Document properties
-\title{IN55 -- Rapport de projet}
+\title{GemStudio -- IN55 P2019}
 \author{A. Einholtz et N. Barbotin}
 
 %% PDF Meta
 \usepackage[pdftex,
             pdfauthor={\theauthor},
             pdftitle={\thetitle}]{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue
+}
 
 %% Line Spacing
 %\singlespacing        %% 1-spacing (default)
@@ -99,12 +106,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DOCUMENT
 \begin{document}
+\setlist[itemize]{label=\textbf{\textbullet}}
 \setlength{\parindent}{0cm}
 \setlength{\parskip}{8pt}
 
 \begin{center}
     % Title
-    \Huge\thetitle
+    \Huge Rapport de projet\\
+    \LARGE \thetitle
 
     \vfill
     \includegraphics[width=15cm]{screenshot.jpg}
@@ -124,7 +133,7 @@ gestion de la fenêtre et GLEW pour le chargement d'OpenGL. Les mathématiques e
 sont gérées par des bibliothèques maisons, soit MGPCL et AISO.
 
 \subsection{Utilisation}
-Lorsque \emph{GemStudio} est lancé, l'utilisateur est acueilli avec le rendu d'une gemme fond, et de
+Lorsque \emph{GemStudio} est lancé, l'utilisateur est acueilli avec le rendu d'une gemme en fond, et
 deux fênetres. La première permet de contrôler la vue et la seconde permet de modifier l'apparence de
 la gemme. Ces fenêtres peuvent être fermées pour profiter de la vue, mais peuvent être réouvertes à tout
 moment à l'aide des touches F1 et F2.
@@ -135,10 +144,10 @@ Les paramètres ajustable via cette fenêtre sont les suivant:
     \item Champ de vision: il s'agît du FOV
     \item Vitesse d'adaption de l'exposition: permet de contrôler la vitesse à laquelle l'œuil s'adapte à la luminance de la scène
     \item Seuil de bloom: luminance à partir de laquelle l'utilisateur est considéré comme ébloui, résultant en un flou léger
-    \item Vitesse de la caméra: vitesse à laquelle la caméra orbital tourne autour de la gemme
+    \item Vitesse de la caméra: vitesse à laquelle la caméra orbitale tourne autour de la gemme
     \item Effets: permet d'activer ou de désactiver les effets utilisés pour le rendu
     \item Affichage: propose de contrôler les IPS et d'afficher des informations de débogage
-    \item Changer la skybox: lorsque les environment map supplémentaires ont été téléchargées, permet de passer à l'environment map suivante
+    \item Changer la skybox: lorsque les environment maps supplémentaires ont été téléchargées, permet de passer à l'environment map suivante
 \end{itemize}
 
 \subsubsection{Fenêtre de customisation}
@@ -147,9 +156,9 @@ Cette fenêtre permet d'ajuster l'apparence de la gemme:
     \item Couleur: permet de changer la couleur de la gemme
     \item Indice de réfraction: permet de changer l'indice de réfraction
     \item N: nombre de côtés de la gemme
-    \item H: hauteur de la partie inferieure
-    \item R: rayon de l'interface inferieure/superieure
-    \item dH: surélévation de la partie superieure
+    \item H: hauteur de la partie inférieure
+    \item R: rayon de l'interface inférieure/supérieure
+    \item dH: surélévation de la partie supérieure
     \item dR: rapport entre R et le rayon de la face du haut
 \end{itemize}
 
@@ -164,7 +173,7 @@ pour l'orienter.
 
 \subsection{Répartition des tâches}
 Amaury s'est chargé la boucle principale, la gestion de la fenêtre, des évènements, et des objets du jeu
-(dont la génération de la gemme). Nicolas s'est concentré sur les effets visuels: réfraction et réflection,
+(dont la gemme et le procédé utilisé pour la générer). Nicolas s'est concentré sur les effets visuels: réfraction et réflection,
 exposition automatique, etc\ldots
 
 \subsection{Choix techniques}
@@ -189,13 +198,13 @@ En plus de la réflection et de la réfraction, nous avons décidé d'implément
 Le projet est séparé en 10 classes principales:
 
 \subsubsection{MainApp}
-C'est elle qui gère la fenêtre, les évènements (position de la souris, entrée clavier etc\ldots), et tout le
+C'est elle qui gère la fenêtre, les évènements (position de la souris, entrée clavier, etc\ldots), tout le
 rendu de la scène (skybox, objets du jeu, etc\ldots), et la pile de matrice modèle.
-Pour ce faire, elle fait appel à toutes les autres classes décrites dans cette section. Elle gère aussi l'IHM,
+Pour ce faire, elle fait appel à l'entièreté des classes décrites dans cette section. Elle gère aussi l'IHM,
 mais nous avons choisi de ne pas détailler cette partie dans ce rapport.
 
 \subsubsection{Camera, FreeCamera et RotatingCamera}
-La classe Camera est une interface utilisé pour décrire une caméra; c'est-à-dire un objet capable de déterminer
+La classe Camera est une interface utilisée pour décrire une caméra; c'est-à-dire un objet capable de déterminer
 la matrice de vue. En plus de cette matrice, l'interface Camera se doit de retourner un vecteur contenant la
 position de la dîte caméra, et ce afin de pouvoir toujour placer le centre de la skybox en cette position.
 
@@ -209,13 +218,13 @@ Le projet propose deux types de caméra:
 GameObject est une interface représentant un objet du jeu; elle avait été crée dans l'optique de pouvoir supporter
 différents objets dans une même scène, mais au final nous n'avons fait qu'un seul objet: la gemme.
 
-La classe Gem implémente GameObject et est chargé de généré selon quelques paramètres les vertices et les indices
+La classe Gem implémente GameObject et est chargé de générer, selon quelques paramètres, les vertices et les indices
 nécéssaire au rendu d'une gemme. 5 paramètres sont supportés lors de la génération:
 \begin{itemize}
     \item Le nombre de côtés
-    \item La hauteur de la partie inferieure
-    \item Le rayon de la séparation inferieure/superieure
-    \item La hauteur de la partie superieure
+    \item La hauteur de la partie inférieure
+    \item Le rayon de la séparation inférieure/supérieure
+    \item La hauteur de la partie supérieure
     \item Le rayon de la face du haut
 \end{itemize}
 
@@ -227,14 +236,14 @@ Cette classe gère 4 choses:
     \item Le chargement d'une environment map HDR au format RGBE
     \item La texture associée à cette environment map (pour la skybox)
     \item La cubemap associée à cette environment map (pour la réflection et la réfraction)
-    \item La vertices de la skybox (c'est-à-dire, les vertices d'un cube texturé)
+    \item Les vertices de la skybox (c'est-à-dire, les vertices d'un cube texturé)
 \end{itemize}
 
 \ \\
-Le chargement de environment map étant très long (1-5 secondes), la classe Skybox propose deux moyens de chargement:
+Le chargement de l'environment map étant très long (1-5 secondes), la classe Skybox propose deux moyens de chargement:
 synchrone et asynchrone. Une skybox étant nécéssaire pour faire fonctionner l'application, la première environment map
-est chargée de manière synchrone au démarrage de l'application. Les suivantes sont chargée de manière asynchrone de
-manière à limiter le gel de l'écran.
+est chargée de manière synchrone au démarrage de l'application. Les suivantes sont chargée de manière asynchrone
+pour limiter le gel de l'écran.
 
 \subsubsection{Autres classes}
 Les classes restantes sont les suivantes:
@@ -258,7 +267,7 @@ la \emph{skybox} et la gemme. Comme il s'agît d'une passe de rendu HDR, cette p
 l'exposition déterminée par le système d'exposition automatique, décrit plus bas. Enfin, cette passe de rendu
 génère en plus du color buffer habituel, un second buffer HDR qui sera plus tard utilisé pour le \emph{bloom}
 (l'effet d'éblouissement). Ce buffer est princialement noir, sauf aux endroits où la couleur dépasse un
-seuil de luminance définit par l'utilisateur. Dans ce cas, le buffer de bloom contient la même valeur que le color
+seuil de luminance défini par l'utilisateur. Dans ce cas, le buffer de bloom contient la même valeur que le color
 buffer. Ceci se résume par le code GLSL suivant:
 
 \begin{lstlisting}
@@ -320,9 +329,9 @@ en revanche sort de l'objet, et il suffit alors d'utiliser la cubemap pour trouv
 \svg[6cm]{refr_int}
 
 On cherche donc à calculer $\overrightarrow{R_2'}$. Pour cela, on réalise au préalable le rendu d'une texture de profondeur ainsi
-que d'une texture de normale constitué des faces arrières (\texttt{glCullFace(GL\_FRONT)}) de la gemme. Ceci nous permettra d'obtenir
-la profondeur (en espace écran) ainsi que la normale (en espace monde) de tout point sur l'écran. Le rendu de la gemme décrit précédemment
-est ensuite modifié:
+que d'une texture de normale constituées des faces arrières (\texttt{glCullFace(GL\_FRONT)}) de la gemme. Ceci nous permettra d'obtenir
+la profondeur (en espace écran) ainsi que la normale (en espace monde) de tout point sur l'écran. Les étapes ci-dessous sont alors ajoutées
+au shader utilisé pour le rendu de la gemme:
 \begin{itemize}
     \item Passer $\overrightarrow{R_2}$ en espace écran
     \item Partir des coordonnées $\overrightarrow{P}$ du fragment en cours de calcul
@@ -330,27 +339,28 @@ est ensuite modifié:
     \item Faire de même jusqu'à ce que $P_z \geq \mathcal{D}(P_x, P_y)$ ($\mathcal{D}$ étant la profondeur de face arrière, retrouvée à partir de la texture générée tout à l'heure)
     \item A cette étape, on dispose des coordonnées espace écran de l'intersection entre $\overrightarrow{R_2}$ et la face arrière
     \item Retrouver $\overrightarrow{N'} = -\overrightarrow{\mathcal{N}}(P_x, P_y)$ avec $\mathcal{N}$ la normale de face arrière
-    \item Calculer $\overrightarrow{R_2'}$ avec $\overrightarrow{R_2}, \overrightarrow{N'}$ et l'indice de réfraction
+    \item Calculer $\overrightarrow{R_2'}$ avec $\overrightarrow{R_2}, \overrightarrow{N'}$ et $\eta_{gemme}$
 \end{itemize}
 
 \ \\
-Reste à déterminer un pas convenable de manière à ne pas sauter trop de pixels (et perdre de la précision) et ne pas être
-trop gourmand en ressources, mais le résultat est convaiquant:
+Reste à déterminer un pas convenable de manière à ne pas sauter trop de pixels et ne pas être
+trop gourmand en ressources, mais le résultat est convaincant:
 \begin{figure}[H]
     \centering
     \includegraphics[width=14cm]{intref_cmp.jpg}
 \end{figure}
 
 \subsubsection{Bloom}
-Le bloom se calcule avec 3 passes de rendu. La première prends en entrée la texture de bloom HDR générée par la passe de rendu princpale,
-et en génère une version basse résolution. La seconde réalise un flou gaussien 12 prises horizontal, et le second un même flou mais cette
-fois sur l'axe vertical. Le résultat est ensuite combiné à la couleur HDR via la passe de tone mapping.
+Le bloom se calcule avec 3 passes de rendu. La première prends en entrée la texture de bloom HDR générée par la passe de rendu principale,
+et en génère une version basse résolution. La seconde réalise un flou gaussien 12 prises horizontal, et la dernière un même flou mais cette
+fois sur l'axe vertical. Le résultat sera ensuite combiné à la couleur HDR lors de la passe de tone mapping.
 
 \subsubsection{Tone mapping et anti-aliasing}
-Il s'agît maintenant de convertir les couleurs HDR en couleurs LDR ($\mathbb{R}_+^3 \to [0; 1]^3$), affichable à l'écran.
+Il s'agît maintenant de convertir les couleurs HDR en couleurs LDR ($\mathbb{R}_+^3 \to [0; 1]^3$), affichables à l'écran.
 Pour cela, on utilise un \emph{tone mapping}. Il existe une multitude de tone mapping, chacun adapté à une scène différente.
 Le meilleur tone mapping est celui ajusté par un artiste spécifiquement pour la scène; mais comme aucun de nous n'a fait les
-beaux-arts, nous avons juste implémenté un tone mapping sous le nom de \emph{ACES Filmic Tone Mapping}, trouvée sur le blog de \emph{Krzysztof Narkowicz}.
+beaux-arts, nous avons juste implémenté un tone mapping sous le nom de \emph{ACES Filmic Tone Mapping}, trouvée sur le blog de
+Krzysztof Narkowicz.
 
 La dernière étape de rendu est une passe d'anti-aliasing. En l'occurrence il s'agît de FXAA, \emph{Fast Approximative Anti-Aliasing}.
 C'est un anti-aliasing très basique sous forme de filtre. Il produit un faible flou au niveau des bords, mais est néanmoins très rapide.
@@ -376,22 +386,22 @@ pierre précieuse en temps réel, et ce en utilisant OpenGL. Ce projet nous aura
 évidemment de s'accomoder avec cette bibliothèque graphique, mais aussi d'en apprendre beacoup
 sur la synthèse d'image photoréaliste de par les différents effets que nous avons pu implémenter.
 
-\subsection{Limites et améliorations possibles}
+\subsection{Améliorations possibles}
 Notre projet pourrait cependant être amélioré, notamment sur les points suivants:
 \begin{itemize}
-    \item Implémenter "real time rendering of refraction of nearby objects" pour pouvoir dessiner plusieurs objets
+    \item Implémenter \emph{Interactive Image-Space Refraction of Nearby Geometry}\footnote{Chris Wyman, 2005, Interactive Image-Space Refraction of Nearby Geometry} pour pouvoir dessiner plusieurs objets
     \item Accélérer la recherche de profondeur dans le shader de la gemme en utilisant un algorithme de recherche dichotomique
     \item Utiliser des couleurs sRGB
-    \item Implémenter un meilleur anti-aliasing (par exemple Temporal Anti-Aliasing, très efficace et très à la mode en ce moment)
+    \item Implémenter un meilleur anti-aliasing (comme le \emph{Temporal Anti-Aliasing}, bien plus efficace que le FXAA)
     \item Plusieurs rebonds dans le shader de la gemme
 \end{itemize}
 
 \subsection{Bibliographie}
-(A compléter avec les bons liens et les ISBN)
 \begin{itemize}
-    \item \emph{Mathematics for 3D Game Programming and Computer Graphics, Third Edition}
-    \item ACES Filmic Tone Mapping
-    \item Automatic Exposure
+    \item \emph{Mathematics for 3D Game Programming and Computer Graphics, Third Edition}, ISBN 978-1435458864
+    \item \emph{ACES Filmic Tone Mapping Curve}, Krzysztof Narkowicz, \url{https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/}
+    \item \emph{Automatic Exposure}, Krzysztof Narkowicz, \url{https://knarkowicz.wordpress.com/2016/01/09/automatic-exposure/}
 \end{itemize}
+
 
 \end{document}

@@ -126,23 +126,23 @@
 \newpage
 \section{Introduction}
 \subsection{Présentation du projet}
-Dans le cadre de l'UV IN55 lors du semestre de printemps 2019, nous avons été chargé de réaliser
+Dans le cadre de l'UV IN55 lors du semestre de printemps 2019, nous avons été chargés de réaliser
 un projet basé sur OpenGL. Le sujet que nous avons sélectionné visait à faire le rendu de pierres
 précieuses en temps réel. Pour cela, nous avons utilisé C++ avec les bibliothèques GLFW pour la
 gestion de la fenêtre et GLEW pour le chargement d'OpenGL. Les mathématiques et l'interface graphique
 sont gérées par des bibliothèques maisons, soit MGPCL et AISO.
 
 \subsection{Utilisation}
-Lorsque \emph{GemStudio} est lancé, l'utilisateur est acueilli avec le rendu d'une gemme en fond, et
+Lorsque \emph{GemStudio} est lancé, l'utilisateur est accueilli avec le rendu d'une gemme en fond, et
 deux fênetres. La première permet de contrôler la vue et la seconde permet de modifier l'apparence de
 la gemme. Ces fenêtres peuvent être fermées pour profiter de la vue, mais peuvent être réouvertes à tout
 moment à l'aide des touches F1 et F2.
 
 \subsubsection{Fenêtre de vue}
-Les paramètres ajustable via cette fenêtre sont les suivant:
+Les paramètres ajustables via cette fenêtre sont les suivants:
 \begin{itemize}
     \item Champ de vision: il s'agît du FOV
-    \item Vitesse d'adaption de l'exposition: permet de contrôler la vitesse à laquelle l'œuil s'adapte à la luminance de la scène
+    \item Vitesse d'adaption de l'exposition: permet de contrôler la vitesse à laquelle l'œil s'adapte à la luminance de la scène
     \item Seuil de bloom: luminance à partir de laquelle l'utilisateur est considéré comme ébloui, résultant en un flou léger
     \item Vitesse de la caméra: vitesse à laquelle la caméra orbitale tourne autour de la gemme
     \item Effets: permet d'activer ou de désactiver les effets utilisés pour le rendu
@@ -377,7 +377,7 @@ cela requiert un peu de calcul. Voici la manière dont nous procédons:
     \item On enlève un pourcentage des pixels les plus sombres
     \item On calcul la luminance moyenne de ce qu'il reste
     \item On en déduit une nouvelle exposition pour la trame suivante
-    \item Pour éviter les changements brusques, et pour simuler le changement progressif de l'œuil, on fait varier en exponentielle inverse l'exposition
+    \item Pour éviter les changements brusques, et pour simuler le changement progressif de l'œil, on fait varier en exponentielle inverse l'exposition
 \end{itemize}
 
 \section{Conclusion}
